@@ -125,13 +125,20 @@ function ImportForm() {
   const [apiKey, setApiKey] = useState("");
 
   const mutation = useMutation<Player, ApiError>({
-    mutationFn: () => api.players.get(playerId.trim()),
+    // Validate the typed key directly — no session exists yet, so we pass it
+    // explicitly rather than relying on localStorage (which is still empty).
+    mutationFn: () => api.players.get(playerId.trim(), apiKey.trim()),
     onSuccess: (player) => {
       login(player.id, apiKey.trim());
       toast.success(`Welcome back, ${player.username}`);
       router.replace("/dashboard");
     },
-    onError: (e) => toast.error(`Player not found: ${e.message}`),
+    onError: (e) =>
+      toast.error(
+        e.status === 403
+          ? "That API key doesn't match this Player ID"
+          : `Sign in failed: ${e.message}`,
+      ),
   });
 
   return (
