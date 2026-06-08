@@ -58,6 +58,79 @@ def _stage_duration_hours(plant: Plant, stage: GrowthStage, sim: Dict) -> float:
     return 0.0
 
 
+def stage_forecast(plant: Plant, cfg, now: datetime) -> Dict:
+    """A pure, deterministic read of where a plant is in its lifecycle and when
+    it will reach the next stage and harvest-readiness.
+
+    The transition rule mirrors `_step`: a stage takes ``base * (1 + (100 - health)
+    / 200)`` hours, so poor health stretches it. ETAs assume the *current* health
+    holds — the UI should present them as estimates that better care improves and
+    stress delays. Times are absolute ISO strings so a client countdown stays
+    accurate between polls.
+    """
+    sim = cfg.raw.get("simulation", {})
+    stage = GrowthStage(plant.growth_stage)
+    idx = _STAGE_ORDER.index(stage)
+
+    def _effective(s: GrowthStage) -> float:
+        base = _stage_duration_hours(plant, s, sim)
+        return base * (1.0 + (100.0 - plant.health) / 200.0)
+
+    age_hours = None
+    if plant.planted_at is not None:
+        age_hours = round(max(0.0, (now - plant.planted_at).total_seconds() / 3600.0), 1)
+    hours_in_stage = 0.0
+    if plant.stage_entered_at is not None:
+        hours_in_stage = max(0.0, (now - plant.stage_entered_at).total_seconds() / 3600.0)
+
+    out = {
+        "stage": stage.value,
+        "stage_index": idx,
+        "stage_count": len(_STAGE_ORDER),
+        "age_hours": age_hours,
+        "hours_in_stage": round(hours_in_stage, 1),
+    }
+
+    # HARVEST is the terminal, harvest-ready state — no further countdown.
+    if stage == GrowthStage.HARVEST:
+        out.update({
+            "next_stage": None,
+            "stage_progress_pct": 100.0,
+            "stage_base_hours": 0.0,
+            "stage_total_hours": 0.0,
+            "next_stage_eta": None,
+            "hours_to_harvest": 0.0,
+            "harvest_eta": None,
+            "is_harvest_ready": True,
+        })
+        return out
+
+    base = _stage_duration_hours(plant, stage, sim)
+    effective = _effective(stage)
+    progress = min(100.0, (hours_in_stage / effective) * 100.0) if effective > 0 else 100.0
+    remaining_in_stage = max(0.0, effective - hours_in_stage)
+
+    # Time to harvest-ready = remaining in this stage + full (current-health)
+    # durations of every stage up to (but excluding) HARVEST.
+    hours_to_harvest = remaining_in_stage
+    for s in _STAGE_ORDER[idx + 1:]:
+        if s == GrowthStage.HARVEST:
+            break
+        hours_to_harvest += _effective(s)
+
+    out.update({
+        "next_stage": _STAGE_ORDER[idx + 1].value,
+        "stage_progress_pct": round(progress, 1),
+        "stage_base_hours": round(base, 1),
+        "stage_total_hours": round(effective, 1),
+        "next_stage_eta": (now + timedelta(hours=remaining_in_stage)).isoformat(),
+        "hours_to_harvest": round(hours_to_harvest, 1),
+        "harvest_eta": (now + timedelta(hours=hours_to_harvest)).isoformat(),
+        "is_harvest_ready": False,
+    })
+    return out
+
+
 def _growth_cm_per_hour(stage: GrowthStage, sim: Dict, health: float) -> float:
     growth = sim.get("growth", {})
     rate = {

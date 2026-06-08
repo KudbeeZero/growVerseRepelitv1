@@ -9,6 +9,7 @@ import { StatBars } from "./StatBars";
 import { ConditionBadges } from "./ConditionBadges";
 import { CareButtons } from "./CareButtons";
 import { PlantMetrics } from "./PlantMetrics";
+import { StageTimelineCompact } from "./StageTimeline";
 import { usePlantState } from "@/hooks/usePlantState";
 import { useStrainMap } from "@/hooks/queries";
 import { titleCase, num } from "@/lib/format";
@@ -63,6 +64,16 @@ export function PlantCard({ playerId, plantId }: { playerId: string; plantId: st
       <div className="flex items-center justify-center rounded-lg bg-ink-900/60 py-2">
         <PlantVisual stage={plant.growth_stage} flags={plant.condition_flags} size={120} />
       </div>
+
+      {plant.forecast && (
+        <div className="rounded-md border border-ink-700 bg-ink-900/50 px-2.5 py-2">
+          <StageTimelineCompact
+            forecast={plant.forecast}
+            harvested={plant.harvested}
+            isAlive={plant.is_alive}
+          />
+        </div>
+      )}
 
       <ConditionBadges flags={plant.condition_flags} />
       {plant.metrics && (

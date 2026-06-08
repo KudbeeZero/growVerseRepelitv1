@@ -149,8 +149,29 @@ export interface PlantMetrics {
   photoperiod_hours: number | null;
 }
 
+/** Lifecycle forecast exposed on GET .../state: where the plant is and when it
+ *  reaches the next stage / harvest-readiness (at current health). */
+export interface StageForecast {
+  stage: GrowthStage;
+  stage_index: number;
+  stage_count: number;
+  age_hours: number | null;
+  hours_in_stage: number;
+  next_stage: GrowthStage | null;
+  stage_progress_pct: number;
+  /** Ideal stage length and the current-health-adjusted ("effective") length, in hours. */
+  stage_base_hours: number;
+  stage_total_hours: number;
+  /** Absolute ISO instants so a client countdown stays accurate between polls. */
+  next_stage_eta: string | null;
+  hours_to_harvest: number;
+  harvest_eta: string | null;
+  is_harvest_ready: boolean;
+}
+
 export interface PlantState extends Plant {
   metrics?: PlantMetrics;
+  forecast?: StageForecast;
   recent_events: PlantEvent[];
 }
 
