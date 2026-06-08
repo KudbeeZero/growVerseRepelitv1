@@ -6,8 +6,9 @@
 
 import type { ApiErrorBody } from "@/lib/types";
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE?.replace(/\/$/, "") || "http://localhost:10000";
+// Use ?? so that an explicit empty string (relative-URL mode) is preserved.
+// Falls back to localhost:10000 only when the env var is truly absent.
+const API_BASE = (process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:10000").replace(/\/$/, "");
 
 const GAME_PREFIX = "/api/game";
 
@@ -50,7 +51,11 @@ interface FetchOptions {
 
 function buildUrl(path: string, raw: boolean, query?: FetchOptions["query"]): string {
   const prefix = raw ? "" : GAME_PREFIX;
-  const url = new URL(`${API_BASE}${prefix}${path}`);
+  const urlStr = `${API_BASE}${prefix}${path}`;
+  // When API_BASE is empty we're in relative-URL mode (Next.js rewrite proxy).
+  // new URL("/api/...") is invalid without a base, so supply window.location.origin.
+  const base = API_BASE || (typeof window !== "undefined" ? window.location.origin : "http://localhost:3000");
+  const url = new URL(urlStr, base);
   if (query) {
     for (const [k, v] of Object.entries(query)) {
       if (v !== undefined && v !== null && v !== "") url.searchParams.set(k, String(v));
