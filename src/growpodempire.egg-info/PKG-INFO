@@ -1,0 +1,16 @@
+Metadata-Version: 2.4
+Name: growpodempire
+Version: 2.0.0
+Summary: GROWv2 — cannabis cultivation game (economy, genetics, real-time sim, on-chain assets)
+Author: GROWv2
+Requires-Python: >=3.8
+Requires-Dist: flask>=2.3.2
+Requires-Dist: flask-cors>=4.0.0
+Requires-Dist: sqlalchemy>=2.0.23
+Requires-Dist: pydantic>=2.5.0
+Requires-Dist: python-dotenv>=1.0.0
+Requires-Dist: PyYAML>=6.0
+Dynamic: author
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary
