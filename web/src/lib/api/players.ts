@@ -11,7 +11,10 @@ export const players = {
   create: (username: string, email?: string) =>
     apiFetch<Player>("/players", { method: "POST", auth: false, body: { username, email } }),
 
-  get: (playerId: string) => apiFetch<Player>(`/players/${playerId}`, { auth: true }),
+  // `apiKey` lets the sign-in flow validate a freshly-typed key before a
+  // session exists; when omitted the stored session key is used.
+  get: (playerId: string, apiKey?: string) =>
+    apiFetch<Player>(`/players/${playerId}`, { auth: true, apiKey }),
 
   wallet: (playerId: string) =>
     apiFetch<Wallet>(`/players/${playerId}/wallet`, { auth: true }),

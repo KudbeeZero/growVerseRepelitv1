@@ -111,6 +111,18 @@ Each entry: branch · what shipped · test count after merge.
   `POST /players/<id>/plants/<pid>/advisor/auto-care` (rate-limited, gated by `ENABLE_AUTO_CARE`,
   default on). CI uses the mock loop (no key).
 
+## Replit launch — onboarding fixes & build log
+- `claude/game-build-first-pr-6t18lz` · **Fixed "create account fails" on the live Replit
+  deploy**: the web client baked `http://localhost:10000` into the browser bundle whenever
+  `NEXT_PUBLIC_API_BASE` was absent at build time (Next inlines `NEXT_PUBLIC_*` at build), so
+  the browser POSTed player-creation to its own localhost. The client now defaults to
+  **same-origin relative URLs** (proxied to gunicorn by the Next rewrites), correct regardless
+  of build-time env. **Fixed the "I have a key" sign-in**, which read the key from empty
+  `localStorage` and threw before contacting the server — the typed key is now sent explicitly
+  to validate, then the session is stored. Rewrote the stale `replit.md` template with the real
+  two-process wiring + "won't connect" gotchas, and added `docs/DEV_BUILD_LOG.md` (sequenced
+  milestones from the backlog). Web-only change; backend untouched.
+
 ## Session summary
 16 feature branches built + merged to trunk (each its own pushed branch for review):
 daily-stipend-quests, player-leveling, api-key-auth, error-handling-validation,

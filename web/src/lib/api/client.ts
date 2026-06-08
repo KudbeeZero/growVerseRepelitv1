@@ -6,9 +6,16 @@
 
 import type { ApiErrorBody } from "@/lib/types";
 
-// Use ?? so that an explicit empty string (relative-URL mode) is preserved.
-// Falls back to localhost:10000 only when the env var is truly absent.
-const API_BASE = (process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:10000").replace(/\/$/, "");
+// Resolve the API base URL.
+//
+// NEXT_PUBLIC_* values are inlined at *build* time. To stay correct even when
+// the build never saw the env var, we default to same-origin relative URLs:
+// `buildUrl` falls back to window.location.origin, and same-origin requests are
+// proxied to the backend by the Next.js rewrites in next.config.mjs. Only when
+// NEXT_PUBLIC_API_BASE is explicitly set to a non-empty value (a separate API
+// domain) do we target that absolute origin instead.
+const CONFIGURED_API_BASE = process.env.NEXT_PUBLIC_API_BASE?.trim();
+const API_BASE = CONFIGURED_API_BASE ? CONFIGURED_API_BASE.replace(/\/$/, "") : "";
 
 const GAME_PREFIX = "/api/game";
 
@@ -44,6 +51,12 @@ interface FetchOptions {
   body?: unknown;
   /** Send the X-API-Key header. Defaults to true for writes, false for GET. */
   auth?: boolean;
+  /**
+   * Explicit API key to send instead of the one in localStorage. Used by the
+   * sign-in flow to validate a key the user just typed, before any session
+   * exists. Implies auth.
+   */
+  apiKey?: string;
   /** Treat `path` as an absolute path under the API host (skip /api/game). */
   raw?: boolean;
   query?: Record<string, string | number | boolean | null | undefined>;
@@ -72,8 +85,9 @@ export async function apiFetch<T>(path: string, opts: FetchOptions = {}): Promis
   const headers: Record<string, string> = {};
   if (opts.body !== undefined) headers["Content-Type"] = "application/json";
 
-  if (auth) {
-    const key = readApiKey();
+  if (auth || opts.apiKey) {
+    // An explicit key (sign-in validation) wins over the stored session key.
+    const key = opts.apiKey ?? readApiKey();
     if (!key) {
       throw new ApiError("Not authenticated — create or import a player first", 401);
     }
