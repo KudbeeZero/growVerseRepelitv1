@@ -2,6 +2,17 @@
   "env": {
     "PYTHONPATH": "src"
   },
+  "permissions": {
+    "allow": [
+      "Bash(make test)",
+      "Bash(make lint)",
+      "Bash(make check-memory)",
+      "Bash(make check-migrations)",
+      "mcp__github__pull_request_read",
+      "mcp__github__list_pull_requests",
+      "mcp__github__actions_list"
+    ]
+  },
   "hooks": {
     "SessionStart": [
       {
