@@ -160,3 +160,23 @@ def test_hall_of_fame_records_champions(session):
     CupService(session, clock=FrozenClock(LATE)).current_cup()  # judges
     hof = CupService(session, clock=FrozenClock(LATE)).hall_of_fame()
     assert any(row["winner"] == "famous" and row["champion_strain"] for row in hof)
+
+
+def test_cup_score_guards_zero_norms():
+    # A balance.yaml edit setting any *_norm_* to 0 must not ZeroDivisionError
+    # every cup entry: a nonpositive norm counts as met (curing.py pattern).
+    raw = copy.deepcopy(CFG.raw)
+    raw.setdefault("cannabis_cup", {}).setdefault("scoring", {}).update(
+        {"weight_norm_grams": 0, "thc_norm_pct": 0, "cbd_norm_pct": 0}
+    )
+    degenerate = EconomyConfig(raw=raw)
+    score = pricing.cup_score(120, 100, "rare", degenerate, thc_actual=25, terpene_intensity=0.8)
+    assert score == pytest.approx(
+        pricing.cup_score(150, 100, "rare", degenerate, thc_actual=30, cbd_actual=20,
+                          terpene_intensity=0.8)
+    )  # all norm components saturate at "met"
+
+    # And the guard is bit-identical to the previous inline math for every
+    # positive norm (the only kind in the shipped balance.yaml).
+    for actual, norm in [(0, 150.0), (120, 150.0), (200, 150.0), (25, 30.0), (0.0, 20.0)]:
+        assert pricing._norm_ratio(actual, norm) == max(0.0, min(norm, actual)) / norm

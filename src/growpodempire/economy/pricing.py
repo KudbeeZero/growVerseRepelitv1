@@ -87,6 +87,17 @@ def harvest_value(
     return to_money(value)
 
 
+def _norm_ratio(actual: float, norm: float) -> float:
+    """Share (0..1) of a tunable norm achieved. A nonpositive norm counts as
+    met (the curing.py guard pattern) so a balance.yaml edit to 0 can't
+    ZeroDivisionError every cup entry; positive norms are bit-identical to
+    the previous inline math.
+    """
+    if norm <= 0:
+        return 1.0
+    return min(1.0, max(0.0, actual) / norm)
+
+
 def cup_score(
     weight_g: float,
     quality: float,
@@ -108,14 +119,10 @@ def cup_score(
     cup = cfg.raw.get("cannabis_cup", {})
     s = cup.get("scoring", {})
 
-    weight_norm = min(1.0, max(0.0, weight_g) / float(s.get("weight_norm_grams", 150.0)))
+    weight_norm = _norm_ratio(weight_g, float(s.get("weight_norm_grams", 150.0)))
     quality_norm = max(0.0, min(100.0, quality)) / 100.0
-    thc_norm = max(0.0, min(float(s.get("thc_norm_pct", 30.0)), thc_actual)) / float(
-        s.get("thc_norm_pct", 30.0)
-    )
-    cbd_norm = max(0.0, min(float(s.get("cbd_norm_pct", 20.0)), cbd_actual)) / float(
-        s.get("cbd_norm_pct", 20.0)
-    )
+    thc_norm = _norm_ratio(thc_actual, float(s.get("thc_norm_pct", 30.0)))
+    cbd_norm = _norm_ratio(cbd_actual, float(s.get("cbd_norm_pct", 20.0)))
     terp_norm = max(0.0, min(1.0, terpene_intensity))
 
     base = 100.0 * (
