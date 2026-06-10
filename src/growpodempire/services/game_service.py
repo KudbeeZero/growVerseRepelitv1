@@ -760,6 +760,31 @@ class GameService:
             )
         return out
 
+    def strain_effects(self, strain_id: str) -> dict:
+        """Terpene-driven effect (buff) profile for any strain — base-catalog or
+        player-bred. Aroma/chemotype becomes predictable gameplay effects via the
+        data-driven palette (data/terpene_effects.yaml; see
+        knowledge-base/strain-classification-and-quality.md §3). Read-only; public.
+
+        Unlike the encyclopedia, this works for bred strains too: it reads the
+        strain's terpene tags plus its quantitative genome so a player's discovery
+        carries a real, derived effect signature.
+        """
+        from . import effects_service
+
+        strain = self.get_strain(strain_id)
+        profile = effects_service.profile_for_strain(
+            strain.terpenes or [], strain.genome or {}
+        )
+        return {
+            "strain_id": strain.id,
+            "name": strain.name,
+            "slug": strain.slug,
+            "rarity": strain.rarity,
+            "terpene_tags": strain.terpenes or [],
+            "profile": profile,
+        }
+
     # ----- Harvest & sale -------------------------------------------------
     def harvest_plant(
         self,

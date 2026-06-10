@@ -232,6 +232,20 @@ def strain_knowledge(strain_id):
         return _error(str(e), 404)
 
 
+@game_bp.get("/strains/<strain_id>/effects")
+def strain_effects(strain_id):
+    """Terpene -> effect (buff) profile for a strain: aroma/chemotype turned into
+    predictable gameplay effects, with a mind<->body lean, flavor families, and
+    the entourage synergy. Works for base-catalog and player-bred strains.
+    Read-only; public."""
+    try:
+        with session_scope() as s:
+            payload = GameService(s).strain_effects(strain_id)
+        return jsonify(payload)
+    except GameError as e:
+        return _error(str(e), 404)
+
+
 # ----- Seeds & planting --------------------------------------------------
 @game_bp.get("/players/<player_id>/seeds")
 @require_player
