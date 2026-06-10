@@ -4,9 +4,11 @@ name: CI
 # migrations + the full test suite (with the coverage ratchet). Mirrors the
 # Makefile targets so `make test && make lint && make check-memory` locally is
 # the same contract CI enforces. Never skipped.
+# push on main covers post-merge; pull_request covers branches (avoids the
+# double-run a branch push would otherwise trigger).
 on:
   push:
-    branches: ["**"]
+    branches: [main]
   pull_request:
 
 concurrency:
