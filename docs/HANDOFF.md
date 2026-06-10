@@ -4,10 +4,21 @@
 > the end of every chat; read by `/handoff-audit` at the start of the next. If this file and
 > the code disagree, the code wins — fix the baton. See `docs/SESSION_PROTOCOL.md`.
 
-**Last rewritten:** 2026-06-10 · **By:** concurrency-hardening chat
+**Last rewritten:** 2026-06-10 · **By:** concurrency-hardening chat (+ PR #6 web fixes merged)
 **Active branch:** `claude/concurrency-idempotency-hardening`
-**Merged to main:** PR #3 (protocol + gates + sim cap), PR #8 (fleet sweep + SQLite parity) — both CI-green.
-**Open PR awaiting audit:** _this branch's PR — run `/handoff-audit` on it next chat._
+**Merged to main:** PR #3 (protocol + gates + sim cap), PR #8 (fleet sweep + SQLite parity),
+PR #9 (concurrency core), PR #6 (web viz lifecycle fixes) — all CI-green.
+**Open PR awaiting audit:** _next chat runs `/handoff-audit`._
+
+> **Bomb Squad addendum (2026-06-10, same day, separate branch):** fixed two lifecycle
+> defects in `web/src/components/viz/Constellation.tsx` — (1) reduced-motion users got a
+> permanently blank canvas (ResizeObserver's initial async callback reset `canvas.width`
+> after the single static draw); (2) unhandled `pointercancel` could strand `dragging=true`
+> (phantom pan + particle velocity injection). RAF lifecycle audited and confirmed inert.
+> Source-contract tripwires added in `web/src/components/viz/__tests__/constellationLifecycle.test.ts`
+> (incl. sacred-render hashes pinning leafParticles/graphParticles/step/draw). Full report:
+> `night-reports/BOMB-SQUAD-2026-06-10.md`. Note: web CI still doesn't execute vitest —
+> recommended follow-up in the report. The NEXT ACTION below is unchanged.
 
 ---
 
