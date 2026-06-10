@@ -112,6 +112,13 @@ export interface Pod {
   active: boolean;
   auto_water: boolean;
   auto_feed: boolean;
+  // Current environment setpoints (null until the player sets them). Used to
+  // seed the grow-chamber climate sliders with the pod's real values.
+  temperature: number | null;
+  humidity: number | null;
+  co2_level: number | null;
+  light_intensity: number | null;
+  ph_level: number | null;
 }
 
 export interface Plant {
