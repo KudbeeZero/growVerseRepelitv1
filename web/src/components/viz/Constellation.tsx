@@ -260,6 +260,12 @@ export function Constellation({
       canvas!.height = h * dpr;
       canvas!.style.width = `${w}px`;
       canvas!.style.height = `${h}px`;
+      // Setting canvas.width wipes the backing store. The animated path
+      // repaints on the next RAF, but reduced-motion renders exactly one
+      // static frame — and ResizeObserver.observe() always fires an initial
+      // async callback, which would land after that frame and leave the
+      // canvas permanently blank. Repaint synchronously instead.
+      if (reduced) draw();
     }
     resize();
     const ro = new ResizeObserver(resize);
@@ -582,6 +588,12 @@ export function Constellation({
     canvas.addEventListener("pointermove", onMove);
     canvas.addEventListener("pointerup", onUp);
     canvas.addEventListener("pointerleave", onUp);
+    // pointercancel: the browser hijacked the pointer mid-drag (touch scroll
+    // takeover, system gesture, pen out of range). Spec-compliant engines fire
+    // pointerleave afterwards, but engines have skipped it under active
+    // capture — and a stranded `dragging` pans + injects velocity on every
+    // subsequent buttonless hover.
+    canvas.addEventListener("pointercancel", onUp);
     canvas.addEventListener("click", onClick);
     canvas.addEventListener("wheel", onWheel, { passive: false });
 
@@ -592,6 +604,7 @@ export function Constellation({
       canvas.removeEventListener("pointermove", onMove);
       canvas.removeEventListener("pointerup", onUp);
       canvas.removeEventListener("pointerleave", onUp);
+      canvas.removeEventListener("pointercancel", onUp);
       canvas.removeEventListener("click", onClick);
       canvas.removeEventListener("wheel", onWheel);
     };
