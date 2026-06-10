@@ -7,6 +7,13 @@
 
 ## 2026-06-10 — Night-shift autonomous run (branch `claude/night-shift-2026-06-10`)
 
+### Entry 4 — Effect signature on harvests (core-loop binding)
+- **What:** `harvest_dict` now derives an `effect_profile` from the batch's
+  *expressed* terpenes, so the effect engine appears on the real grown product
+  (grow→harvest→sell), not only the strain catalog. Additive, read-only, lazy
+  import keeps the serializer pure. +2 tests. Full suite **198 passed**.
+- **Result:** committed `2b0b52f`, on PR #12.
+
 ### Finding — CI is phantom (no `.github/workflows/`)
 - The repo has **no GitHub Actions** at all; the lint/coverage/memory/single-head
   "CI gates" the docs claim run on every push do **not** run anywhere automated,
