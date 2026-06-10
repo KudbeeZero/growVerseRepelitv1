@@ -19,16 +19,3 @@ anthropic>=0.49.0
 # Postgres driver for production (Render). Local/dev/test default to SQLite and
 # do not require this; safe to skip if the binary wheel is unavailable.
 psycopg2-binary==2.9.9
-alembic==1.13.2
-anthropic
-flask==2.3.2
-flask-cors==4.0.0
-Flask-Limiter==3.5.0
-gunicorn==21.2.0
-psycopg2-binary==2.9.9
-py-algorand-sdk==2.11.1
-pydantic==2.5.0
-python-dotenv==1.0.0
-PyYAML==6.0.2
-sqlalchemy==2.0.23
-werkzeug==2.3.7
