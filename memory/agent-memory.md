@@ -14,6 +14,17 @@
   (latent, not exploitable via current HTTP). Consolidator bug found+fixed: severity casing
   normalization (was rejecting 18 valid findings).
 
+- **2026-06-10 @ dc1094c** · focus: NEW-2/NEW-3 + chain codex · Builder (Reese) bounded the
+  cup faucet (payouts ≤ prize_pool + house_sponsorship, Decimal end-to-end) and pinned the
+  REWARD overload audit with 4 regression tests; independent verifier (Casey) re-proved every
+  claim incl. mutation-testing the guards (rebuttal in reports/2026-06-10/rebuttals/). Numeric
+  sweep: 5600 bound never clamps (tight bound 4700) — conservative, intended. Five-agent chain
+  design team + synthesis landed docs/memory/design/chain/ (wallet login, GrowAsset/ARC-19
+  lifecycle, tokenomics audit: +55–75 GROW/day late-game inflation + engine auto-feed leak,
+  merkle/snapshot recording, custody/NEW-4 deposit redesign) with 6 debate rulings in
+  00-overview.md. Suite 221→227, coverage 79.88%. check_memory strip→rstrip fix (leading `..`
+  in doc-relative tokens was being eaten). Residual: judge() TOCTOU = known F005 class.
+
 ## L4 — Lessons & standing heuristics (≤200 lines, rewritten by Jordan each cycle)
 
 ### Architecture invariants (from CLAUDE.md — violations are findings)
