@@ -9,9 +9,10 @@ and tests run with no network or secrets — mirroring chain/factory.py.
 from typing import Optional
 
 from ..config import get_settings
-from .provider import AdvisorProvider, LecturerProvider
+from .provider import AdvisorProvider, LecturerProvider, QuizProvider
 from .mock import MockAdvisorProvider
 from .lecturer_mock import MockLecturerProvider
+from .quiz_mock import MockQuizProvider
 from .autocare import AutoCareProvider, MockAutoCareProvider
 
 
@@ -69,6 +70,31 @@ def shared_lecturer(settings=None) -> LecturerProvider:
 def reset_shared_lecturer() -> None:
     global _lecturer
     _lecturer = None
+
+
+def get_quiz_provider(settings=None) -> QuizProvider:
+    settings = settings or get_settings()
+    if settings.use_mock_ai or not settings.anthropic_api_key:
+        return MockQuizProvider()
+    from .quiz_claude import ClaudeQuizProvider
+    return ClaudeQuizProvider(
+        api_key=settings.anthropic_api_key, model=settings.advisor_model,
+    )
+
+
+_quiz: Optional[QuizProvider] = None
+
+
+def shared_quiz(settings=None) -> QuizProvider:
+    global _quiz
+    if _quiz is None:
+        _quiz = get_quiz_provider(settings)
+    return _quiz
+
+
+def reset_shared_quiz() -> None:
+    global _quiz
+    _quiz = None
 
 
 def get_auto_care_provider(settings=None) -> AutoCareProvider:

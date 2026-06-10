@@ -444,3 +444,42 @@ export interface LectureReport {
   key_takeaways: string[];
   quiz_question: string;
 }
+
+export interface QuizQuestionClient {
+  question: string;
+  options: string[]; // exactly 4
+}
+
+export interface QuizPending {
+  id: string;
+  course_key: string;
+  provider: string;
+  questions: QuizQuestionClient[];
+  completed_at: null;
+}
+
+export interface QuizResultItem {
+  question: string;
+  chosen_idx: number;
+  correct_idx: number;
+  correct: boolean;
+  explanation: string;
+}
+
+export interface QuizSubmitResult {
+  quiz_id: string;
+  score: number;
+  passed: boolean;
+  correct_count: number;
+  total: number;
+  xp_earned: number;
+  results: QuizResultItem[];
+}
+
+export interface QuizCompleted extends QuizPending {
+  score: number;
+  passed: boolean;
+  answers: number[];
+  results: QuizResultItem[];
+  completed_at: string;
+}

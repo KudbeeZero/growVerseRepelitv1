@@ -23,8 +23,8 @@ from ..economy.config import get_economy_config, EconomyConfig
 from ..economy.ledger import post, to_money
 from ..enums import LedgerEntryType
 from ..db.models import (
-    Player, CourseEnrollment, DegreeProgress, Harvest, BreedingEvent, CupEntry,
-    ResearchProgress,
+    Player, CourseEnrollment, CourseQuiz, DegreeProgress, Harvest, BreedingEvent,
+    CupEntry, ResearchProgress,
 )
 from ..simulation.clock import Clock, SystemClock
 from . import leveling_service
@@ -294,6 +294,138 @@ class UniversityService:
                 for k, d in self.degrees.items()
             ],
         }
+
+    # ----- quizzes --------------------------------------------------------
+    def generate_quiz(self, player_id: str, course_key: str) -> dict:
+        """Generate a 5-question MCQ quiz and persist it; returns questions without answers."""
+        self._player(player_id)
+        course = self.courses.get(course_key)
+        if course is None:
+            raise GameError(f"Unknown course '{course_key}'")
+
+        from ..ai.factory import shared_quiz
+        from ..ai.provider import AdvisorError
+
+        quiz_provider = shared_quiz()
+        lecture_cfg = course.get("lecture") or {}
+        context = {
+            "course": course.get("name", course_key),
+            "course_key": course_key,
+            "topic": lecture_cfg.get("topic", ""),
+            "objectives": lecture_cfg.get("objectives") or [],
+            "level": "beginner",
+        }
+        try:
+            report = quiz_provider.generate_quiz(context)
+        except AdvisorError as e:
+            raise GameError(f"Quiz generation failed: {e}") from e
+
+        quiz = CourseQuiz(
+            player_id=player_id,
+            course_key=course_key,
+            questions=[q.model_dump() for q in report.questions],
+        )
+        self.session.add(quiz)
+        self.session.flush()
+
+        # Return questions stripped of correct_idx/explanation (anti-cheat)
+        return {
+            "id": quiz.id,
+            "course_key": course_key,
+            "provider": quiz_provider.name(),
+            "questions": [
+                {"question": q.question, "options": q.options}
+                for q in report.questions
+            ],
+        }
+
+    def submit_quiz(self, player_id: str, quiz_id: str, answers: list) -> dict:
+        """Score a submitted quiz; reveals correct answers and awards XP on pass."""
+        self._player(player_id)
+        quiz = self.session.get(CourseQuiz, quiz_id)
+        if quiz is None or quiz.player_id != player_id:
+            raise GameError("Quiz not found")
+        if quiz.answers is not None:
+            raise GameError("Quiz already submitted")
+        if len(answers) != 5:
+            raise GameError("Must submit exactly 5 answers")
+
+        questions = quiz.questions or []
+        correct_count = 0
+        results = []
+        for q, chosen in zip(questions, answers):
+            is_correct = int(chosen) == int(q["correct_idx"])
+            if is_correct:
+                correct_count += 1
+            results.append({
+                "question": q["question"],
+                "chosen_idx": int(chosen),
+                "correct_idx": int(q["correct_idx"]),
+                "correct": is_correct,
+                "explanation": q["explanation"],
+            })
+
+        score = correct_count / len(questions) * 100.0
+        passed = score >= 60.0
+
+        xp_earned = 0
+        if passed:
+            xp_earned = int(self._univ.get("quiz_xp", 25))
+            if xp_earned:
+                leveling_service.award_xp(self.session, player_id, xp_earned, self.cfg)
+
+        quiz.answers = [int(a) for a in answers]
+        quiz.score = score
+        quiz.passed = passed
+        quiz.completed_at = self.clock.now()
+        self.session.flush()
+
+        return {
+            "quiz_id": quiz.id,
+            "score": score,
+            "passed": passed,
+            "correct_count": correct_count,
+            "total": len(questions),
+            "xp_earned": xp_earned,
+            "results": results,
+        }
+
+    def latest_quiz(self, player_id: str, course_key: str) -> Optional[dict]:
+        """Return the most recent quiz for a player+course, or None if none exists."""
+        self._player(player_id)
+        quiz = (
+            self.session.query(CourseQuiz)
+            .filter(CourseQuiz.player_id == player_id, CourseQuiz.course_key == course_key)
+            .order_by(CourseQuiz.created_at.desc())
+            .first()
+        )
+        if quiz is None:
+            return None
+
+        payload: dict = {
+            "id": quiz.id,
+            "course_key": quiz.course_key,
+            "questions": [
+                {"question": q["question"], "options": q["options"]}
+                for q in (quiz.questions or [])
+            ],
+            "completed_at": quiz.completed_at.isoformat() if quiz.completed_at else None,
+        }
+        if quiz.answers is not None:
+            payload["score"] = quiz.score
+            payload["passed"] = quiz.passed
+            payload["answers"] = quiz.answers
+            payload["results"] = [
+                {
+                    "question": q["question"],
+                    "chosen_idx": quiz.answers[i],
+                    "correct_idx": q["correct_idx"],
+                    "correct": quiz.answers[i] == q["correct_idx"],
+                    "explanation": q["explanation"],
+                }
+                for i, q in enumerate(quiz.questions or [])
+            ]
+        return payload
 
     # ----- practical checks (real game state) -----------------------------
     def _practical_met(self, player_id: str, practical: dict) -> tuple:

@@ -4,6 +4,9 @@ import type {
   Transcript,
   Enrollment,
   LectureReport,
+  QuizPending,
+  QuizSubmitResult,
+  QuizCompleted,
 } from "@/lib/types";
 
 export const university = {
@@ -39,4 +42,28 @@ export const university = {
       auth: true,
       query: opts,
     }),
+
+  // Quiz endpoints
+  generateQuiz: (playerId: string, courseKey: string) =>
+    apiFetch<QuizPending>(
+      `/players/${playerId}/courses/${courseKey}/quiz/generate`,
+      { method: "POST" },
+    ),
+
+  submitQuiz: (
+    playerId: string,
+    courseKey: string,
+    quizId: string,
+    answers: number[],
+  ) =>
+    apiFetch<QuizSubmitResult>(
+      `/players/${playerId}/courses/${courseKey}/quiz/${quizId}/submit`,
+      { method: "POST", body: { answers } },
+    ),
+
+  latestQuiz: (playerId: string, courseKey: string) =>
+    apiFetch<QuizCompleted>(
+      `/players/${playerId}/courses/${courseKey}/quiz/latest`,
+      { auth: true },
+    ),
 };

@@ -492,6 +492,26 @@ class DegreeProgress(UUIDPrimaryKeyMixin, Base):
     )
 
 
+class CourseQuiz(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    """A generated quiz attempt for a course: stores questions, player answers, and score."""
+
+    __tablename__ = "course_quizzes"
+
+    player_id: Mapped[str] = mapped_column(ForeignKey("players.id"), nullable=False, index=True)
+    course_key: Mapped[str] = mapped_column(String(64), nullable=False)
+    # questions: list of {question, options, correct_idx, explanation} dicts
+    questions: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    # answers: null until submitted; list of 5 int indices chosen by the player
+    answers: Mapped[Optional[list]] = mapped_column(JSON)
+    score: Mapped[Optional[float]] = mapped_column(Float)
+    passed: Mapped[Optional[bool]] = mapped_column(Boolean)
+    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
+
+    __table_args__ = (
+        Index("ix_quiz_player_course", "player_id", "course_key"),
+    )
+
+
 class MarketListing(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "market_listings"
 

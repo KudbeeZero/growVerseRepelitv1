@@ -98,3 +98,49 @@ class LecturerProvider(ABC):
         `context` (built by LecturerService) carries the course name, lecture
         topic + objectives, requested level, and optional live game-state.
         """
+
+
+class QuizQuestion(BaseModel):
+    """One multiple-choice question in a course quiz."""
+
+    question: str = Field(description="The question text.")
+    options: List[str] = Field(
+        description="Exactly four answer options (A, B, C, D).",
+        min_length=4,
+        max_length=4,
+    )
+    correct_idx: int = Field(
+        description="0-based index of the correct option (0–3).", ge=0, le=3
+    )
+    explanation: str = Field(
+        description="One sentence explaining why the correct answer is right."
+    )
+
+
+class QuizReport(BaseModel):
+    """Five-question multiple-choice quiz for a course."""
+
+    course_key: str = Field(default="", description="The course this quiz belongs to.")
+    provider: str = Field(default="", description="Backend that generated the quiz.")
+    questions: List[QuizQuestion] = Field(
+        default_factory=list,
+        description="Exactly 5 questions covering the course objectives.",
+        min_length=5,
+        max_length=5,
+    )
+
+
+class QuizProvider(ABC):
+    """Generates a multiple-choice quiz for a course lecture."""
+
+    @abstractmethod
+    def name(self) -> str:
+        """Backend identifier (e.g. 'mock', 'claude:...')."""
+
+    @abstractmethod
+    def generate_quiz(self, context: dict) -> QuizReport:
+        """Produce a QuizReport from a course context dict.
+
+        `context` carries course name, department, topic, objectives, and level.
+        Returns exactly 5 QuizQuestions with 4 options each.
+        """

@@ -968,6 +968,53 @@ def university_lecture(player_id, course_key):
         return _error(f"Professor unavailable: {e}", 503)
 
 
+@game_bp.post("/players/<player_id>/courses/<course_key>/quiz/generate")
+@require_player
+@limiter.limit("20 per hour")
+def university_quiz_generate(player_id, course_key):
+    """Generate a 5-question MCQ quiz for a course (AI; deterministic mock in CI)."""
+    from ..ai.provider import AdvisorError
+
+    try:
+        with session_scope() as s:
+            payload = UniversityService(s).generate_quiz(player_id, course_key)
+        return jsonify(payload), 201
+    except GameError as e:
+        return _error(str(e), 404)
+    except AdvisorError as e:
+        return _error(f"Quiz generator unavailable: {e}", 503)
+
+
+@game_bp.post("/players/<player_id>/courses/<course_key>/quiz/<quiz_id>/submit")
+@require_player
+def university_quiz_submit(player_id, course_key, quiz_id):
+    """Submit answers for a quiz; returns score, pass/fail, and per-question results."""
+    data = request.get_json(force=True, silent=True) or {}
+    answers = data.get("answers")
+    if not isinstance(answers, list) or len(answers) != 5:
+        return _error("answers must be a list of exactly 5 integers (0–3)")
+    try:
+        with session_scope() as s:
+            payload = UniversityService(s).submit_quiz(player_id, quiz_id, answers)
+        return jsonify(payload), 201
+    except GameError as e:
+        return _error(str(e), 404)
+
+
+@game_bp.get("/players/<player_id>/courses/<course_key>/quiz/latest")
+@require_player
+def university_quiz_latest(player_id, course_key):
+    """Return the most recent quiz for a player+course, or 404 if none."""
+    try:
+        with session_scope() as s:
+            payload = UniversityService(s).latest_quiz(player_id, course_key)
+        if payload is None:
+            return _error("No quiz found", 404)
+        return jsonify(payload)
+    except GameError as e:
+        return _error(str(e), 404)
+
+
 # ----- On-chain: wallet linking, NFT minting, metadata -------------------
 @game_bp.post("/players/<player_id>/wallet/link")
 @require_player

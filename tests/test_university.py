@@ -156,3 +156,139 @@ def test_unknown_course_and_double_enroll(session):
         uni.enroll(p.id, "cult-101")                     # already enrolled
     with pytest.raises(GameError):
         uni.complete_course(p.id, "nut-101")             # not enrolled
+
+
+# ----- Quiz tests ---------------------------------------------------------
+
+def test_generate_quiz_returns_five_questions(session):
+    _, p = _player(session, "quizzer")
+    uni = UniversityService(session)
+    result = uni.generate_quiz(p.id, "cult-101")
+    assert result["course_key"] == "cult-101"
+    assert "id" in result
+    questions = result["questions"]
+    assert len(questions) == 5
+    for q in questions:
+        assert "question" in q
+        assert len(q["options"]) == 4
+        # correct_idx must NOT be exposed to the client
+        assert "correct_idx" not in q
+        assert "explanation" not in q
+
+
+def test_generate_quiz_unknown_course(session):
+    _, p = _player(session, "quizzer-unk")
+    uni = UniversityService(session)
+    with pytest.raises(GameError):
+        uni.generate_quiz(p.id, "does-not-exist")
+
+
+def test_submit_quiz_scores_correctly(session):
+    _, p = _player(session, "submitter")
+    uni = UniversityService(session)
+    gen = uni.generate_quiz(p.id, "cult-101")
+    quiz_id = gen["id"]
+
+    # Peek at the DB to get correct answers (tests bypass the anti-cheat)
+    from growpodempire.db.models import CourseQuiz
+    quiz_row = session.get(CourseQuiz, quiz_id)
+    correct_answers = [q["correct_idx"] for q in quiz_row.questions]
+
+    result = uni.submit_quiz(p.id, quiz_id, correct_answers)
+    assert result["correct_count"] == 5
+    assert result["score"] == 100.0
+    assert result["passed"] is True
+    assert result["xp_earned"] > 0
+    assert len(result["results"]) == 5
+    assert all(r["correct"] for r in result["results"])
+
+
+def test_submit_quiz_partial_score(session):
+    _, p = _player(session, "partial")
+    uni = UniversityService(session)
+    gen = uni.generate_quiz(p.id, "cult-101")
+    quiz_id = gen["id"]
+
+    from growpodempire.db.models import CourseQuiz
+    quiz_row = session.get(CourseQuiz, quiz_id)
+    correct_answers = [q["correct_idx"] for q in quiz_row.questions]
+    # Get 2 wrong (fail threshold is 3/5 = 60%)
+    wrong_answers = correct_answers[:]
+    wrong_answers[0] = (wrong_answers[0] + 1) % 4
+    wrong_answers[1] = (wrong_answers[1] + 1) % 4
+
+    result = uni.submit_quiz(p.id, quiz_id, wrong_answers)
+    assert result["correct_count"] == 3
+    assert result["passed"] is True   # 3/5 passes
+    wrong_answers[2] = (wrong_answers[2] + 1) % 4
+    # Can't resubmit — new quiz needed
+    with pytest.raises(GameError, match="already submitted"):
+        uni.submit_quiz(p.id, quiz_id, wrong_answers)
+
+
+def test_submit_quiz_failing_score_no_xp(session):
+    _, p = _player(session, "failer")
+    uni = UniversityService(session)
+    gen = uni.generate_quiz(p.id, "cult-101")
+    quiz_id = gen["id"]
+
+    from growpodempire.db.models import CourseQuiz
+    quiz_row = session.get(CourseQuiz, quiz_id)
+    correct_answers = [q["correct_idx"] for q in quiz_row.questions]
+    # Get 3 wrong (fail: only 2/5 = 40%)
+    fail_answers = correct_answers[:]
+    for i in range(3):
+        fail_answers[i] = (fail_answers[i] + 1) % 4
+
+    result = uni.submit_quiz(p.id, quiz_id, fail_answers)
+    assert result["passed"] is False
+    assert result["xp_earned"] == 0
+    assert result["correct_count"] == 2
+
+
+def test_submit_quiz_wrong_length(session):
+    _, p = _player(session, "short-answers")
+    uni = UniversityService(session)
+    gen = uni.generate_quiz(p.id, "cult-101")
+    with pytest.raises(GameError, match="exactly 5"):
+        uni.submit_quiz(p.id, gen["id"], [0, 1, 2])
+
+
+def test_submit_quiz_not_found(session):
+    _, p = _player(session, "ghost")
+    uni = UniversityService(session)
+    with pytest.raises(GameError, match="not found"):
+        uni.submit_quiz(p.id, "nonexistent-id", [0, 1, 2, 3, 0])
+
+
+def test_latest_quiz_none_before_any_generated(session):
+    _, p = _player(session, "no-quiz-yet")
+    uni = UniversityService(session)
+    assert uni.latest_quiz(p.id, "cult-101") is None
+
+
+def test_latest_quiz_returns_pending_then_complete(session):
+    _, p = _player(session, "latest-flow")
+    uni = UniversityService(session)
+    gen = uni.generate_quiz(p.id, "cult-101")
+    quiz_id = gen["id"]
+
+    # Before submit: no score/results
+    pending = uni.latest_quiz(p.id, "cult-101")
+    assert pending is not None
+    assert pending["id"] == quiz_id
+    assert "score" not in pending
+    assert len(pending["questions"]) == 5
+    assert "correct_idx" not in pending["questions"][0]
+
+    # After submit: score and results appear
+    from growpodempire.db.models import CourseQuiz
+    quiz_row = session.get(CourseQuiz, quiz_id)
+    correct_answers = [q["correct_idx"] for q in quiz_row.questions]
+    uni.submit_quiz(p.id, quiz_id, correct_answers)
+
+    completed = uni.latest_quiz(p.id, "cult-101")
+    assert completed is not None
+    assert completed["score"] == 100.0
+    assert completed["passed"] is True
+    assert len(completed["results"]) == 5
