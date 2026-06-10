@@ -260,6 +260,12 @@ export function Constellation({
       canvas!.height = h * dpr;
       canvas!.style.width = `${w}px`;
       canvas!.style.height = `${h}px`;
+      // Setting canvas.width wipes the backing store. The animated path
+      // repaints on the next RAF, but reduced-motion renders exactly one
+      // static frame — and ResizeObserver.observe() always fires an initial
+      // async callback, which would land after that frame and leave the
+      // canvas permanently blank. Repaint synchronously instead.
+      if (reduced) draw();
     }
     resize();
     const ro = new ResizeObserver(resize);

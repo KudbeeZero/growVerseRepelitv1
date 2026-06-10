@@ -76,6 +76,14 @@ describe("Constellation lifecycle contracts", () => {
     expect(SRC).toContain("ro.disconnect()");
   });
 
+  it("resize repaints the static frame in reduced-motion mode", () => {
+    // Setting canvas.width clears the backing store; ResizeObserver.observe()
+    // always fires an initial async callback after the one reduced-motion
+    // draw. Without a synchronous repaint, reduced-motion users get a
+    // permanently blank canvas.
+    expect(functionBody("resize")).toContain("if (reduced) draw()");
+  });
+
   it("does not touch the sacred geometry/physics/render functions", () => {
     const expected: Record<string, string> = {
       leafParticles: "4730224577faa700724cae8f16b880dc6697b8c947670cc7a302d01b48a66d21",
