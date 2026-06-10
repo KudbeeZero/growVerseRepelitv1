@@ -4,10 +4,21 @@
 > the end of every chat; read by `/handoff-audit` at the start of the next. If this file and
 > the code disagree, the code wins — fix the baton. See `docs/SESSION_PROTOCOL.md`.
 
-**Last rewritten:** 2026-06-10 · **By:** protocol install + integrity gates + sim cost cap chat
-**Active branch:** `claude/session-relay-protocol-ybubw7`
-**Open PR awaiting audit:** _this branch's PR — run `/handoff-audit` on it next chat._
+**Last rewritten:** 2026-06-10 · **By:** Bomb Squad night shift (web viz lifecycle defects)
+**Active branch:** `claude/bomb-squad-defects-un7ldl`
+**Open PR awaiting audit:** _this branch's PR (Bomb Squad 2026-06-10) — plus the earlier
+`claude/session-relay-protocol-ybubw7` PR if still unaudited. Run `/handoff-audit` next chat._
 **Previous PR audit status:** n/a (protocol bootstrap)
+
+> **Bomb Squad addendum (2026-06-10, same day, separate branch):** fixed two lifecycle
+> defects in `web/src/components/viz/Constellation.tsx` — (1) reduced-motion users got a
+> permanently blank canvas (ResizeObserver's initial async callback reset `canvas.width`
+> after the single static draw); (2) unhandled `pointercancel` could strand `dragging=true`
+> (phantom pan + particle velocity injection). RAF lifecycle audited and confirmed inert.
+> Source-contract tripwires added in `web/src/components/viz/__tests__/constellationLifecycle.test.ts`
+> (incl. sacred-render hashes pinning leafParticles/graphParticles/step/draw). Full report:
+> `night-reports/BOMB-SQUAD-2026-06-10.md`. Note: web CI still doesn't execute vitest —
+> recommended follow-up in the report. The NEXT ACTION below is unchanged.
 
 ---
 
