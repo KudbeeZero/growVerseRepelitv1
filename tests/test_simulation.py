@@ -170,3 +170,74 @@ def test_water_action_raises_water_level(db):
         sim = SimulationService(s, clock=FrozenClock(BASE + timedelta(hours=1)))
         sim.water(pid, plant.id, amount=40)
         assert plant.water_level > 30.0
+
+
+# --- compute-on-read cost cap (dormancy) -------------------------------------
+
+def _capped_cfg(hours):
+    import copy
+    from growpodempire.economy.config import EconomyConfig
+    raw = copy.deepcopy(CFG.raw)
+    raw["simulation"]["max_catchup_hours"] = hours
+    return EconomyConfig(raw=raw)
+
+
+def test_long_idle_read_is_bounded_and_converges(session, monkeypatch):
+    # An automated pod keeps a plant alive indefinitely — the worst case for
+    # compute-on-read. A 5-year absence must cost at most one cap window of
+    # steps, land exactly at `now` (no time-debt carried to the next read),
+    # and leave an auditable dormancy event for the skipped span.
+    _, pod, plant = _plant(session)
+    pod.auto_water = True
+    pod.auto_feed = True
+
+    cfg = _capped_cfg(240)  # small window keeps the test fast
+    calls = {"n": 0}
+    real_step = engine._step
+
+    def counting_step(*args, **kwargs):
+        calls["n"] += 1
+        return real_step(*args, **kwargs)
+
+    monkeypatch.setattr(engine, "_step", counting_step)
+
+    now = BASE + timedelta(days=5 * 365)
+    events = engine.catch_up(session, plant, now, cfg)
+
+    assert calls["n"] <= 240                       # bounded work per read
+    assert plant.last_tick_at == now               # converged in ONE read
+    dormancy = [e for e in events if e.event_type == "dormancy"]
+    assert len(dormancy) == 1
+    assert dormancy[0].payload["skipped_hours"] == 5 * 365 * 24 - 240
+
+    # A follow-up read pays nothing extra.
+    calls["n"] = 0
+    engine.catch_up(session, plant, now + timedelta(minutes=30), cfg)
+    assert calls["n"] == 0
+
+    # The stage clock paused with the plant: the dormant gap must not be
+    # counted as time-in-stage, so the next hours don't cascade stage changes.
+    events2 = engine.catch_up(session, plant, now + timedelta(hours=5), cfg)
+    assert not any(e.event_type == "stage_change" for e in events2)
+
+
+def test_cap_leaves_normal_reads_untouched(session):
+    # Elapsed under the cap: the dormancy path must not fire at all — the
+    # plant advances fully to `now` with no dormancy event (near-term parity).
+    _, _, plant = _plant(session)
+    now = BASE + timedelta(hours=48)
+    events = engine.catch_up(session, plant, now, CFG)
+    assert plant.last_tick_at == now
+    assert not any(e.event_type == "dormancy" for e in events)
+
+
+def test_long_idle_unattended_plant_dies_without_dormancy(session):
+    # Without automation the plant dies early in the window; the loop breaks
+    # on death, so a huge absence is cheap and records no dormancy (the dead
+    # fast path keeps every later read O(1)).
+    _, _, plant = _plant(session, humidity=75, temperature=33)
+    events = engine.catch_up(session, plant, BASE + timedelta(days=400), CFG)
+    assert plant.is_alive is False
+    assert not any(e.event_type == "dormancy" for e in events)
+    engine.catch_up(session, plant, BASE + timedelta(days=401), CFG)
+    assert plant.last_tick_at == BASE + timedelta(days=401)

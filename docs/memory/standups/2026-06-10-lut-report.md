@@ -61,3 +61,15 @@ chat, one PR, starting with `/handoff-audit`.
 
 ---
 *Compiled on branch `claude/session-relay-protocol-ybubw7`.*
+
+---
+
+## Addendum (same day, second unit of work) — sim cost cap shipped
+The baton's NEXT ACTION landed: **compute-on-read is now bounded** (OPEN RISK #2 closed,
+test-backed). The pre-existing clamp bounded one loop but not convergence — a derelict plant
+repaid the full cap window (measured **310 ms**) on *every* read. Now an absence beyond
+`max_catchup_hours` becomes recorded **dormancy** (stage clock pauses, plant lands at `now`,
+auditable `dormancy` event): **311 ms once ever, 0.1 ms after**; near-term reads bit-identical
+(parity-tested). +3 tests → **185 passed**, coverage **79.26%**, floor ratcheted **78 → 79**.
+ADR in `DECISIONS.md`; ARCHITECTURE risk list updated (residual: first-read bursts at scale →
+background materialization). Next per the baton: idempotency keys (risk #3).

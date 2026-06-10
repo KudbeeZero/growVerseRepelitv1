@@ -247,7 +247,9 @@ def catch_up(session, plant: Plant, now: datetime, cfg) -> List[PlantEvent]:
     }
 
     elapsed_hours = int((now - plant.last_tick_at).total_seconds() // 3600)
-    elapsed_hours = max(0, min(elapsed_hours, sim.get("max_catchup_hours", 8760)))
+    raw_elapsed = max(0, elapsed_hours)
+    cap = int(sim.get("max_catchup_hours", 8760))
+    elapsed_hours = min(raw_elapsed, cap)
 
     prev_conditions = {f["condition"] for f in (plant.condition_flags or [])}
 
@@ -273,6 +275,23 @@ def catch_up(session, plant: Plant, now: datetime, cfg) -> List[PlantEvent]:
 
         if not plant.is_alive:
             break
+
+    # Dormancy: an absence longer than the cap simulates only the first
+    # `cap` hours, then pauses the plant through the rest of the gap (the
+    # stage clock shifts with it) and lands at `now`. This bounds every
+    # read at one cap window — without it a capped plant stays behind
+    # `now` and each subsequent read pays the full cap again. The skip is
+    # recorded as an auditable event.
+    if plant.is_alive and raw_elapsed > cap:
+        skipped = raw_elapsed - cap
+        plant.last_tick_at += timedelta(hours=skipped)
+        plant.stage_entered_at += timedelta(hours=skipped)
+        emitted.append(
+            _record_event(
+                session, plant, plant.last_tick_at, "dormancy", None,
+                {"skipped_hours": skipped},
+            )
+        )
 
     plant.condition_flags = reactions.compute_conditions(plant, sim)
     return emitted

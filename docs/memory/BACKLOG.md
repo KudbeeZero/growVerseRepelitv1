@@ -42,7 +42,12 @@ once they appear here. Last reconciled: **2026-06-10**.
   not exist — `.github/workflows/ci.yml` was built for real this session.)*
 - 🟠 ⬜ **Sprint 4: real TestNet + IPFS** — fund treasury, run `reset_asa`, wire `ASA_ID`; move NFT
   metadata to IPFS; add a DB↔chain reconciliation job + `onchain_txid` audit.
-- 🟠 ⬜ **Sim cost cap** — bound compute-on-read catch-up; batch/materialize dormant plants.
+- 🟠 ✅ **Sim cost cap** (2026-06-10) — compute-on-read is bounded: one catch-up simulates at most
+  `max_catchup_hours`, then the plant goes **dormant** through the rest of the gap (stage clock
+  pauses; auditable `dormancy` event) and lands at `now` — one cap window once ever per derelict
+  plant (311 ms → 0.1 ms on the next read), near-term reads bit-identical (parity-tested). +3 tests
+  (185 total). ADR in `DECISIONS.md`. *Remaining (⬜): background materialization for bursts of
+  first-reads at scale.*
 - 🟠 ⬜ **Idempotency keys on mutations** — protect ledger/economy from double-submits & retries.
 - 🟠 ⬜ **Load/soak test the `/state` catch-up path** to find the cost knee before players do.
 - 🟠 ⬜ **Web e2e smoke** (Playwright) over the full loop; today web CI is lint/typecheck/build only.

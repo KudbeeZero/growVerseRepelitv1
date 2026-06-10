@@ -63,8 +63,11 @@ genetics targets, the trust layer) see the **Design Codex** at `docs/memory/desi
    path.
 
 ## Known structural risks (watch these)
-- **Sim cost is O(elapsed hours)** per plant on read. Fine now; needs a cap + background
-  batching/materialization for dormant plants at scale.
+- **Sim cost per read is bounded** (fixed 2026-06-10): one catch-up simulates at most
+  `simulation.max_catchup_hours` (balance.yaml); a longer absence becomes recorded `dormancy`
+  (state + stage clock pause, then the plant lands at `now`), so a derelict plant costs one cap
+  window **once**, not per read. Residual watch: many derelict plants hitting their first read in
+  the same request burst; background materialization remains the at-scale answer.
 - **Custodial key custody** (treasury/ASA, future player keys): must be encrypted at rest /
   secrets-manager only before any real value moves. Today it's TestNet/mock.
 - **Minting is still mock / not wired to a funded TestNet ASA** (`ASA_ID` unset; metadata not on
