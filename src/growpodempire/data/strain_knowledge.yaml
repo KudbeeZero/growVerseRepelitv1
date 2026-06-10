@@ -625,3 +625,703 @@ super-lemon-haze:
     height: "tall (1.5-2.4 m)"
     resilience: "vigorous, resinous; stretchy sativa that rewards training"
   notes: "A two-time Cannabis Cup winner — explosively lemony and energizing; a modern Haze benchmark."
+
+gelato:
+  aka: ["Larry Bird", "Gelato #42"]
+  lineage: "Sunset Sherbet x Thin Mint GSC"
+  origin: "USA (San Francisco Bay Area)"
+  type: photoperiod
+  genotype: "55% Indica / 45% Sativa"
+  aroma: [sweet, citrus, dessert, berry]
+  flavor: [creamy, citrus, lavender, sweet]
+  effects: [euphoric, relaxed, creative, uplifting]
+  medical: [stress, pain, depression, fatigue]
+  terpenes:
+    caryophyllene: "peppery, spicy — binds CB2"
+    limonene: "bright citrus — mood-lifting"
+    myrcene: "earthy, musky — relaxing"
+  cannabinoids: {thc: "20-25%", cbd: "<1%", cbg: "low", thcv: "trace"}
+  morphology: "medium height, dense colorful buds, dark purple hues, heavy trichomes"
+  grow:
+    difficulty: moderate
+    environment: [indoor, greenhouse, outdoor]
+    flowering_weeks: "8-9"
+    photoperiod: "flip to 12/12 to flower"
+    optimal: {temp_c: "20-26", rh_veg_pct: "55-65", rh_flower_pct: "40-50", vpd_kpa: "0.9-1.3", dli: "35-45"}
+    yield_indoor_g_m2: "450-550"
+    yield_outdoor_g_plant: "400-550"
+    height: "medium (0.9-1.6 m)"
+    resilience: "moderately resistant; benefits from defoliation and airflow"
+  notes: "A flagship of the modern dessert-hybrid era — loud sweet nose, balanced heady-to-relaxed effect."
+
+wedding-cake:
+  aka: ["Triangle Mints #23", "Pink Cookies"]
+  lineage: "Triangle Kush x Animal Mints"
+  origin: "USA (Seed Junky Genetics)"
+  type: photoperiod
+  genotype: "60% Indica / 40% Sativa"
+  aroma: [vanilla, sweet, earthy, pepper]
+  flavor: [vanilla, doughy, tangy, sweet]
+  effects: [relaxed, euphoric, happy, sleepy]
+  medical: [pain, insomnia, stress, appetite-loss]
+  terpenes:
+    caryophyllene: "peppery, spicy — binds CB2"
+    limonene: "bright citrus — mood-lifting"
+    humulene: "hoppy, woody — earthy depth"
+  cannabinoids: {thc: "23-27%", cbd: "<1%", cbg: "low", thcv: "trace"}
+  morphology: "compact bushy plant, dense frosty buds, thick trichome coat, pale green with amber pistils"
+  grow:
+    difficulty: hard
+    environment: [indoor, greenhouse]
+    flowering_weeks: "9"
+    photoperiod: "flip to 12/12 to flower"
+    optimal: {temp_c: "20-26", rh_veg_pct: "55-65", rh_flower_pct: "40-50", vpd_kpa: "1.0-1.4", dli: "38-48"}
+    yield_indoor_g_m2: "500-600"
+    yield_outdoor_g_plant: "450-600"
+    height: "medium (0.8-1.5 m)"
+    resilience: "dense buds; demands strict humidity control to avoid bud rot"
+  notes: "Leafly Strain of the Year 2019 — high-potency, frosty dessert indica-hybrid prized for flavor and relaxation."
+
+zkittlez:
+  aka: ["Skittlez", "The Original Z"]
+  lineage: "Grape Ape x Grapefruit"
+  origin: "USA (California — 3rd Gen Family & Terp Hogz)"
+  type: photoperiod
+  genotype: "70% Indica / 30% Sativa"
+  aroma: [tropical, berry, grape, sweet]
+  flavor: [fruity, candy, grape, citrus]
+  effects: [relaxed, happy, uplifted, focused]
+  medical: [stress, anxiety, depression, pain]
+  terpenes:
+    myrcene: "earthy, musky — relaxing"
+    limonene: "bright citrus — mood-lifting"
+    caryophyllene: "peppery, spicy — binds CB2"
+  cannabinoids: {thc: "15-23%", cbd: "<1%", cbg: "low", thcv: "trace"}
+  morphology: "short stocky plant, dense olive-green buds, purple accents, sticky resinous calyxes"
+  grow:
+    difficulty: easy
+    environment: [indoor, greenhouse, outdoor]
+    flowering_weeks: "8"
+    photoperiod: "flip to 12/12 to flower"
+    optimal: {temp_c: "20-26", rh_veg_pct: "55-65", rh_flower_pct: "40-50", vpd_kpa: "0.9-1.3", dli: "35-45"}
+    yield_indoor_g_m2: "450-500"
+    yield_outdoor_g_plant: "500-800"
+    height: "short to medium (0.7-1.3 m)"
+    resilience: "robust and forgiving; good mold and pest tolerance for beginners"
+  notes: "A multi-Cup-winning candy strain — intensely sweet tropical-fruit terpenes with a calm, clear-headed body buzz."
+
+runtz:
+  aka: ["Runtz OG", "Gelato Zkittlez"]
+  lineage: "Zkittlez x Gelato #33"
+  origin: "USA (Los Angeles — Cookies Fam & Runtz Crew)"
+  type: photoperiod
+  genotype: "50% Indica / 50% Sativa"
+  aroma: [candy, fruity, sweet, gassy]
+  flavor: [candy, tropical, creamy, sweet]
+  effects: [euphoric, relaxed, happy, giggly]
+  medical: [stress, depression, pain, anxiety]
+  terpenes:
+    caryophyllene: "peppery, spicy — binds CB2"
+    limonene: "bright citrus — mood-lifting"
+    myrcene: "earthy, musky — relaxing"
+  cannabinoids: {thc: "19-29%", cbd: "<1%", cbg: "low", thcv: "trace"}
+  morphology: "medium plant, dense lime-green buds with deep purple hues, glittering trichome frost"
+  grow:
+    difficulty: hard
+    environment: [indoor, greenhouse]
+    flowering_weeks: "8-9"
+    photoperiod: "flip to 12/12 to flower"
+    optimal: {temp_c: "20-26", rh_veg_pct: "55-65", rh_flower_pct: "40-50", vpd_kpa: "1.0-1.4", dli: "38-48"}
+    yield_indoor_g_m2: "475-575"
+    yield_outdoor_g_plant: "450-600"
+    height: "medium (0.9-1.5 m)"
+    resilience: "needs attentive feeding and airflow; rewards experienced growers with heavy resin"
+  notes: "A modern legend of the exotic era — candy-sweet nose over a gassy backbone, balanced euphoric-to-relaxed effect."
+
+sunset-sherbet:
+  aka: ["Sherbet", "Sunset Sherbert"]
+  lineage: "Girl Scout Cookies x Pink Panties"
+  origin: "USA (Bay Area — Mr. Sherbinski)"
+  type: photoperiod
+  genotype: "85% Indica / 15% Sativa"
+  aroma: [sweet, citrus, candy, earthy]
+  flavor: [sweet, citrus, creamy, berry]
+  effects: [relaxed, happy, uplifted, calm]
+  medical: [stress, anxiety, pain, insomnia]
+  terpenes:
+    caryophyllene: "peppery, spicy — binds CB2"
+    limonene: "bright citrus — mood-lifting"
+    myrcene: "earthy, musky — relaxing"
+  cannabinoids: {thc: "16-20%", cbd: "<1%", cbg: "low", thcv: "trace"}
+  morphology: "medium bushy plant, chunky buds with orange hairs and purple tones, frosty trichome layer"
+  grow:
+    difficulty: moderate
+    environment: [indoor, greenhouse, outdoor]
+    flowering_weeks: "9"
+    photoperiod: "flip to 12/12 to flower"
+    optimal: {temp_c: "20-26", rh_veg_pct: "55-65", rh_flower_pct: "40-50", vpd_kpa: "0.9-1.3", dli: "35-45"}
+    yield_indoor_g_m2: "400-500"
+    yield_outdoor_g_plant: "400-550"
+    height: "medium (0.9-1.5 m)"
+    resilience: "moderately resistant; appreciates pruning and steady airflow"
+  notes: "The terpene-rich parent of Gelato — smooth sweet-citrus dessert indica with a deeply relaxing, mood-lifting effect."
+
+purple-punch:
+  aka: ["Purple Punch S1"]
+  lineage: "Larry OG x Granddaddy Purple"
+  origin: "USA (California)"
+  type: photoperiod
+  genotype: "80% Indica / 20% Sativa"
+  aroma: [grape, berry, candy, sweet]
+  flavor: [grape, blueberry, candy, vanilla]
+  effects: [relaxed, euphoric, sleepy, body-heavy]
+  medical: [stress, insomnia, pain, anxiety]
+  terpenes:
+    caryophyllene: "peppery, spicy — anti-inflammatory"
+    limonene: "citrus, sweet — mood-lifting"
+    myrcene: "earthy, musky — sedative"
+  cannabinoids: {thc: "18-25%", cbd: "<1%", cbg: "low", thcv: "trace"}
+  morphology: "medium, dense purple-tinged buds with frosty trichome coverage"
+  grow:
+    difficulty: moderate
+    environment: [indoor, greenhouse, outdoor]
+    flowering_weeks: "7-8"
+    photoperiod: "flip to 12/12 to flower"
+    optimal: {temp_c: "20-26", rh_veg_pct: "55-65", rh_flower_pct: "40-50", vpd_kpa: "0.8-1.2", dli: "30-40"}
+    yield_indoor_g_m2: "450-550"
+    yield_outdoor_g_plant: "500-600"
+    height: "medium (1.0-1.6 m)"
+    resilience: "moderately hardy; watch bud rot on dense colas — keep late-flower RH low"
+  notes: "A dessert-grade indica hybrid famed for its grape-candy nose and a smooth, sedating body-melt."
+
+do-si-dos:
+  aka: ["Dosidos", "Dosi"]
+  lineage: "OG Kush Breath (OGKB) x Face Off OG"
+  origin: "USA (Oregon, Archive Seed Bank)"
+  type: photoperiod
+  genotype: "70% Indica / 30% Sativa"
+  aroma: [earthy, floral, pine, sweet]
+  flavor: [earthy, sweet, mint, floral]
+  effects: [relaxed, euphoric, creative, body-heavy]
+  medical: [stress, insomnia, pain, depression]
+  terpenes:
+    limonene: "citrus, sweet — mood-lifting"
+    caryophyllene: "peppery, spicy — anti-inflammatory"
+    myrcene: "earthy, musky — sedative"
+  cannabinoids: {thc: "20-30%", cbd: "<1%", cbg: "low", thcv: "trace"}
+  morphology: "compact, sticky lime-green buds with purple hints and heavy resin"
+  grow:
+    difficulty: hard
+    environment: [indoor, greenhouse]
+    flowering_weeks: "8-10"
+    photoperiod: "flip to 12/12 to flower"
+    optimal: {temp_c: "20-26", rh_veg_pct: "55-65", rh_flower_pct: "40-50", vpd_kpa: "0.8-1.3", dli: "30-45"}
+    yield_indoor_g_m2: "400-500"
+    yield_outdoor_g_plant: "450-550"
+    height: "medium (1.0-1.5 m)"
+    resilience: "rewards experienced growers; benefits from training and careful feeding"
+  notes: "A high-potency GSC-lineage indica hybrid delivering a knockout full-body stone with a creative front end."
+
+grape-ape:
+  aka: ["Purple Ape", "Ape"]
+  lineage: "Mendocino Purps x Skunk #1 x Afghani"
+  origin: "USA (California, Apothecary Genetics)"
+  type: photoperiod
+  genotype: "90% Indica / 10% Sativa"
+  aroma: [grape, berry, sweet, earthy]
+  flavor: [grape, candy, sweet, earthy]
+  effects: [relaxed, sleepy, body-heavy, calming]
+  medical: [pain, insomnia, stress, anxiety]
+  terpenes:
+    myrcene: "earthy, musky — sedative"
+    caryophyllene: "peppery, spicy — anti-inflammatory"
+    pinene: "pine, fresh — alertness, bronchodilator"
+  cannabinoids: {thc: "18-24%", cbd: "<1%", cbg: "low", thcv: "trace"}
+  morphology: "short, bushy broad-leaf; dense purple buds; heavy resin"
+  grow:
+    difficulty: easy
+    environment: [indoor, greenhouse, outdoor]
+    flowering_weeks: "7-8"
+    photoperiod: "flip to 12/12 to flower"
+    optimal: {temp_c: "18-26", rh_veg_pct: "55-65", rh_flower_pct: "40-50", vpd_kpa: "0.8-1.2", dli: "30-40"}
+    yield_indoor_g_m2: "400-500"
+    yield_outdoor_g_plant: "450-550"
+    height: "short (0.8-1.4 m)"
+    resilience: "hardy, mold-aware on dense purple buds — keep RH low in late flower"
+  notes: "A classic purple indica prized for grape candy aroma and deep physical relaxation."
+
+master-kush:
+  aka: ["Master Kush Skunk", "High Rise"]
+  lineage: "Hindu Kush x Skunk #1"
+  origin: "Netherlands (Amsterdam, White Label / Sensi Seeds)"
+  type: photoperiod
+  genotype: "85% Indica / 15% Sativa"
+  aroma: [earthy, musky, pine, citrus]
+  flavor: [earthy, hash, pine, citrus]
+  effects: [relaxed, sleepy, happy, calming]
+  medical: [stress, pain, insomnia, appetite-loss]
+  terpenes:
+    myrcene: "earthy, musky — sedative"
+    caryophyllene: "peppery, spicy — anti-inflammatory"
+    pinene: "pine, fresh — alertness, bronchodilator"
+  cannabinoids: {thc: "15-24%", cbd: "1%", cbg: "low", thcv: "trace"}
+  morphology: "short, sturdy Afghan-type; dense resin-coated buds with classic hash aroma"
+  grow:
+    difficulty: easy
+    environment: [indoor, greenhouse, outdoor]
+    flowering_weeks: "7-8"
+    photoperiod: "flip to 12/12 to flower"
+    optimal: {temp_c: "18-26", rh_veg_pct: "55-65", rh_flower_pct: "40-50", vpd_kpa: "0.8-1.2", dli: "28-38"}
+    yield_indoor_g_m2: "450-550"
+    yield_outdoor_g_plant: "500-600"
+    height: "short (0.8-1.3 m)"
+    resilience: "very hardy and forgiving; strong mold and pest tolerance, ideal for beginners"
+  notes: "A landrace-rooted Afghan indica beloved for its dependable, low-maintenance grow and heavy hash-like stone."
+
+la-confidential:
+  aka: ["LA Confidential OG", "LAC"]
+  lineage: "OG LA Affie x Afghani"
+  origin: "USA (California, DNA Genetics)"
+  type: photoperiod
+  genotype: "80% Indica / 20% Sativa"
+  aroma: [earthy, pine, skunk, spicy]
+  flavor: [earthy, pine, hash, lime]
+  effects: [relaxed, euphoric, sleepy, body-heavy]
+  medical: [pain, insomnia, stress, anxiety]
+  terpenes:
+    myrcene: "earthy, musky — sedative"
+    limonene: "citrus, sweet — mood-lifting"
+    caryophyllene: "peppery, spicy — anti-inflammatory"
+  cannabinoids: {thc: "18-26%", cbd: "<1%", cbg: "low", thcv: "trace"}
+  morphology: "medium, frosty buds with purple fade and a pungent piney-skunk dankness"
+  grow:
+    difficulty: moderate
+    environment: [indoor, greenhouse, outdoor]
+    flowering_weeks: "7-8"
+    photoperiod: "flip to 12/12 to flower"
+    optimal: {temp_c: "18-26", rh_veg_pct: "55-65", rh_flower_pct: "40-50", vpd_kpa: "0.8-1.2", dli: "30-40"}
+    yield_indoor_g_m2: "400-500"
+    yield_outdoor_g_plant: "450-550"
+    height: "medium (1.0-1.5 m)"
+    resilience: "robust Afghan vigor; moderate care, watch dense buds for late-flower mold"
+  notes: "A legendary DNA Genetics indica with a piney-skunk dankness and a heavy, couch-locking body high."
+
+amnesia-haze:
+  aka: ["Amnesia"]
+  lineage: "Haze x (Afghani / Hawaiian / Laotian / Jamaican / Thai / Cambodian) hybrid"
+  origin: "Netherlands (Soma, ~2003; Haze backbone from US/Jamaican/Thai roots)"
+  type: photoperiod
+  genotype: "20% Indica / 80% Sativa"
+  aroma: [citrus, lemon, earthy, spicy]
+  flavor: [lemon, citrus, sweet, earthy]
+  effects: [energetic, uplifting, euphoric, cerebral]
+  medical: [depression, fatigue, stress, focus]
+  terpenes:
+    terpinolene: "fresh herbal-citrus — haze signature"
+    limonene: "bright citrus"
+    caryophyllene: "light pepper"
+  cannabinoids: {thc: "20-25%", cbd: "<1%", cbg: "low", thcv: "notable"}
+  morphology: "tall, stretchy sativa; long airy colas; heavy trichome coverage"
+  grow:
+    difficulty: hard
+    environment: [indoor, greenhouse, outdoor]
+    flowering_weeks: "10-11"
+    photoperiod: "flip to 12/12; big stretch — flip early, support and train"
+    optimal: {temp_c: "21-28", rh_veg_pct: "55-65", rh_flower_pct: "40-50", vpd_kpa: "1.0-1.4", dli: "40-55"}
+    yield_indoor_g_m2: "500-600"
+    yield_outdoor_g_plant: "600-800"
+    height: "tall (1.6-2.5 m)"
+    resilience: "vigorous but long-flowering and stretchy; rewards experienced growers"
+  notes: "A multi-Cup-winning sativa benchmark — soaring cerebral energy and a loud lemon-haze nose."
+
+green-crack:
+  aka: ["Green Cush", "Mango Crack"]
+  lineage: "Skunk #1 x Afghani landrace"
+  origin: "USA (Athens, Georgia / popularized via Skunk #1 genetics)"
+  type: photoperiod
+  genotype: "35% Indica / 65% Sativa"
+  aroma: [mango, citrus, earthy, tropical]
+  flavor: [mango, citrus, sweet, earthy]
+  effects: [energetic, uplifting, focused, invigorating]
+  medical: [fatigue, depression, stress, nausea]
+  terpenes:
+    myrcene: "herbal-earthy, mango undertone"
+    caryophyllene: "peppery spice"
+    limonene: "bright citrus lift"
+  cannabinoids: {thc: "15-21%", cbd: "<1%", cbg: "low", thcv: "trace"}
+  morphology: "compact-to-medium sativa; dense tapered colas; bright orange pistils"
+  grow:
+    difficulty: moderate
+    environment: [indoor, greenhouse, outdoor]
+    flowering_weeks: "7-9"
+    photoperiod: "flip to 12/12; manageable stretch — easy daytime daily driver"
+    optimal: {temp_c: "20-28", rh_veg_pct: "55-65", rh_flower_pct: "40-50", vpd_kpa: "1.0-1.4", dli: "35-50"}
+    yield_indoor_g_m2: "450-550"
+    yield_outdoor_g_plant: "400-600"
+    height: "medium (1.0-1.8 m)"
+    resilience: "hardy, fast, forgiving — a strong beginner-friendly sativa"
+  notes: "The quintessential wake-and-bake sativa — sharp mango-citrus energy and a quick finish."
+
+trainwreck:
+  aka: ["Train Wreck"]
+  lineage: "Mexican sativa x Thai sativa x Afghani indica"
+  origin: "USA (Northern California / Arcata, late 1970s)"
+  type: photoperiod
+  genotype: "30% Indica / 70% Sativa"
+  aroma: [lemon, pine, spicy, earthy]
+  flavor: [lemon, pine, sweet, spicy]
+  effects: [energetic, euphoric, creative, uplifting]
+  medical: [stress, pain, depression, anxiety]
+  terpenes:
+    terpinolene: "piney herbal sativa lift"
+    pinene: "sharp fresh pine"
+    myrcene: "earthy-herbal base"
+  cannabinoids: {thc: "18-25%", cbd: "<1%", cbg: "low", thcv: "trace"}
+  morphology: "tall, vigorous sativa; large frosty colas; hits like a freight train"
+  grow:
+    difficulty: moderate
+    environment: [indoor, greenhouse, outdoor]
+    flowering_weeks: "8-10"
+    photoperiod: "flip to 12/12; notable stretch — train and support heavy colas"
+    optimal: {temp_c: "20-28", rh_veg_pct: "55-65", rh_flower_pct: "40-50", vpd_kpa: "1.0-1.4", dli: "38-52"}
+    yield_indoor_g_m2: "500-600"
+    yield_outdoor_g_plant: "500-700"
+    height: "tall (1.5-2.2 m)"
+    resilience: "vigorous and productive; manageable for intermediate growers"
+  notes: "A classic NorCal sativa — sweet lemon-pine nose and a fast, freight-train cerebral rush."
+
+purple-haze:
+  aka: ["Purple Haze"]
+  lineage: "Purple Thai x Haze"
+  origin: "USA (1960s-70s psychedelic-era sativa; Purple Thai/Haze roots)"
+  type: photoperiod
+  genotype: "25% Indica / 75% Sativa"
+  aroma: [berry, grape, earthy, sweet]
+  flavor: [berry, grape, sweet, spicy]
+  effects: [energetic, euphoric, creative, dreamy]
+  medical: [stress, depression, fatigue, pain]
+  terpenes:
+    myrcene: "earthy-berry base"
+    limonene: "bright citrus lift"
+    humulene: "subtle hoppy-woody spice"
+  cannabinoids: {thc: "16-20%", cbd: "<1%", cbg: "low", thcv: "trace"}
+  morphology: "tall sativa with anthocyanin-driven lavender/violet buds; deepens in cool temps; frosty trichomes and bright orange pistils"
+  grow:
+    difficulty: moderate
+    environment: [indoor, greenhouse, outdoor]
+    flowering_weeks: "9-10"
+    photoperiod: "flip to 12/12; cool late-flower nights bring out the purple coloration"
+    optimal: {temp_c: "18-27", rh_veg_pct: "55-65", rh_flower_pct: "40-50", vpd_kpa: "1.0-1.4", dli: "38-52"}
+    yield_indoor_g_m2: "400-500"
+    yield_outdoor_g_plant: "400-600"
+    height: "tall (1.6-2.0 m)"
+    resilience: "classic stretchy Haze sativa; cool finishing temps reward the purple phenotype"
+  notes: "The iconic psychedelic-era sativa — vivid purple buds, sweet berry nose and a dreamy, creative high."
+
+strawberry-cough:
+  aka: ["Strawberry Cough"]
+  lineage: "Strawberry Fields x Haze (clone-only origin)"
+  origin: "USA (Connecticut clone-only, popularized by Kyle Kushman ~1999)"
+  type: photoperiod
+  genotype: "20% Indica / 80% Sativa"
+  aroma: [strawberry, berry, sweet, earthy]
+  flavor: [strawberry, berry, sweet, spicy]
+  effects: [energetic, uplifting, euphoric, social]
+  medical: [stress, anxiety, depression, fatigue]
+  terpenes:
+    myrcene: "sweet earthy berry base"
+    pinene: "fresh pine edge"
+    caryophyllene: "light peppery spice"
+  cannabinoids: {thc: "18-23%", cbd: "<1%", cbg: "low", thcv: "trace"}
+  morphology: "medium-tall sativa; dense resinous colas; sweet strawberry nose"
+  grow:
+    difficulty: moderate
+    environment: [indoor, greenhouse, outdoor]
+    flowering_weeks: "9"
+    photoperiod: "flip to 12/12; moderate stretch — a clean, social daytime sativa"
+    optimal: {temp_c: "20-28", rh_veg_pct: "55-65", rh_flower_pct: "40-50", vpd_kpa: "1.0-1.4", dli: "38-52"}
+    yield_indoor_g_m2: "400-500"
+    yield_outdoor_g_plant: "400-550"
+    height: "medium-tall (1.3-1.9 m)"
+    resilience: "stable and aromatic; approachable for intermediate growers"
+  notes: "Famed for its true strawberry sweetness — smooth, social and brightly uplifting cerebral energy."
+
+tangie:
+  aka: ["Tangerine Dream cut", "Tangie Dream"]
+  lineage: "California Orange x Skunk (DNA Genetics)"
+  origin: "Netherlands/USA (DNA Genetics, 2010s; California Orange heritage)"
+  type: photoperiod
+  genotype: "30% Indica / 70% Sativa"
+  aroma: [tangerine, citrus, orange, sweet]
+  flavor: [tangerine, orange, citrus, sweet]
+  effects: [uplifting, euphoric, energetic, creative]
+  medical: [stress, depression, fatigue, anxiety]
+  terpenes:
+    limonene: "bright citrus, mood-lifting"
+    terpinolene: "piney, floral, fresh citrus lift"
+    myrcene: "earthy, musky base note"
+  cannabinoids: {thc: "19-26%", cbd: "<1%", cbg: "low", thcv: "trace"}
+  morphology: "tall, lanky sativa structure; long internodes; airy frosty colas"
+  grow:
+    difficulty: moderate
+    environment: [indoor, greenhouse, outdoor]
+    flowering_weeks: "9-10"
+    photoperiod: "flip to 12/12; benefits from trellising due to stretch"
+    optimal: {temp_c: "20-28", rh_veg_pct: "55-65", rh_flower_pct: "40-50", vpd_kpa: "1.0-1.4", dli: "32-45"}
+    yield_indoor_g_m2: "450-550"
+    yield_outdoor_g_plant: "500-650"
+    height: "tall (1.5-2.0 m)"
+    resilience: "vigorous but stretchy; manage height and airflow in canopy"
+  notes: "A reborn citrus classic from DNA Genetics that revived the California Orange flavor and seeded a whole 'Tangie' family of crosses."
+
+mimosa:
+  aka: ["Purple Mimosa", "Mimosas"]
+  lineage: "Clementine x Purple Punch (Symbiotic Genetics)"
+  origin: "USA (Symbiotic Genetics, ~2017)"
+  type: photoperiod
+  genotype: "35% Indica / 65% Sativa"
+  aroma: [citrus, orange, berry, sweet]
+  flavor: [citrus, orange, tropical, berry]
+  effects: [uplifting, happy, focused, energetic]
+  medical: [stress, depression, fatigue, anxiety]
+  terpenes:
+    limonene: "citrus-forward, bright and zesty"
+    caryophyllene: "peppery, spicy warmth"
+    myrcene: "soft earthy, mildly sedating base"
+  cannabinoids: {thc: "19-27%", cbd: "<1%", cbg: "low", thcv: "trace"}
+  morphology: "medium-tall hybrid; sturdy branching; can throw purple hues from Purple Punch"
+  grow:
+    difficulty: moderate
+    environment: [indoor, greenhouse, outdoor]
+    flowering_weeks: "8-9"
+    photoperiod: "flip to 12/12; responds well to topping and SCROG"
+    optimal: {temp_c: "20-27", rh_veg_pct: "55-65", rh_flower_pct: "40-50", vpd_kpa: "1.0-1.3", dli: "32-44"}
+    yield_indoor_g_m2: "450-550"
+    yield_outdoor_g_plant: "500-650"
+    height: "medium-tall (1.2-1.8 m)"
+    resilience: "robust and grower-friendly; good mold tolerance for a citrus hybrid"
+  notes: "A brunch-named modern hybrid: Clementine's citrus brightness over Purple Punch's grape-candy body, prized for daytime uplift."
+
+cherry-pie:
+  aka: ["Cherry Kush", "Cherry Pie OG"]
+  lineage: "Granddaddy Purple x Durban Poison"
+  origin: "USA (Bay Area, California; bred by Kenny 'PieGuy' Dumetz)"
+  type: photoperiod
+  genotype: "50% Indica / 50% Sativa"
+  aroma: [cherry, berry, sweet, earthy]
+  flavor: [cherry, berry, vanilla, sweet]
+  effects: [relaxed, happy, euphoric, uplifting]
+  medical: [stress, pain, depression, anxiety]
+  terpenes:
+    caryophyllene: "peppery, spicy edge"
+    myrcene: "earthy, musky relaxation"
+    limonene: "citrus brightness"
+  cannabinoids: {thc: "18-25%", cbd: "<1%", cbg: "low", thcv: "trace"}
+  morphology: "medium, sturdy hybrid; dense buds; purple hues from Granddaddy Purple in cool temps"
+  grow:
+    difficulty: easy
+    environment: [indoor, greenhouse, outdoor]
+    flowering_weeks: "8-9"
+    photoperiod: "flip to 12/12; cool nights bring out purple coloration"
+    optimal: {temp_c: "18-27", rh_veg_pct: "55-65", rh_flower_pct: "40-50", vpd_kpa: "0.9-1.3", dli: "30-42"}
+    yield_indoor_g_m2: "400-500"
+    yield_outdoor_g_plant: "450-600"
+    height: "medium (1.0-1.6 m)"
+    resilience: "forgiving and beginner-friendly; watch bud density for mold late in flower"
+  notes: "A Bay Area cup-winner and a foundational parent of the modern fruity-dessert lineage, balancing Durban Poison lift with GDP body."
+
+forbidden-fruit:
+  aka: ["Purple Obeah"]
+  lineage: "Cherry Pie x Tangie (Chameleon Extracts)"
+  origin: "USA (Chameleon Extracts, ~2015)"
+  type: photoperiod
+  genotype: "70% Indica / 30% Sativa"
+  aroma: [cherry, citrus, tropical, pine]
+  flavor: [cherry, citrus, passionfruit, tropical]
+  effects: [relaxed, euphoric, happy, calming]
+  medical: [pain, stress, insomnia, anxiety]
+  terpenes:
+    myrcene: "earthy, musky — deeply relaxing"
+    limonene: "citrus brightness from the Tangie side"
+    caryophyllene: "peppery, spicy warmth"
+  cannabinoids: {thc: "21-27%", cbd: "<1%", cbg: "low", thcv: "trace"}
+  morphology: "short-medium, dense indica structure; thick resinous buds with deep purple and green hues"
+  grow:
+    difficulty: moderate
+    environment: [indoor, greenhouse, outdoor]
+    flowering_weeks: "8-10"
+    photoperiod: "flip to 12/12; cool finishing nights deepen purple tones"
+    optimal: {temp_c: "18-26", rh_veg_pct: "55-65", rh_flower_pct: "40-48", vpd_kpa: "0.9-1.3", dli: "30-42"}
+    yield_indoor_g_m2: "400-480"
+    yield_outdoor_g_plant: "450-550"
+    height: "short-medium (0.9-1.5 m)"
+    resilience: "resinous and dense — prioritize airflow and humidity control in late flower"
+  notes: "A decadent Cherry Pie x Tangie cross marrying musky cherry to tropical citrus, leaning heavily indica for an evening body-melt."
+
+blueberry:
+  aka: ["Berry Blue"]
+  lineage: "Afghani x Thai x Purple Thai (DJ Short)"
+  origin: "USA (DJ Short, 1970s-80s)"
+  type: photoperiod
+  genotype: "80% Indica / 20% Sativa"
+  aroma: [blueberry, sweet, berry, earthy]
+  flavor: [blueberry, sweet, vanilla]
+  effects: [relaxed, euphoric, happy, calming]
+  medical: [pain, stress, insomnia, anxiety]
+  terpenes:
+    myrcene: "earthy, musky — relaxing"
+    pinene: "fresh pine, subtle clarity"
+    caryophyllene: "peppery, spicy"
+  cannabinoids: {thc: "16-24%", cbd: "<1%", cbg: "low", thcv: "trace"}
+  morphology: "short-medium, bushy; blue/purple hues in cool temps; dense resinous buds"
+  grow:
+    difficulty: moderate
+    environment: [indoor, greenhouse, outdoor]
+    flowering_weeks: "7-9"
+    photoperiod: "flip to 12/12; cool nights deepen blue/purple color"
+    optimal: {temp_c: "18-26", rh_veg_pct: "55-65", rh_flower_pct: "40-50", vpd_kpa: "0.8-1.2", dli: "30-42"}
+    yield_indoor_g_m2: "400-500"
+    yield_outdoor_g_plant: "500-600"
+    height: "short-medium (0.9-1.5 m)"
+    resilience: "hardy heirloom; watch bud density for mold in late flower"
+  notes: "A 2000 Cannabis Cup winner and one of the most famous fruit-flavored indicas — DJ Short's legacy line."
+
+bruce-banner:
+  aka: ["Banner", "Bruce Banner #3", "OG Banner"]
+  lineage: "OG Kush x Strawberry Diesel"
+  origin: "USA (Delta 9 Labs / Dark Horse Genetics)"
+  type: photoperiod
+  genotype: "40% Indica / 60% Sativa"
+  aroma: [diesel, sweet, strawberry, earthy]
+  flavor: [diesel, berry, sweet, spicy]
+  effects: [euphoric, energetic, powerful, creative]
+  medical: [stress, depression, pain, fatigue]
+  terpenes:
+    myrcene: "earthy, musky base"
+    caryophyllene: "peppery, spicy — binds CB2"
+    limonene: "citrus brightness"
+  cannabinoids: {thc: "24-29%", cbd: "<1%", cbg: "low", thcv: "trace"}
+  morphology: "tall, vigorous; large dense frosted colas; strong diesel-berry nose"
+  grow:
+    difficulty: moderate
+    environment: [indoor, greenhouse, outdoor]
+    flowering_weeks: "9-10"
+    photoperiod: "flip to 12/12; stretches — support heavy colas"
+    optimal: {temp_c: "20-27", rh_veg_pct: "55-65", rh_flower_pct: "40-50", vpd_kpa: "1.0-1.4", dli: "40-50"}
+    yield_indoor_g_m2: "500-600"
+    yield_outdoor_g_plant: "500-700"
+    height: "tall (1.4-2.2 m)"
+    resilience: "vigorous and resinous; heavy colas need support late"
+  notes: "Once ranked among the strongest strains on Earth (~29% THC) — a high-octane diesel-berry powerhouse."
+
+critical-kush:
+  aka: ["Critical OG", "Critical Kush"]
+  lineage: "Critical Mass x OG Kush"
+  origin: "Netherlands (Barney's Farm)"
+  type: photoperiod
+  genotype: "80% Indica / 20% Sativa"
+  aroma: [earthy, spicy, pine, kush]
+  flavor: [earthy, spicy, sweet, woody]
+  effects: [relaxed, sleepy, heavy, calming]
+  medical: [insomnia, pain, stress, anxiety]
+  terpenes:
+    myrcene: "earthy, sedating, musky"
+    caryophyllene: "peppery, spicy — binds CB2"
+    limonene: "citrus lift"
+  cannabinoids: {thc: "19-25%", cbd: "low-medium", cbg: "low", thcv: "trace"}
+  morphology: "short, stout, heavy indica build; dense resinous colas; big yields"
+  grow:
+    difficulty: easy
+    environment: [indoor, greenhouse, outdoor]
+    flowering_weeks: "8"
+    photoperiod: "flip to 12/12; compact and forgiving — easy for beginners"
+    optimal: {temp_c: "20-26", rh_veg_pct: "55-65", rh_flower_pct: "40-50", vpd_kpa: "1.0-1.4", dli: "35-45"}
+    yield_indoor_g_m2: "550-650"
+    yield_outdoor_g_plant: "550-750"
+    height: "short to medium (0.9-1.4 m)"
+    resilience: "robust, mold-tolerant indica; reliable heavy producer"
+  notes: "An indica-heavy powerhouse from Critical Mass x OG Kush — fast, productive, and deeply sedating."
+
+white-rhino:
+  aka: ["Rhino", "White Rhino"]
+  lineage: "White Widow x North American Indica"
+  origin: "Netherlands (Green House Seeds)"
+  type: photoperiod
+  genotype: "80% Indica / 20% Sativa"
+  aroma: [skunky, earthy, sweet, woody]
+  flavor: [earthy, pine, sweet, woody]
+  effects: [relaxed, sleepy, euphoric, calming]
+  medical: [pain, stress, insomnia, appetite]
+  terpenes:
+    myrcene: "musky, earthy, sedative base"
+    caryophyllene: "spicy, peppery — anti-inflammatory"
+    pinene: "fresh pine, clarity"
+  cannabinoids: {thc: "18-22%", cbd: "<1%", cbg: "low", thcv: "trace"}
+  morphology: "bushy, stout indica; frosty white trichome coat; heavy yielding"
+  grow:
+    difficulty: easy
+    environment: [indoor, greenhouse, outdoor]
+    flowering_weeks: "8-9"
+    photoperiod: "flip to 12/12; compact bushy structure responds well to topping"
+    optimal: {temp_c: "20-26", rh_veg_pct: "55-65", rh_flower_pct: "40-50", vpd_kpa: "1.0-1.4", dli: "35-45"}
+    yield_indoor_g_m2: "600-700"
+    yield_outdoor_g_plant: "700-900"
+    height: "short to medium (0.9-1.5 m)"
+    resilience: "hardy, resinous, mold-resistant; strong commercial producer"
+  notes: "A frosty, heavy-yielding indica from White Widow lineage — skunky, resinous, and deeply relaxing."
+
+uk-cheese:
+  aka: ["Cheese", "Exodus Cheese", "Cognitiva"]
+  lineage: "Skunk #1 (UK clone-only phenotype)"
+  origin: "United Kingdom (Exodus collective, Luton)"
+  type: photoperiod
+  genotype: "60% Indica / 40% Sativa"
+  aroma: [cheese, skunky, pungent, earthy]
+  flavor: [cheese, sour, earthy, skunky]
+  effects: [relaxed, happy, euphoric, giggly]
+  medical: [stress, pain, depression, appetite]
+  terpenes:
+    myrcene: "earthy, musky, sedating"
+    caryophyllene: "peppery, spicy — binds CB2"
+    terpinolene: "pungent, herbal, complex"
+  cannabinoids: {thc: "15-20%", cbd: "<0.5%", cbg: "low", thcv: "trace"}
+  morphology: "medium-height Skunk pheno; dense buds; intensely pungent sour-cheese nose"
+  grow:
+    difficulty: moderate
+    environment: [indoor, greenhouse, outdoor]
+    flowering_weeks: "8-9"
+    photoperiod: "flip to 12/12; carbon filters essential — extremely pungent in flower"
+    optimal: {temp_c: "20-26", rh_veg_pct: "55-65", rh_flower_pct: "40-50", vpd_kpa: "1.0-1.4", dli: "35-45"}
+    yield_indoor_g_m2: "450-550"
+    yield_outdoor_g_plant: "500-650"
+    height: "medium (1.0-1.6 m)"
+    resilience: "vigorous clone-only classic; manage odor and humidity in dense canopy"
+  notes: "The original UK clone-only Cheese — a pungent Skunk #1 phenotype and a true British cannabis icon."
+
+headband:
+  aka: ["HB", "Sour OG", "818 Headband"]
+  lineage: "OG Kush x Sour Diesel"
+  origin: "USA (Cali Connection / DNA Genetics lineage)"
+  type: photoperiod
+  genotype: "55% Indica / 45% Sativa"
+  aroma: [diesel, lemon, earthy, creamy]
+  flavor: [diesel, lemon, earthy, spicy]
+  effects: [relaxed, euphoric, happy, cerebral]
+  medical: [stress, pain, anxiety, headache]
+  terpenes:
+    limonene: "bright lemon-citrus lead"
+    caryophyllene: "peppery, spicy — binds CB2"
+    myrcene: "earthy, musky base"
+  cannabinoids: {thc: "20-27%", cbd: "<1%", cbg: "low", thcv: "trace"}
+  morphology: "medium hybrid; diesel-lemon OG nose; named for the pressure 'headband' it leaves behind"
+  grow:
+    difficulty: moderate
+    environment: [indoor, greenhouse, outdoor]
+    flowering_weeks: "9-10"
+    photoperiod: "flip to 12/12; moderate stretch — train early for even canopy"
+    optimal: {temp_c: "20-27", rh_veg_pct: "55-65", rh_flower_pct: "40-50", vpd_kpa: "1.0-1.4", dli: "38-48"}
+    yield_indoor_g_m2: "450-550"
+    yield_outdoor_g_plant: "450-600"
+    height: "medium (1.2-1.8 m)"
+    resilience: "resinous OG-diesel hybrid; moderate feeder, rewards careful training"
+  notes: "OG Kush x Sour Diesel — a lemon-diesel hybrid famous for the gentle cranial 'headband' pressure it delivers."

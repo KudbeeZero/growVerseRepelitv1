@@ -183,3 +183,187 @@ strains:
     terpenes: [limonene, terpinolene, caryophyllene]
     traits: {indica_ratio: 0.25, thc: 22, cbd: 0.5, flowering_time: 70, yield: 520, difficulty: 3, disease_resistance: 0.5, pest_resistance: 0.6, vigor: 0.85}
     dominant: [thc]
+
+  - name: Gelato
+    lineage_type: hybrid
+    rarity: rare
+    stability: 0.82
+    terpenes: [caryophyllene, limonene, myrcene]
+    traits: {indica_ratio: 0.55, thc: 22, cbd: 0.5, flowering_time: 60, yield: 500, difficulty: 3, disease_resistance: 0.55, pest_resistance: 0.5, vigor: 0.7}
+    dominant: [thc, indica_ratio]
+  - name: Wedding Cake
+    lineage_type: hybrid
+    rarity: epic
+    stability: 0.8
+    terpenes: [caryophyllene, limonene, humulene]
+    traits: {indica_ratio: 0.6, thc: 25, cbd: 0.4, flowering_time: 63, yield: 550, difficulty: 4, disease_resistance: 0.5, pest_resistance: 0.55, vigor: 0.65}
+    dominant: [thc, yield]
+  - name: Zkittlez
+    lineage_type: hybrid
+    rarity: rare
+    stability: 0.85
+    terpenes: [myrcene, limonene, caryophyllene]
+    traits: {indica_ratio: 0.7, thc: 19, cbd: 0.6, flowering_time: 58, yield: 475, difficulty: 2, disease_resistance: 0.6, pest_resistance: 0.6, vigor: 0.75}
+    dominant: [indica_ratio, thc]
+  - name: Runtz
+    lineage_type: hybrid
+    rarity: legendary
+    stability: 0.78
+    terpenes: [caryophyllene, limonene, myrcene]
+    traits: {indica_ratio: 0.5, thc: 24, cbd: 0.3, flowering_time: 60, yield: 525, difficulty: 4, disease_resistance: 0.5, pest_resistance: 0.5, vigor: 0.7}
+    dominant: [thc, indica_ratio]
+  - name: Sunset Sherbet
+    lineage_type: hybrid
+    rarity: uncommon
+    stability: 0.8
+    terpenes: [caryophyllene, limonene, myrcene]
+    traits: {indica_ratio: 0.85, thc: 18, cbd: 0.7, flowering_time: 63, yield: 450, difficulty: 3, disease_resistance: 0.55, pest_resistance: 0.55, vigor: 0.7}
+    dominant: [indica_ratio, thc]
+  - name: Purple Punch
+    lineage_type: hybrid
+    rarity: rare
+    stability: 0.82
+    terpenes: [caryophyllene, limonene, myrcene]
+    traits: {indica_ratio: 0.80, thc: 21, cbd: 0.5, flowering_time: 53, yield: 500, difficulty: 2, disease_resistance: 0.55, pest_resistance: 0.6, vigor: 0.7}
+    dominant: [indica_ratio, thc]
+  - name: Do-Si-Dos
+    lineage_type: hybrid
+    rarity: epic
+    stability: 0.78
+    terpenes: [limonene, caryophyllene, myrcene]
+    traits: {indica_ratio: 0.70, thc: 28, cbd: 0.3, flowering_time: 63, yield: 450, difficulty: 3, disease_resistance: 0.6, pest_resistance: 0.55, vigor: 0.75}
+    dominant: [thc, indica_ratio]
+  - name: Grape Ape
+    lineage_type: hybrid
+    rarity: uncommon
+    stability: 0.85
+    terpenes: [myrcene, caryophyllene, pinene]
+    traits: {indica_ratio: 0.90, thc: 20, cbd: 0.4, flowering_time: 53, yield: 470, difficulty: 2, disease_resistance: 0.5, pest_resistance: 0.6, vigor: 0.7}
+    dominant: [indica_ratio]
+  - name: Master Kush
+    lineage_type: hybrid
+    rarity: common
+    stability: 0.88
+    terpenes: [myrcene, caryophyllene, pinene]
+    traits: {indica_ratio: 0.85, thc: 18, cbd: 0.6, flowering_time: 52, yield: 520, difficulty: 1, disease_resistance: 0.7, pest_resistance: 0.7, vigor: 0.8}
+    dominant: [indica_ratio, disease_resistance]
+  - name: LA Confidential
+    lineage_type: hybrid
+    rarity: rare
+    stability: 0.83
+    terpenes: [myrcene, limonene, caryophyllene]
+    traits: {indica_ratio: 0.80, thc: 22, cbd: 0.4, flowering_time: 56, yield: 480, difficulty: 3, disease_resistance: 0.55, pest_resistance: 0.55, vigor: 0.7}
+    dominant: [indica_ratio, thc]
+  - name: Amnesia Haze
+    lineage_type: hybrid
+    rarity: epic
+    stability: 0.78
+    terpenes: [terpinolene, limonene, caryophyllene]
+    traits: {indica_ratio: 0.20, thc: 22, cbd: 0.5, flowering_time: 73, yield: 550, difficulty: 4, disease_resistance: 0.55, pest_resistance: 0.6, vigor: 0.9}
+    dominant: [thc, vigor, flowering_time]
+
+  - name: Green Crack
+    lineage_type: hybrid
+    rarity: rare
+    stability: 0.86
+    terpenes: [myrcene, caryophyllene, limonene]
+    traits: {indica_ratio: 0.35, thc: 18, cbd: 0.3, flowering_time: 56, yield: 500, difficulty: 2, disease_resistance: 0.65, pest_resistance: 0.6, vigor: 0.88}
+    dominant: [vigor, yield]
+
+  - name: Trainwreck
+    lineage_type: hybrid
+    rarity: rare
+    stability: 0.82
+    terpenes: [terpinolene, pinene, myrcene]
+    traits: {indica_ratio: 0.30, thc: 21, cbd: 0.4, flowering_time: 63, yield: 600, difficulty: 3, disease_resistance: 0.6, pest_resistance: 0.65, vigor: 0.87}
+    dominant: [thc, yield, vigor]
+
+  - name: Purple Haze
+    lineage_type: hybrid
+    rarity: epic
+    stability: 0.8
+    terpenes: [myrcene, limonene, humulene]
+    traits: {indica_ratio: 0.25, thc: 18, cbd: 0.5, flowering_time: 67, yield: 450, difficulty: 3, disease_resistance: 0.55, pest_resistance: 0.55, vigor: 0.83}
+    dominant: [thc, vigor]
+
+  - name: Strawberry Cough
+    lineage_type: hybrid
+    rarity: uncommon
+    stability: 0.84
+    terpenes: [myrcene, pinene, caryophyllene]
+    traits: {indica_ratio: 0.20, thc: 20, cbd: 0.4, flowering_time: 63, yield: 450, difficulty: 3, disease_resistance: 0.6, pest_resistance: 0.6, vigor: 0.85}
+    dominant: [thc, vigor]
+  - name: "Tangie"
+    lineage_type: hybrid
+    rarity: rare
+    stability: 0.8
+    terpenes: [limonene, terpinolene, myrcene]
+    traits: {indica_ratio: 0.3, thc: 22, cbd: 0.4, flowering_time: 67, yield: 500, difficulty: 3, disease_resistance: 0.55, pest_resistance: 0.55, vigor: 0.8}
+    dominant: [limonene, terpinolene]
+
+  - name: "Mimosa"
+    lineage_type: hybrid
+    rarity: rare
+    stability: 0.78
+    terpenes: [limonene, caryophyllene, myrcene]
+    traits: {indica_ratio: 0.35, thc: 23, cbd: 0.3, flowering_time: 60, yield: 520, difficulty: 3, disease_resistance: 0.6, pest_resistance: 0.55, vigor: 0.78}
+    dominant: [limonene]
+
+  - name: "Cherry Pie"
+    lineage_type: hybrid
+    rarity: uncommon
+    stability: 0.82
+    terpenes: [caryophyllene, myrcene, limonene]
+    traits: {indica_ratio: 0.5, thc: 20, cbd: 0.4, flowering_time: 60, yield: 480, difficulty: 2, disease_resistance: 0.6, pest_resistance: 0.6, vigor: 0.75}
+    dominant: [caryophyllene, myrcene]
+
+  - name: "Forbidden Fruit"
+    lineage_type: hybrid
+    rarity: epic
+    stability: 0.79
+    terpenes: [myrcene, limonene, caryophyllene]
+    traits: {indica_ratio: 0.7, thc: 24, cbd: 0.3, flowering_time: 63, yield: 460, difficulty: 3, disease_resistance: 0.55, pest_resistance: 0.55, vigor: 0.72}
+    dominant: [myrcene, limonene]
+
+  - name: "Blueberry"
+    lineage_type: hybrid
+    rarity: rare
+    stability: 0.85
+    terpenes: [myrcene, pinene, caryophyllene]
+    traits: {indica_ratio: 0.8, thc: 20, cbd: 0.5, flowering_time: 55, yield: 450, difficulty: 3, disease_resistance: 0.6, pest_resistance: 0.55, vigor: 0.7}
+    dominant: [myrcene]
+  - name: Bruce Banner
+    lineage_type: hybrid
+    rarity: epic
+    stability: 0.82
+    terpenes: [myrcene, caryophyllene, limonene]
+    traits: {indica_ratio: 0.40, thc: 28, cbd: 0.5, flowering_time: 65, yield: 560, difficulty: 3, disease_resistance: 0.55, pest_resistance: 0.5, vigor: 0.9}
+    dominant: [thc, vigor]
+  - name: Critical Kush
+    lineage_type: hybrid
+    rarity: uncommon
+    stability: 0.85
+    terpenes: [myrcene, caryophyllene, limonene]
+    traits: {indica_ratio: 0.80, thc: 22, cbd: 1.2, flowering_time: 56, yield: 600, difficulty: 2, disease_resistance: 0.6, pest_resistance: 0.55, vigor: 0.75}
+    dominant: [indica_ratio, yield]
+  - name: White Rhino
+    lineage_type: hybrid
+    rarity: common
+    stability: 0.84
+    terpenes: [myrcene, caryophyllene, pinene]
+    traits: {indica_ratio: 0.80, thc: 21, cbd: 0.6, flowering_time: 60, yield: 650, difficulty: 2, disease_resistance: 0.65, pest_resistance: 0.6, vigor: 0.8}
+    dominant: [indica_ratio, yield]
+  - name: UK Cheese
+    lineage_type: hybrid
+    rarity: rare
+    stability: 0.80
+    terpenes: [myrcene, caryophyllene, terpinolene]
+    traits: {indica_ratio: 0.60, thc: 19, cbd: 0.3, flowering_time: 60, yield: 500, difficulty: 3, disease_resistance: 0.5, pest_resistance: 0.5, vigor: 0.7}
+    dominant: [indica_ratio]
+  - name: Headband
+    lineage_type: hybrid
+    rarity: uncommon
+    stability: 0.81
+    terpenes: [limonene, caryophyllene, myrcene]
+    traits: {indica_ratio: 0.55, thc: 23, cbd: 0.5, flowering_time: 67, yield: 480, difficulty: 3, disease_resistance: 0.5, pest_resistance: 0.5, vigor: 0.75}
+    dominant: [thc]
