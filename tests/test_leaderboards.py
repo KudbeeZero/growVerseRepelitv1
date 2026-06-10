@@ -42,7 +42,7 @@ def test_breeders_and_level_leaderboards(db):
     with session_scope() as s:
         svc = GameService(s)
         breeder = svc.create_player("breeder")
-        idler = svc.create_player("idler")
+        svc.create_player("idler")
         a = s.query(Strain).filter(Strain.slug == "blue-dream").one()
         b = s.query(Strain).filter(Strain.slug == "white-widow").one()
         svc.breed(breeder.id, a.id, b.id, rng_seed=1)

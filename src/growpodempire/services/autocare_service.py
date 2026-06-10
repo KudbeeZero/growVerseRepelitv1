@@ -8,7 +8,6 @@ Every executed tool goes through the normal ledger-posting care path, so the
 loop is server-authoritative and can never spend beyond the cap.
 """
 
-from decimal import Decimal
 from typing import List, Optional
 
 from sqlalchemy.orm import Session

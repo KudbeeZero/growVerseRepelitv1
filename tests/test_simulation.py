@@ -8,7 +8,7 @@ from decimal import Decimal
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from growpodempire.db.session import session_scope
-from growpodempire.db.models import Strain, GrowPod, Plant
+from growpodempire.db.models import Strain
 from growpodempire.economy.config import load_economy_config
 from growpodempire.economy.ledger import balance
 from growpodempire.services.game_service import GameService

@@ -3,14 +3,13 @@
 import os
 import sys
 from datetime import datetime
-from decimal import Decimal
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 import pytest
 
 from growpodempire.db.session import session_scope
-from growpodempire.db.models import Strain, Harvest
+from growpodempire.db.models import Strain
 from growpodempire.economy.ledger import balance
 from growpodempire.economy.config import get_economy_config
 from growpodempire.economy import pricing

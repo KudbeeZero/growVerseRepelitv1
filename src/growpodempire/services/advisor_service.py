@@ -17,7 +17,6 @@ from ..simulation.clock import Clock, SystemClock
 from ..db.models import GrowPod
 from ..ai.provider import AdvisorProvider, AdvisorReport
 from ..ai.factory import shared_advisor
-from .game_service import GameError
 from .simulation_service import SimulationService
 
 # Genome traits worth surfacing to the advisor (kept compact for prompt economy).

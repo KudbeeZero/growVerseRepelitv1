@@ -19,7 +19,7 @@ from growpodempire.economy import pricing
 from growpodempire.economy.ledger import (
     post, balance, recompute_balance, to_money, InsufficientFundsError,
 )
-from growpodempire.enums import LedgerEntryType, Rarity, RARITY_ORDER
+from growpodempire.enums import LedgerEntryType, RARITY_ORDER
 from growpodempire.services.game_service import GameService
 from growpodempire.genetics.traits import TRAIT_SPECS, genome_from_traits, Dominance
 from growpodempire.genetics.breeding import cross

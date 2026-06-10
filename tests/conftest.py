@@ -7,7 +7,6 @@ database file so tests never bleed into one another.
 
 import os
 import sys
-import tempfile
 
 import pytest
 

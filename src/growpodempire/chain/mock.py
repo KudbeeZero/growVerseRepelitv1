@@ -6,7 +6,7 @@ move balances, txids are deterministic. No network, no secrets.
 """
 
 import itertools
-from typing import Dict, Optional, Tuple
+from typing import Dict, Tuple
 
 from .provider import ChainProvider, AssetInfo, ChainError, TREASURY
 

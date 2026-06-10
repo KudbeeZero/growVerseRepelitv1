@@ -12,7 +12,7 @@ from types import SimpleNamespace
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from growpodempire.db.session import session_scope
-from growpodempire.db.models import Strain, Plant
+from growpodempire.db.models import Strain
 from growpodempire.services.game_service import GameService
 from growpodempire.services.advisor_service import AdvisorService
 from growpodempire.simulation.clock import FrozenClock
