@@ -4,51 +4,56 @@
 > the end of every chat; read by `/handoff-audit` at the start of the next. If this file and
 > the code disagree, the code wins — fix the baton. See `docs/SESSION_PROTOCOL.md`.
 
-**Last rewritten:** 2026-06-10 · **By:** Session Relay Protocol install chat
+**Last rewritten:** 2026-06-10 · **By:** Session Relay Protocol install + integrity-gate repair chat
 **Active branch:** `claude/session-relay-protocol-ybubw7`
-**Open PR awaiting audit:** _none yet — this chat's PR is opened by `/closeout`._
+**Open PR awaiting audit:** _this chat's PR (opened by `/closeout`) — audit it next chat._
 **Previous PR audit status:** n/a (protocol bootstrap)
 
 ---
 
 ## NEXT ACTION (the one scoped item the next chat does)
 
-**Make the phantom gates real.** `make check-memory` and `make check-migrations` both
-reference Python scripts that do not exist (see OPEN RISKS #1). Build
-`scripts/check_memory.py` (broken-link / ✅-citation / layer-map-drift checks per
-`docs/memory/README.md`) and `scripts/check_single_head.py` (Alembic single-head check), wire
-them into CI, and reconcile the false ✅ claims in `docs/memory/BACKLOG.md`.
+**Cap the sim's compute-on-read (OPEN RISK #2).** `simulation/engine.py` catch-up is O(elapsed
+hours) with no bound — a long-idle plant can spike a `/state` request. Add a max catch-up window
+(clamp elapsed to a configurable cap in `data/balance.yaml`) and/or materialize dormant plants,
+turning the unbounded cost into a bounded one. Add a test that proves a very-old plant resolves in
+bounded work.
 
-- **Scope:** only the two scripts + their CI wiring + the BACKLOG reconciliation.
-- **Risks:** `check_memory.py` must not flag the existing docs as broken on first run — write
-  it against the current tree, then tighten.
-- **Off-limits:** no gameplay/engine/economy changes; no chain or web work in this chat.
+- **Scope:** the engine cap + its `balance.yaml` knob + tests. Touch `services/` only if
+  materialization is needed; keep the pure engine pure.
+- **Risks:** the cap must not change near-term plant outcomes (only bound the worst case) — assert
+  parity with the uncapped path for normal elapsed times.
+- **Off-limits:** no chain/web/economy changes in that chat.
 
 ---
 
 ## What THIS chat did
 
-Installed the Session Relay Protocol, adapted to GROWv2's Layer 0–4 memory system:
-- `docs/SESSION_PROTOCOL.md` — the loop + the four improvements (definition-of-done,
-  carried-risks ledger, device-vs-agent split, reply format).
-- `docs/HANDOFF.md` (this baton) + `docs/audits/` (README + template).
-- `.claude/hooks/session-start.sh` — **made real** (it was a phantom that `CLAUDE.md` and
-  `BACKLOG.md` both claimed shipped). It best-effort installs deps and prints this baton.
-- `.claude/settings.json` — registers the SessionStart hook and sets `PYTHONPATH=src`.
-- `.claude/skills/handoff-audit/` and `.claude/skills/closeout/` — the start/end skills,
-  wired to GROWv2's gates (`make test` / `make lint` / `make check-memory`).
+1. **Installed the Session Relay Protocol** on GROWv2's Layer 0–4 memory: `docs/SESSION_PROTOCOL.md`
+   (loop + the four improvements), this baton, `docs/audits/` (README + template), and the
+   `/handoff-audit` + `/closeout` skills under `.claude/skills/`.
+2. **Caught and fixed real truth-drift.** Four things claimed ✅ shipped were **absent on disk**;
+   built them for real and verified:
+   - `scripts/check_memory.py` — memory-integrity gate (links · ✅ citations · layer-map), teeth-tested.
+   - `scripts/check_single_head.py` — Alembic fork gate (head `e7a9c1b3f2d8`).
+   - `.claude/hooks/session-start.sh` — SessionStart hook (it **fired this session**).
+   - `.github/workflows/ci.yml` — the missing CI (lint → memory → single-head → migrate → tests; + web job).
+3. **Reconciled** the four false ✅ claims in `docs/memory/BACKLOG.md` and wrote standup
+   `docs/memory/standups/2026-06-10-lut-report.md`.
 
 ## Verification split (this chat)
 
-**Agent-verifiable (done):**
-- SessionStart hook exists, is executable, and exits 0 on a dry run; prints the baton.
-- All new docs are internally link-clean by inspection.
+**Agent-verifiable (proven — test-backed):**
+- `make check-memory` ✅ · `make check-migrations` ✅ · `make lint` ✅ ·
+  `make test` → **182 passed, coverage 79.1% ≥ 78** ✅ · `alembic upgrade head` on fresh sqlite ✅ ·
+  checker teeth-test ✅.
+- SessionStart hook executes and prints the baton (observed this session).
 
 **Device/human-verifiable (owner, please confirm):**
-- That a fresh web session actually runs `.claude/hooks/session-start.sh` and you see the
-  baton printed at session start (hook execution depends on the harness, not the test suite).
-- That `make setup && make test` is green on your machine (the suite was **not** run in this
-  chat — see OPEN RISKS, the install gates are themselves under repair).
+- `.github/workflows/ci.yml` goes **green on first push** — the YAML is agent-written; its
+  *commands* are locally verified, but the GitHub Actions run (esp. the **web job**'s
+  `npm ci && npm run build`) was not run on a runner this session.
+- A fresh **web session** auto-installs deps via the hook (harness-dependent).
 
 ---
 
@@ -56,11 +61,11 @@ Installed the Session Relay Protocol, adapted to GROWv2's Layer 0–4 memory sys
 
 | # | Sev | Risk | Evidence | Status |
 |---|-----|------|----------|--------|
-| 1 | HIGH | **Phantom integrity gates.** `scripts/check_memory.py` & `scripts/check_single_head.py` are referenced by `Makefile`, `CLAUDE.md`, and claimed ✅ in `BACKLOG.md`, but do **not** exist → `make check-memory` / `make check-migrations` fail; memory & migration drift are currently **unguarded**. | `Makefile:22-26`; `BACKLOG.md:20-24,74-77`; `ls scripts/` (python files absent) | OPEN → this is the NEXT ACTION |
-| 2 | HIGH | **Sim compute-on-read is O(elapsed hours), no cost cap.** A long-idle plant can spike a `/state` request. | `BACKLOG.md:32`; standup 2026-06-08 §1 (Simulation) | OPEN |
-| 3 | HIGH | **No idempotency keys on mutations.** Retries/double-clicks can double-post the ledger. | `BACKLOG.md:33`; standup 2026-06-08 §1 (Backend) | OPEN |
-| 4 | MED | **Chain fully mocked.** No funded TestNet, `ASA_ID` unset, metadata not on IPFS → "on-chain" unproven end-to-end. | `BACKLOG.md:31`; standup 2026-06-08 §1 (Chain) | OPEN |
-| 5 | — | **SessionStart hook was phantom** (claimed ✅, absent). | was `BACKLOG.md:16-18` | **FIXED this chat** — hook created + exits 0 (test-backed); keep until a web session confirms it actually fires (device-verifiable). |
+| 1 | HIGH | **Phantom integrity gates.** `scripts/check_memory.py` & `scripts/check_single_head.py` (and CI itself) were referenced everywhere but absent → `make check-memory`/`make check-migrations` failed; drift unguarded. | was `Makefile:22-26`; `BACKLOG.md` | **FIXED 2026-06-10** — both scripts + `.github/workflows/ci.yml` built; gates green + teeth-tested. CI green on first push is still owner-verifiable. |
+| 2 | HIGH | **Sim compute-on-read is O(elapsed hours), no cost cap.** A long-idle plant can spike a `/state` request. | `BACKLOG.md`; standup 2026-06-08 §1 (Simulation) | OPEN → this is the NEXT ACTION |
+| 3 | HIGH | **No idempotency keys on mutations.** Retries/double-clicks can double-post the ledger. | `BACKLOG.md`; standup 2026-06-08 §1 (Backend) | OPEN |
+| 4 | MED | **Chain fully mocked.** No funded TestNet, `ASA_ID` unset, metadata not on IPFS → "on-chain" unproven end-to-end. | `BACKLOG.md`; standup 2026-06-08 §1 (Chain) | OPEN |
+| 5 | — | **SessionStart hook was phantom** (claimed ✅, absent). | was `BACKLOG.md` | **FIXED 2026-06-10** — hook built and observed firing this session. |
 
-> Risks #1–#4 are pre-existing GROWv2 findings carried forward. They do **not** clear on a
+> Risks #2–#4 are pre-existing GROWv2 findings carried forward. They do **not** clear on a
 > mention — only when a test proves the fix.
