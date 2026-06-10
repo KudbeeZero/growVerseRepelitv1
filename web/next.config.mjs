@@ -17,6 +17,14 @@ const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "";
 // actually hydrate. connect-src is limited to self + any configured API origin.
 const connectSrc = API_BASE ? `'self' ${API_BASE}` : "'self'";
 
+// Next.js dev mode evaluates modules and runs HMR via eval(), which requires
+// 'unsafe-eval'. Production builds never use eval, so we only relax script-src
+// in development — the deployed CSP stays strict (no 'unsafe-eval').
+const isDev = process.env.NODE_ENV !== "production";
+const scriptSrc = isDev
+  ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
+  : "script-src 'self' 'unsafe-inline'";
+
 const csp = [
   "default-src 'self'",
   "base-uri 'self'",
@@ -24,7 +32,7 @@ const csp = [
   "object-src 'none'",
   "img-src 'self' data: blob:",
   "style-src 'self' 'unsafe-inline'",
-  "script-src 'self' 'unsafe-inline'",
+  scriptSrc,
   "font-src 'self' data:",
   `connect-src ${connectSrc}`,
   "form-action 'self'",
