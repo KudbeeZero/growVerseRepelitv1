@@ -20,6 +20,7 @@ from typing import Optional
 
 from sqlalchemy import (
     Boolean,
+    CheckConstraint,
     DateTime,
     Float,
     ForeignKey,
@@ -73,9 +74,21 @@ class Wallet(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
     # Mirror of on-chain ASA balance (Phase 3); null until materialized.
     asa_balance: Mapped[Optional[Decimal]] = mapped_column(MONEY)
+    # Optimistic-lock counter: SQLAlchemy stamps `WHERE version = :old` on every
+    # UPDATE and bumps it on flush (see __mapper_args__). Two concurrent debits
+    # that both read the same version can't both commit — the loser gets a
+    # StaleDataError and rolls back, so the wallet can never be double-spent.
     version: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
     player: Mapped["Player"] = relationship(back_populates="wallet")
+
+    # `version_id_col` turns the column above into enforced optimistic locking;
+    # the CHECK is a hard DB backstop so the cached balance can never go negative
+    # even if application logic has a bug.
+    __mapper_args__ = {"version_id_col": version}
+    __table_args__ = (
+        CheckConstraint("cached_balance >= 0", name="ck_wallets_balance_nonneg"),
+    )
 
 
 class LedgerEntry(UUIDPrimaryKeyMixin, Base):
@@ -368,6 +381,11 @@ class Harvest(UUIDPrimaryKeyMixin, Base):
     # On-chain (Phase 3).
     nft_asset_id: Mapped[Optional[int]] = mapped_column(Integer)
     nft_status: Mapped[str] = mapped_column(String(16), default="none", nullable=False)
+
+    # A plant is harvested exactly once; this unique constraint makes a
+    # double-harvest (which would mint duplicate currency under a race)
+    # impossible at the DB level, not just via the app-side `harvested` check.
+    __table_args__ = (Index("uq_harvests_plant", "plant_id", unique=True),)
 
 
 class Contract(UUIDPrimaryKeyMixin, Base):

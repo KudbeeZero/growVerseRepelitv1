@@ -4,6 +4,20 @@ Status: `⬜ todo · 🔨 doing · ✅ done · ❄️ parked`. Standups may *pro
 once they appear here. Last reconciled: **2026-06-10**.
 
 ## 🔴 Immediate (do now — correctness, truth, or unblocks others)
+- 🔴 🔨 **Concurrency + idempotency hardening** (RISK #6) — *core landed 2026-06-10*: wallet
+  optimistic locking (`version_id_col`) + `CHECK(cached_balance >= 0)` + harvest-once unique index
+  (migration `f1a2b3c4d5e6`) + 409-on-conflict + the F5 flaky-limiter-test fix. +4 concurrency
+  tests (189 total). Closes double-spend / double-harvest / negative-balance at the DB level.
+  *Remaining (⬜): general `Idempotency-Key` header (duplicate → original response, not a 409) and
+  one-shot-grant uniqueness (daily stipend, achievements).* See `DECISIONS.md` 2026-06-10 +
+  `docs/audits/2026-06-10-fleet-sweep.md`.
+- 🔴 ⬜ **Chain settlement verification** (RISK #7) — deposit must verify an on-chain txid
+  (confirmed, asset-id, receiver=treasury, sender=linked addr, amount); txid replay protection
+  (unique `onchain_txid`); reconciliation job; address validation/opt-in on link/withdraw. Blocks
+  any real value moving (Sprint 4 gate).
+- 🔴 ⬜ **Restore the web safety net** (RISK #8) — real vitest + Playwright in devDeps + CI (the
+  scripts are `echo` stubs today); add HTTP-boundary tests for withdraw/deposit/mint
+  (`game_api.py` 40% covered); global 401/403 handler.
 - 🔴 ✅ **Make the integrity/CI gates REAL** (2026-06-10) — a chat found that
   `scripts/check_memory.py`, `scripts/check_single_head.py`, the SessionStart hook, **and
   `.github/workflows/ci.yml` did not exist on disk**, despite being claimed ✅ below and in

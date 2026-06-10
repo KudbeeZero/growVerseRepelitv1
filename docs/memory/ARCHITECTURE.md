@@ -48,7 +48,10 @@ genetics targets, the trust layer) see the **Design Codex** at `docs/memory/desi
 2. **Simulation is compute-on-read and deterministic.** State is derived from elapsed time + stored
    inputs (lazy catch-up). Same inputs ⇒ same outputs. No wall-clock randomness without a seed.
 3. **All money is `Decimal` and ledger-posted.** No floats for currency. Every economic effect has a
-   ledger entry. Every faucet has a sink (inflation guard).
+   ledger entry. Every faucet has a sink (inflation guard). **Concurrency-safe (2026-06-10):** the
+   wallet uses optimistic locking (`version_id_col`) + a `CHECK(cached_balance >= 0)` backstop, and a
+   plant is harvested once (`uq_harvests_plant`) — so concurrent debits/harvests can't double-spend
+   or double-mint; a lost race rolls back as a 409. Don't reintroduce check-then-act on money rows.
 4. **Server is authoritative.** No client-trusted state. Spending paths go through guards
    (e.g. `SpendGuard` caps the AI auto-care budget per invocation).
 5. **Writes are authenticated + rate-limited; reads are public.**

@@ -67,8 +67,9 @@ def post(
             f"{amount} ({entry_type})"
         )
 
+    # `version` is managed by SQLAlchemy's optimistic locking (Wallet's
+    # version_id_col) — do NOT bump it here, or the stamp/flush would conflict.
     wallet.cached_balance = new_balance
-    wallet.version += 1
 
     entry = LedgerEntry(
         player_id=player_id,
