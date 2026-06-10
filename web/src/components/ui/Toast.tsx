@@ -4,6 +4,9 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
+  useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -27,18 +30,34 @@ let nextId = 1;
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const timers = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
 
   const push = useCallback((message: string, kind: ToastKind = "info") => {
     const id = nextId++;
     setToasts((t) => [...t, { id, message, kind }]);
-    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 4000);
+    const timer = setTimeout(() => {
+      timers.current.delete(timer);
+      setToasts((t) => t.filter((x) => x.id !== id));
+    }, 4000);
+    timers.current.add(timer);
   }, []);
 
-  const api: ToastApi = {
-    push,
-    success: (m) => push(m, "success"),
-    error: (m) => push(m, "error"),
-  };
+  // Dismiss timers must not outlive the provider (setState after unmount).
+  useEffect(() => {
+    const pending = timers.current;
+    return () => pending.forEach(clearTimeout);
+  }, []);
+
+  // Stable context value: without the memo every toast change rebuilt the api
+  // object and re-rendered all consumers.
+  const api = useMemo<ToastApi>(
+    () => ({
+      push,
+      success: (m) => push(m, "success"),
+      error: (m) => push(m, "error"),
+    }),
+    [push],
+  );
 
   return (
     <ToastContext.Provider value={api}>

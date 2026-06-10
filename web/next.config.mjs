@@ -1,5 +1,14 @@
 /** @type {import('next').NextConfig} */
 
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+// Pin file tracing to this directory (not an inferred monorepo root — the
+// repo also carries a root pnpm lockfile that would mislead the inference).
+// Derived, not hardcoded, so Replit (/home/runner/workspace/web), CI and
+// local checkouts all resolve correctly.
+const TRACING_ROOT = path.dirname(fileURLToPath(import.meta.url));
+
 // When NEXT_PUBLIC_API_BASE is empty, the client uses relative URLs and
 // Next.js rewrites proxy them to the local gunicorn backend.
 // Set NEXT_PUBLIC_API_BASE to a full URL (e.g. https://api.example.com) in
@@ -46,7 +55,7 @@ const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:8000";
 
 const nextConfig = {
   reactStrictMode: true,
-  outputFileTracingRoot: "/home/runner/workspace/web",
+  outputFileTracingRoot: TRACING_ROOT,
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

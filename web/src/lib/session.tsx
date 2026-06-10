@@ -25,27 +25,47 @@ interface SessionState {
 
 const SessionContext = createContext<SessionState | null>(null);
 
+// localStorage can throw (privacy mode, disabled storage, quota) — mirror
+// lib/api/client.ts and degrade to a logged-out in-memory session instead of
+// crashing the app on mount.
+function storageGet(key: string): string | null {
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function storageSet(key: string, value: string | null) {
+  try {
+    if (value === null) window.localStorage.removeItem(key);
+    else window.localStorage.setItem(key, value);
+  } catch {
+    // Persistence is best-effort; the session still works for this tab.
+  }
+}
+
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [playerId, setPlayerId] = useState<string | null>(null);
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    setPlayerId(window.localStorage.getItem(PLAYER_ID_STORAGE));
-    setApiKey(window.localStorage.getItem(API_KEY_STORAGE));
+    setPlayerId(storageGet(PLAYER_ID_STORAGE));
+    setApiKey(storageGet(API_KEY_STORAGE));
     setHydrated(true);
   }, []);
 
   const login = useCallback((pid: string, key: string) => {
-    window.localStorage.setItem(PLAYER_ID_STORAGE, pid);
-    window.localStorage.setItem(API_KEY_STORAGE, key);
+    storageSet(PLAYER_ID_STORAGE, pid);
+    storageSet(API_KEY_STORAGE, key);
     setPlayerId(pid);
     setApiKey(key);
   }, []);
 
   const logout = useCallback(() => {
-    window.localStorage.removeItem(PLAYER_ID_STORAGE);
-    window.localStorage.removeItem(API_KEY_STORAGE);
+    storageSet(PLAYER_ID_STORAGE, null);
+    storageSet(API_KEY_STORAGE, null);
     setPlayerId(null);
     setApiKey(null);
   }, []);
