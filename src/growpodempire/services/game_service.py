@@ -93,8 +93,18 @@ class GameService:
 
     # ----- Players & wallets ---------------------------------------------
     def create_player(self, username: str, email: Optional[str] = None) -> Player:
+        # Normalize + validate so a blank/whitespace or over-long username, or a
+        # duplicate email, returns a clean 400 instead of creating a junk account
+        # or 500-ing on the DB unique constraint.
+        username = (username or "").strip()
+        if not (1 <= len(username) <= 64):
+            raise GameError("username must be 1-64 characters")
         if self.session.query(Player).filter(Player.username == username).first():
             raise GameError(f"Username '{username}' already taken")
+        email = email.strip() if isinstance(email, str) else email
+        email = email or None
+        if email and self.session.query(Player).filter(Player.email == email).first():
+            raise GameError("Email already registered")
 
         player = Player(
             username=username, email=email, api_key=secrets.token_urlsafe(32)

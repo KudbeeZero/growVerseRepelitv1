@@ -104,3 +104,17 @@ DB-impossible regardless of worker concurrency. Remaining for the next chat: the
 `Idempotency-Key` header (duplicate → original response, not a 409), one-shot-grant uniqueness
 (stipend/achievements), and the `/state` duplicate-PlantEvents race (C1). ADR in `DECISIONS.md`;
 ARCHITECTURE invariant #3 updated.
+
+---
+
+## Addendum (fifth unit) — API-validation hardening + money-endpoint tests
+Closed the RISK #11 validation-500 gaps and part of RISK #8 (the money-boundary test blind spot).
+Added `validation.number()` and wired it so `set_environment` (5 sensor params), `advisor/auto-care`
+(`budget`/`max_actions`), `create_player` (blank/over-long username, **duplicate email**) all return
+a clean **400** instead of a generic 500 (the env case used to TypeError on the next sim read of
+every plant in the pod). Added HTTP-boundary tests on the money endpoints: withdraw/deposit
+**auth (401) · wrong-key + cross-player IDOR (403) · bad-amount (400)** — withdraw/deposit were
+already guarded but untested. **+8 tests → 197 passed; coverage 79.3% → 80.03%.** lint /
+check-memory / check-migrations green. Also landed PR #6's Constellation fixes via PR #10 (resolved
+the baton conflict). Remaining on #8: real vitest/Playwright in CI + treasury-cap (F2) and
+chain-failure-rollback (F3) tests; on #11: Redis rate-limit storage + `get_level` gating.

@@ -187,3 +187,96 @@ def test_player_creation_is_rate_limited(client):
     ]
     assert statuses[-1] == 429
     assert statuses.count(201) == 30
+
+
+# ----- Input validation: clean 400s, never a 500 -------------------------
+def test_set_environment_rejects_non_numeric(client):
+    """A non-numeric sensor value is a clean 400, not a 500 (it used to be
+    stored raw and TypeError on the next sim read of every plant in the pod)."""
+    pid, key = _new_player(client, "envbad")
+    h = {"X-API-Key": key}
+    pod = client.post(
+        f"/api/game/players/{pid}/pods", json={"name": "Tent"}, headers=h
+    ).get_json()
+    r = client.post(
+        f"/api/game/players/{pid}/pods/{pod['id']}/environment",
+        json={"temperature": "hot", "humidity": 50, "co2_level": 1000,
+              "light_intensity": 500, "ph_level": 6.5},
+        headers=h,
+    )
+    assert r.status_code == 400
+    assert "temperature" in r.get_json()["error"].lower()
+
+
+def test_set_environment_rejects_out_of_range(client):
+    pid, key = _new_player(client, "envrange")
+    h = {"X-API-Key": key}
+    pod = client.post(
+        f"/api/game/players/{pid}/pods", json={"name": "Tent"}, headers=h
+    ).get_json()
+    r = client.post(
+        f"/api/game/players/{pid}/pods/{pod['id']}/environment",
+        json={"temperature": 24, "humidity": 50, "co2_level": 1000,
+              "light_intensity": 500, "ph_level": 99},  # pH 99 is impossible
+        headers=h,
+    )
+    assert r.status_code == 400
+
+
+def test_auto_care_rejects_non_numeric_budget(client):
+    pid, key = _new_player(client, "acbad")
+    plant_id = _plant_a_seed(client, pid, key)
+    r = client.post(
+        f"/api/game/players/{pid}/plants/{plant_id}/advisor/auto-care",
+        json={"budget": "lots"},
+        headers={"X-API-Key": key},
+    )
+    assert r.status_code == 400
+
+
+def test_create_player_rejects_blank_username(client):
+    r = client.post("/api/game/players", json={"username": "   "})
+    assert r.status_code == 400
+
+
+def test_create_player_rejects_duplicate_email(client):
+    a = client.post("/api/game/players", json={"username": "dupe1", "email": "x@y.com"})
+    assert a.status_code == 201
+    b = client.post("/api/game/players", json={"username": "dupe2", "email": "x@y.com"})
+    assert b.status_code == 400  # was a 500 (DB IntegrityError) before
+
+
+# ----- Money endpoints: auth + IDOR + validation at the HTTP boundary -----
+def test_withdraw_requires_auth_and_blocks_idor(client):
+    a_id, a_key = _new_player(client, "wA")
+    b_id, _ = _new_player(client, "wB")
+    # No key -> 401.
+    assert client.post(f"/api/game/players/{a_id}/wallet/withdraw",
+                       json={"amount": 1}).status_code == 401
+    # Wrong key -> 403.
+    assert client.post(f"/api/game/players/{a_id}/wallet/withdraw",
+                       json={"amount": 1},
+                       headers={"X-API-Key": "nope"}).status_code == 403
+    # A's key on B's wallet (IDOR) -> 403.
+    assert client.post(f"/api/game/players/{b_id}/wallet/withdraw",
+                       json={"amount": 1},
+                       headers={"X-API-Key": a_key}).status_code == 403
+
+
+def test_withdraw_validates_amount(client):
+    pid, key = _new_player(client, "wval")
+    h = {"X-API-Key": key}
+    assert client.post(f"/api/game/players/{pid}/wallet/withdraw",
+                       json={"amount": -5}, headers=h).status_code == 400
+    assert client.post(f"/api/game/players/{pid}/wallet/withdraw",
+                       json={"amount": "lots"}, headers=h).status_code == 400
+    assert client.post(f"/api/game/players/{pid}/wallet/withdraw",
+                       json={}, headers=h).status_code == 400
+
+
+def test_deposit_requires_auth_and_blocks_idor(client):
+    a_id, a_key = _new_player(client, "dA")
+    b_id, _ = _new_player(client, "dB")
+    assert client.post(f"/api/game/players/{b_id}/wallet/deposit",
+                       json={"amount": 1},
+                       headers={"X-API-Key": a_key}).status_code == 403
