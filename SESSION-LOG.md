@@ -7,6 +7,23 @@
 
 ## 2026-06-10 — Night-shift autonomous run (branch `claude/night-shift-2026-06-10`)
 
+### Entry 10 — Rebase onto current main (I was 21 commits stale) — owner catch
+- **What:** Owner asked if I'd fetched main. I **hadn't this session** — local main
+  was `d0bad30`; `origin/main` had advanced to `2d5cb6e` (**21 commits**). My
+  PRs #12/#13 were based on `f890277` (the still-open PR #5 tip), so they sat on
+  old main and even dragged in PR #5's commits. Fixed: cut a fresh branch
+  `claude/terpene-effect-engine` off **current `origin/main`**, cherry-picked the
+  4 feature commits (clean, no conflicts), verified **216 passed / coverage 80.6%
+  ≥ 79 floor / lint clean** → **PR #14**. Closed the stale **#13** (no force-push;
+  new branch instead). PR #12 left for the chamber/#4 reconciliation, flagged stale.
+- **Bonus context from the fetch:** main already shipped several of my backlog
+  items — **real CI gates** (`f4a63e6`; my "phantom CI" finding is resolved on
+  main), the **sim cost cap** (`5cd505a`), **idempotency/concurrency hardening**
+  (`80b78a2`), and API-validation hardening (`d5befdc`). My features are **not**
+  on main (no duplication). Drop those resolved items from the next-shift backlog.
+- **Lesson:** `git fetch origin` at the **start** of a session in a busy multi-agent
+  repo; never branch off an open-PR tip when you mean to branch off main.
+
 ### Entry 9 — Split clean features into PR #13 (mergeability fix)
 - **What:** Cherry-picked the four read-only feature commits (terpene engine,
   `/effects` route, harvest signature, `/economy/health`) onto a fresh branch
