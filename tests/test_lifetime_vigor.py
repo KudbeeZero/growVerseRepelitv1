@@ -55,6 +55,14 @@ def test_lifetime_care_drives_yield(session):
     # The integral remembers the neglect.
     assert plant_g.lifetime_vigor > plant_b.lifetime_vigor + 5
 
+    # Isolate the yield mechanic from the maturity gate: a neglected plant grows
+    # slower and may not have reached flowering yet, but here we're comparing the
+    # vigour-driven *weight*, so put both at a harvestable stage first.
+    for pl in (plant_g, plant_b):
+        pl.is_alive = True
+        pl.growth_stage = "flowering"
+    session.flush()
+
     # Same strain → identical yield band, so the weight gap is purely lifetime care.
     clock_g.set(end)
     clock_b.set(end)

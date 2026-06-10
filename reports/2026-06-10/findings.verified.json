@@ -1,0 +1,1709 @@
+[
+  {
+    "id": "F016",
+    "severity": "critical",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "security",
+    "title": "Disable dev guest login by default (GPE_DEV_LOGIN) — it leaks any account's API key by username",
+    "files": [
+      {
+        "path": "src/growpodempire/config.py",
+        "lines": "119-127"
+      },
+      {
+        "path": "src/growpodempire/api/game_api.py",
+        "lines": "62-86"
+      },
+      {
+        "path": "src/growpodempire/services/game_service.py",
+        "lines": "117-133"
+      }
+    ],
+    "description": "POST /api/game/players/guest does find-or-create by username and returns the account's api_key in the body. It is gated only by Settings.dev_login_enabled, which reads GPE_DEV_LOGIN and DEFAULTS TO 'true'. A production deploy that does not explicitly set GPE_DEV_LOGIN=false therefore exposes a route where anyone who knows or guesses a username receives that account's API key — full account takeover with no secret required. The endpoint is rate-limited per-IP (60/hour) but that does not mitigate targeted takeover of a known username, nor distributed enumeration.",
+    "impact": "Any player's account (and wallet/treasury withdrawal rights, market, mint) can be hijacked by submitting their username. Currency theft and auth bypass; launch-blocking.",
+    "evidence": {
+      "type": "command",
+      "command": ".venv/bin/python -c \"import os; os.environ.pop('GPE_DEV_LOGIN',None); os.environ['DATABASE_URL']='sqlite:///:memory:'; os.environ['RATELIMIT_ENABLED']='false'; from growpodempire.config import get_settings; get_settings.cache_clear(); from growpodempire.api.flask_api import create_app; app=create_app(); c=app.test_client(); r=c.post('/api/game/players',json={'username':'victim'}); vk=r.get_json()['api_key']; r2=c.post('/api/game/players/guest',json={'username':'victim'}); print('status',r2.status_code,'TAKEOVER',r2.get_json().get('api_key')==vk)\"",
+      "output": "dev_login_enabled default = True\nvictim real key prefix: 2Y3dIDlL\nguest status: 200\nleaked key prefix: 2Y3dIDlL\nTAKEOVER: True"
+    },
+    "fix": {
+      "summary": "Make dev guest login fail-closed: default GPE_DEV_LOGIN to 'false' so it is OFF unless an operator explicitly opts in for a playtest. Belt-and-suspenders: refuse to enable it when the environment looks like prod (e.g. ALGORAND_NETWORK=mainnet, or a non-sqlite/non-localhost DATABASE_URL), and never return an existing account's api_key — only mint a key for freshly-created guest accounts, or require a per-session token. Add a startup warning log when it is enabled.",
+      "diff": "--- a/src/growpodempire/config.py\n+++ b/src/growpodempire/config.py\n-            os.environ.get(\"GPE_DEV_LOGIN\", \"true\").lower() == \"true\"\n+            os.environ.get(\"GPE_DEV_LOGIN\", \"false\").lower() == \"true\""
+    },
+    "test_idea": "reports/proposed-tests/test_guest_login_prod_safety.py: assert get_settings().dev_login_enabled is False when GPE_DEV_LOGIN is unset, and POST /players/guest returns 403 by default.",
+    "confidence": 10,
+    "dedupe_key": "security:src/growpodempire/config.py:dev-guest-login-default-on-key-leak",
+    "agents": [
+      "dana"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "true",
+    "verification_note": "Re-ran Dana's command on a fresh app: POST /players/guest returned the victim's EXACT api_key (TAKEOVER=True, 200). Account takeover by username confirmed."
+  },
+  {
+    "id": "F040",
+    "severity": "critical",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "economic",
+    "title": "Instant harvest exploit: buy->plant->harvest in the same hour yields full top-of-band weight (no grow time), net +923 per cycle",
+    "files": [
+      {
+        "path": "src/growpodempire/services/game_service.py",
+        "lines": "772-838"
+      },
+      {
+        "path": "src/growpodempire/db/models.py",
+        "lines": "280-286"
+      },
+      {
+        "path": "src/growpodempire/api/game_api.py",
+        "lines": "403-420"
+      }
+    ],
+    "description": "harvest_plant() has no growth-stage gate, and the public POST .../harvest route (game_api.py:403-420) forwards straight to it with no extra check. A freshly planted plant has lifetime_hours==0, so Plant.lifetime_vigor falls back to `self.health` (default 100). harvest weight = round(midpoint*(0.4+0.6*vigor/100)) => full top-of-band yield (500g for white-widow) for a plant that never grew. With sell=True the NPC sale posts to the ledger, netting strongly positive. Reachable end-to-end over the live API.",
+    "impact": "Faucet with no matching sink: a ~25 seed becomes ~+923 balance instantly and repeatably, bypassing the entire grow->care->harvest core loop. Inflation / supply manipulation -> launch blocker.",
+    "evidence": {
+      "type": "test",
+      "command": ".venv/bin/python -m pytest -q reports/proposed-tests/test_harper_instant_harvest_profit.py -s",
+      "output": "start=500.000000 end=1423.648000 net=923.648000 weight=500.0g stage_grew=NO\n1 passed in 0.38s"
+    },
+    "fix": {
+      "summary": "Gate harvest_plant on growth_stage (require FLOWER/HARVEST-ready) and reject if lifetime_hours==0; make lifetime_vigor return a low/zero default (not health) when no hours have accumulated, so an un-grown plant cannot inherit health=100."
+    },
+    "test_idea": "Assert harvesting a seedling raises GameError (or yields ~floor weight), and that a never-ticked plant cannot net positive.",
+    "confidence": 9,
+    "dedupe_key": "economic:services/game_service.py:instant-harvest-full-yield",
+    "agents": [
+      "harper"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "true",
+    "verification_note": "Re-ran Harper's repro (test_harper_instant_harvest_profit.py) — PASS. Same-hour buy→plant→harvest yields full top-of-band weight; ledger net +923/cycle (faucet, no sink)."
+  },
+  {
+    "id": "F017",
+    "severity": "high",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "security",
+    "title": "Guest login endpoint is a username/account enumeration + key-disclosure oracle",
+    "files": [
+      {
+        "path": "src/growpodempire/api/game_api.py",
+        "lines": "62-86"
+      },
+      {
+        "path": "src/growpodempire/services/game_service.py",
+        "lines": "117-133"
+      }
+    ],
+    "description": "Independent of the default-on gate: even when intentionally enabled for a playtest, guest_login returns the existing account's api_key for any matching username (find-or-create). There is no per-session credential, no proof-of-prior-ownership, and the response is identical whether the account pre-existed. Combined with the 200/key body it doubles as an account-existence oracle and a credential-disclosure primitive. The design comment acknowledges this ('returns an account's API key to anyone who knows the username') but ships it as a returnable production code path.",
+    "impact": "In any environment where the flag is on (incl. shared staging/playtests), a user can claim other testers' accounts and their in-game funds; also enables username enumeration for the Critical takeover above.",
+    "evidence": {
+      "type": "trace",
+      "command": "src/growpodempire/services/game_service.py:117-133",
+      "output": "    def guest_login(self, username: str) -> Player:\n        existing = (\n            self.session.query(Player).filter(Player.username == username).first()\n        )\n        if existing is not None:\n            return existing   # <- returns account whose api_key the route then discloses\n        return self.create_player(username)"
+    },
+    "fix": {
+      "summary": "Do not return an existing account's long-lived api_key from guest_login. Either (a) only allow guest login to create brand-new accounts and 409 on collision, or (b) issue a short-lived, rotating session token distinct from the persistent api_key, or (c) require the caller to already present the api_key to 'resume'. Keep find-or-create only for accounts created via guest in the same isolated dev DB.",
+      "diff": ""
+    },
+    "test_idea": "With dev login enabled: create 'alice' via POST /players (capture key A); a different client POSTs /players/guest {username: alice} and must NOT receive key A (expect 403/409 or a session token != A).",
+    "confidence": 9,
+    "dedupe_key": "security:src/growpodempire/services/game_service.py:guest-login-returns-existing-account-key",
+    "agents": [
+      "dana"
+    ],
+    "corroborations": 1,
+    "cap_notes": [
+      "kept at severity: conf≥9 self-evident trace"
+    ],
+    "verified": "true",
+    "verification_note": "Same endpoint as F016 (command-proven key disclosure). find-or-create returns 200+api_key for any username → enumeration + key oracle. Verified via F016's run + code trace."
+  },
+  {
+    "id": "F005",
+    "severity": "high",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "economic",
+    "title": "MAX_WITHDRAWAL_PER_DAY cap is bypassable for un-flushed withdrawals in one session",
+    "files": [
+      {
+        "path": "src/growpodempire/services/settlement_service.py",
+        "lines": "54-98"
+      }
+    ],
+    "description": "_enforce_daily_cap() sums prior ASA_WITHDRAWAL LedgerEntry rows via a query. The session runs autoflush=False (db/session.py:46), and the just-posted withdrawal entry is deliberately not flushed (per the in-code comment). This means ANY prior withdrawal entries that are still pending in the same uncommitted transaction are invisible to the cap query, so multiple withdraw() calls batched in one session bypass the cap. I confirmed with a probe test: cap=150, two withdraw(100) calls in one session_scope — the second one does NOT raise (sum seen = 0, not 100). Across separate committed sessions the cap correctly blocks. The current HTTP route does one withdraw per request (so the request path is presently safe), but the control is latently broken: any future code that calls withdraw() twice in a request, a batch/admin endpoint, or a job loop, silently exceeds the treasury cap. The comment 'isn't double-counted' is the defect, not a feature.",
+    "impact": "Defense-in-depth treasury cap can be bypassed by any multi-withdraw-per-transaction path; a stolen API key combined with such a path could exceed the daily limit the cap exists to enforce.",
+    "evidence": {
+      "type": "test",
+      "command": ".venv/bin/python -m pytest reports/proposed-tests/test_blake_withdrawal_cap.py -q",
+      "output": "F.\ntest_two_withdrawals_same_session_should_be_capped: Failed: DID NOT RAISE GameError\n(cap=150; withdraw(100) then withdraw(100) in one session — second should be blocked but is not)\ntest_two_withdrawals_separate_sessions_capped: PASSED\n1 failed, 1 passed"
+    },
+    "fix": {
+      "summary": "Flush the posted withdrawal entry before summing, or include the in-flight amount explicitly, and add a SELECT ... FOR UPDATE / per-player lock so concurrent requests cannot both pass the cap. Compute cap from committed+pending rows: self.session.flush() then query, or sum existing rows AND add the current amount (already added) — the real fix is session.flush() before the query so prior pending entries are counted."
+    },
+    "test_idea": "reports/proposed-tests/test_blake_withdrawal_cap.py (included): two withdrawals in one session must trip the cap.",
+    "confidence": 8,
+    "dedupe_key": "economic:settlement_service.py:daily-cap-unflushed-bypass",
+    "agents": [
+      "blake"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "true",
+    "verification_note": "Re-ran Blake's probe — second same-session withdrawal NOT capped (autoflush=False makes the rolling-sum query miss the unflushed prior row). RECONCILED with Casey F011: the cap IS correct across committed requests; the HTTP route does one-withdraw-per-request, so NOT exploitable today. Real latent defense-in-depth gap + a plausible concurrent-request race. Harden before mainnet."
+  },
+  {
+    "id": "F011",
+    "severity": "high",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "test-gap",
+    "title": "Settlement daily-withdrawal cap (treasury drain defense) is entirely untested",
+    "files": [
+      {
+        "path": "src/growpodempire/services/settlement_service.py",
+        "lines": "54-80"
+      }
+    ],
+    "description": "_enforce_daily_cap is the rolling-24h per-player treasury limit (defense-in-depth: even with a stolen API key an attacker can't drain more than the cap). tests/test_settlement.py covers only the happy path, linked-wallet, roundtrip, and insufficient-balance cases — coverage term-missing flags settlement_service.py lines 51,62,76-77,103-104,120,126-127, i.e. the cap accumulation/limit branch, the zero-cap disable branch, the negative-amount guard, the chain-failure rollback, and the insufficient-ASA deposit guard. A regression that disabled or mis-summed the cap (it sums -r.amount over ASA_WITHDRAWAL rows) would silently let the treasury be drained with no test catching it.",
+    "impact": "Payment/treasury path: a broken cap = unbounded on-chain withdrawal per player. Highest-value money-path gap found.",
+    "evidence": {
+      "type": "test",
+      "command": "PYTHONPATH=src .venv/bin/python -m pytest reports/proposed-tests/test_casey_settlement_cap.py --cov=growpodempire.services.settlement_service --cov-report=term-missing -q",
+      "output": "7 passed in 1.91s\nsettlement_service.py  68  10  85%  86, 88, 122-135 (was missing 51,62,76-77,103-104,120,126-127 before these tests)"
+    },
+    "fix": {
+      "summary": "Add reports/proposed-tests/test_casey_settlement_cap.py to the suite: covers single over-cap rejection, accumulation across withdrawals with rollback, cap=0 disable, non-positive guard, chain-failure rollback, insufficient-ASA deposit."
+    },
+    "test_idea": "Set MAX_WITHDRAWAL_PER_DAY low via a custom Settings, fund a player, assert a single over-cap and an accumulated over-cap withdrawal both raise GameError and (after txn rollback) leave the in-game balance untouched.",
+    "confidence": 8,
+    "dedupe_key": "test-gap:settlement_service:daily-cap",
+    "agents": [
+      "casey"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "true",
+    "verification_note": "Re-ran Casey's 7 settlement-cap tests — all PASS. The treasury-drain defense was 0%-covered; the gap is real and these tests close it."
+  },
+  {
+    "id": "F041",
+    "severity": "high",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "economic",
+    "title": "Pre-migration / never-ticked rows get full-vigor yield via the lifetime_vigor health fallback",
+    "files": [
+      {
+        "path": "src/growpodempire/db/models.py",
+        "lines": "280-286"
+      },
+      {
+        "path": "alembic/versions/c1d2e3f4a5b6_add_plant_lifetime_vigor.py",
+        "lines": "21-38"
+      },
+      {
+        "path": "src/growpodempire/services/game_service.py",
+        "lines": "798-802"
+      }
+    ],
+    "description": "Migration c1d2e3f4a5b6 backfills lifetime_health_sum/lifetime_hours with server_default '0'. Any plant created before the migration (or any plant never advanced by catch_up under the new accumulator) has lifetime_hours==0, so lifetime_vigor returns self.health instead of an integrated average. A mature, full-health legacy plant therefore harvests at full top-of-band weight regardless of how it was actually grown -- defeating the whole 'lifetime care sets yield' design.",
+    "impact": "Legacy/un-migrated plants ignore the new lifetime-vigor mechanic and pay max yield; an exploiter can also keep a plant at lifetime_hours==0 to dodge the integrator.",
+    "evidence": {
+      "type": "test",
+      "command": ".venv/bin/python -m pytest -q reports/proposed-tests/test_harper_lifetime_vigor_edges.py::test_pre_migration_row_fallback -s",
+      "output": "legacy fallback weight=500.0 vigor=100.0 hours_after_harvest=0.0\n1 passed"
+    },
+    "fix": {
+      "summary": "When lifetime_hours==0 at harvest, treat vigor as a conservative default (e.g. seed/baseline, not current health). Optionally backfill lifetime_health_sum from a sane proxy at migration time, or block harvest until at least one simulated hour has accrued."
+    },
+    "test_idea": "A plant with lifetime_hours==0 and health=100 must NOT harvest at top-of-band weight.",
+    "confidence": 8,
+    "dedupe_key": "economic:db/models.py:lifetime-vigor-health-fallback",
+    "agents": [
+      "harper"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "true",
+    "verification_note": "Re-ran Harper's edge test — pre-migration/never-ticked row (lifetime_hours==0) harvests at FULL vigor via the health=100 fallback, defeating the new lifetime-care mechanic for legacy rows."
+  },
+  {
+    "id": "F042",
+    "severity": "high",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "correctness",
+    "title": "Dead plants can be harvested and sold for non-trivial weight (no is_alive gate)",
+    "files": [
+      {
+        "path": "src/growpodempire/services/game_service.py",
+        "lines": "772-838"
+      }
+    ],
+    "description": "harvest_plant never checks plant.is_alive. A plant that died mid-grow (is_alive=False, health=0) still produces weight from its accumulated lifetime_vigor (avg health while it lived) and, with sell=True, completes an NPC sale. Quality is 0 but weight is substantial.",
+    "impact": "A corpse pays out (292.7g in repro). Death is supposed to be a loss; here it is partially monetized, weakening the risk side of the core loop and adding an unintended faucet.",
+    "evidence": {
+      "type": "test",
+      "command": ".venv/bin/python -m pytest -q reports/proposed-tests/test_harper_lifetime_vigor_edges.py::test_dead_plant_can_be_harvested_and_sold -s",
+      "output": "is_alive=False health=0.0 vigor=31.088619868744473 hours=57.0\nDEAD plant harvested weight=293.3 quality=0.0 sold_value=?\n1 passed"
+    },
+    "fix": {
+      "summary": "In harvest_plant, raise GameError('Plant is dead') when not plant.is_alive (or allow harvest but force weight_g=0)."
+    },
+    "test_idea": "Harvesting a dead plant raises GameError or yields 0g.",
+    "confidence": 8,
+    "dedupe_key": "correctness:services/game_service.py:dead-plant-harvest",
+    "agents": [
+      "harper"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "true",
+    "verification_note": "Re-ran Harper's edge test — a DEAD plant is harvested and sold for non-trivial weight; harvest_plant has no is_alive gate."
+  },
+  {
+    "id": "F009",
+    "severity": "medium",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "test-gap",
+    "title": "No test exercises MAX_WITHDRAWAL_PER_DAY enforcement at all",
+    "files": [
+      {
+        "path": "tests/test_settlement.py",
+        "lines": "1-71"
+      }
+    ],
+    "description": "test_settlement.py covers withdraw mirror, linked-wallet requirement, roundtrip, and insufficient balance, but has ZERO coverage of the daily withdrawal cap (_enforce_daily_cap). The cap is the only treasury-drain control on withdrawals and is both untested and (per finding #2) bypassable in-session. A regression that disables or miscounts the cap would not fail CI.",
+    "impact": "The treasury's primary withdrawal safety limit is unverified by the suite; bugs in it ship silently.",
+    "evidence": {
+      "type": "command",
+      "command": "grep -ni 'cap\\|max_withdrawal\\|daily' tests/test_settlement.py",
+      "output": "(no matches) — test_settlement.py never references the cap, MAX_WITHDRAWAL_PER_DAY, or _enforce_daily_cap"
+    },
+    "fix": {
+      "summary": "Add cap tests: a withdrawal at the cap succeeds, one over the cap is rejected, and the rolling 24h window resets. Include the same-session case from reports/proposed-tests/test_blake_withdrawal_cap.py."
+    },
+    "test_idea": "Set MAX_WITHDRAWAL_PER_DAY low, assert the over-cap withdraw raises GameError and the ledger debit is rolled back.",
+    "confidence": 9,
+    "dedupe_key": "test-gap:test_settlement.py:no-daily-cap-coverage",
+    "agents": [
+      "blake"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "unaudited",
+    "verification_note": "Not re-run this shift (severity ≤ Medium; outside the Critical+top-High audit worklist). Agent evidence stands as reported."
+  },
+  {
+    "id": "F035",
+    "severity": "medium",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "docs",
+    "title": "README says \"16 founding strains\" but the catalog now ships 47",
+    "files": [
+      {
+        "path": "README.md",
+        "lines": "78,174"
+      }
+    ],
+    "description": "README's Strain Codex blurb (line 78) and the quickstart seed step (line 174) both say the game seeds \"16 founding strains\". strains.yaml actually defines 47 strains (and strain_knowledge.yaml has matching entries). The catalog grew 16→22→47; the README never caught up.",
+    "impact": "New users/devs reading the front-door README get a wrong count of the headline content. The quickstart comment \"seed the 16 founding strains\" misrepresents what `db.seed` produces.",
+    "evidence": {
+      "type": "trace",
+      "command": "grep -cE '^  - name:' src/growpodempire/data/strains.yaml; grep -niE 'founding strains' README.md",
+      "output": "strains.yaml name count = 47\nREADME.md:78: A Pokedex-style catalog of all 16 founding strains — full genome stats,\nREADME.md:174: # 2. Create the schema + seed the 16 founding strains (idempotent)"
+    },
+    "fix": {
+      "summary": "Update README lines 78 and 174 from \"16 founding strains\" to \"47\" (or a maintained phrasing like \"the full catalog\")."
+    },
+    "test_idea": "doc check: grep README for a strain count and compare to len(strains.yaml)",
+    "confidence": 9,
+    "dedupe_key": "docs:README.md:strain-count-16-vs-47",
+    "agents": [
+      "gabe"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "unaudited",
+    "verification_note": "Not re-run this shift (severity ≤ Medium; outside the Critical+top-High audit worklist). Agent evidence stands as reported."
+  },
+  {
+    "id": "F045",
+    "severity": "medium",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "integration",
+    "title": "plant_dict serializes lifetime_vigor but Plant TS interface omits it (serializer↔client drift)",
+    "files": [
+      {
+        "path": "src/growpodempire/api/serialize.py",
+        "lines": "96-110"
+      },
+      {
+        "path": "web/src/lib/types.ts",
+        "lines": "117-133"
+      }
+    ],
+    "description": "serialize.plant_dict() emits `lifetime_vigor` (round(plant.lifetime_vigor,1)) on EVERY plant payload (list, single, and /state). The hand-written client `Plant` interface in web/src/lib/types.ts (lines 117-133) does NOT declare a `lifetime_vigor` field. Verified by an AST/regex diff of serializer keys vs TS interface fields: the only Plant drift is exactly `lifetime_vigor`. lifetime_vigor is the headline new mechanic — it is the integrated average health that sizes harvest weight (game_service.py:799 `vigor = max(0.0, min(100.0, plant.lifetime_vigor))` → weight_g = midpoint * (0.4 + 0.6*vigor/100)). The web client cannot type-safely surface the value that determines a player's yield. No test guards serializer↔TS parity (test_openapi.py only checks paths/security, not body schemas; the TS file header itself states 'OpenAPI spec carries no body schemas').",
+    "impact": "Client UI cannot expose or reason about lifetime vigor (the field that drives harvest weight) without an untyped escape hatch; future renames of the field on either side go undetected. Bounded: additive field, no balance misreport, existing consumers unaffected.",
+    "evidence": {
+      "type": "command",
+      "command": ".venv/bin/python diff serializer keys vs TS interfaces; grep -c lifetime_vigor both files",
+      "output": "serialize.py lifetime_vigor count: 1\nweb/src/lib/types.ts lifetime_vigor count: 0\nAST diff: Plant: in serializer but NOT in TS -> ['lifetime_vigor']\nserialize.py:106:        \"lifetime_vigor\": round(plant.lifetime_vigor, 1),\ngame_service.py:799: vigor = max(0.0, min(100.0, plant.lifetime_vigor))  # drives harvest weight"
+    },
+    "fix": {
+      "summary": "Add `lifetime_vigor: number;` to the Plant interface in web/src/lib/types.ts (after `health`), mirroring serialize.plant_dict.",
+      "diff": "  height: number;\n  health: number;\n+  /** Integrated average health (0..100) over the plant's life; sizes harvest weight. */\n+  lifetime_vigor: number;\n  water_level: number;"
+    },
+    "test_idea": "A parity test (Python or a generated JSON-Schema snapshot) asserting that the key set of serialize.plant_dict(sample_plant) is a subset of the documented Plant TS fields; would fail today on lifetime_vigor.",
+    "confidence": 9,
+    "dedupe_key": "integration:web/src/lib/types.ts:plant-lifetime-vigor-drift",
+    "agents": [
+      "ivy"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "true",
+    "verification_note": "grep: serialize.py emits lifetime_vigor (1), web Plant interface has it (0) — serializer↔client drift confirmed."
+  },
+  {
+    "id": "F046",
+    "severity": "medium",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "integration",
+    "title": "strain_dict serializes `season` but Strain TS interface omits it (serializer↔client drift)",
+    "files": [
+      {
+        "path": "src/growpodempire/api/serialize.py",
+        "lines": "43-69"
+      },
+      {
+        "path": "web/src/lib/types.ts",
+        "lines": "71-94"
+      }
+    ],
+    "description": "serialize.strain_dict() emits `season` via getattr(strain, 'season', 'all') on every strain payload (serialize.py line ~57). The client `Strain` interface (web/src/lib/types.ts lines 71-94) has no `season` field — the two `season` occurrences in types.ts both belong to Cup/leaderboard interfaces, not Strain (grep confirmed). The model column exists and is non-null with a server_default (models.py:126 `season: Mapped[str] = mapped_column(String(16), default='all', nullable=False)`; migration c7e2f4a16b80 adds it with `server_default='all'`). So backend↔DB is in sync; only the web type is stale. season gates seasonal strain availability (models.py:124-126 comment: 'all (always), or a season key spring/summer/fall/...').",
+    "impact": "The client cannot type-safely read a strain's seasonal availability window, so any seasonal-availability UI (catalog filtering, shop gating) must use an untyped access. Bounded: additive field, no economic/balance misreport.",
+    "evidence": {
+      "type": "command",
+      "command": ".venv/bin/python AST diff serializer vs TS; grep season types.ts",
+      "output": "AST diff: Strain: in serializer but NOT in TS -> ['season']\nweb/src/lib/types.ts season occurrences: 2 (both Cup: cup/page.tsx & hall-of-fame, NOT Strain interface)\nserialize.py: \"season\": getattr(strain, \"season\", \"all\"),\nmodels.py:126: season: Mapped[str] = mapped_column(String(16), default=\"all\", nullable=False)\nmigration c7e2f4a16b80: sa.Column('season', sa.String(length=16), nullable=False, server_default='all')"
+    },
+    "fix": {
+      "summary": "Add `season: string;` (or a SeasonKey union 'all'|'spring'|'summer'|'fall'|'winter') to the Strain interface in web/src/lib/types.ts.",
+      "diff": "  difficulty: number;\n+  /** Availability window: 'all' or a season key. Mirrors Strain.season. */\n+  season: string;\n  terpenes: string[] | null;"
+    },
+    "test_idea": "Same serializer↔TS parity snapshot test as the lifetime_vigor finding, applied to strain_dict; would fail today on season.",
+    "confidence": 9,
+    "dedupe_key": "integration:web/src/lib/types.ts:strain-season-drift",
+    "agents": [
+      "ivy"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "unaudited",
+    "verification_note": "Not re-run this shift (severity ≤ Medium; outside the Critical+top-High audit worklist). Agent evidence stands as reported."
+  },
+  {
+    "id": "F001",
+    "severity": "medium",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "ux",
+    "title": "Chamber canvas is fully inert under prefers-reduced-motion, but UI still tells users to swipe to brush",
+    "files": [
+      {
+        "path": "web/src/components/plant/plantRenderer.ts",
+        "lines": "303-305,856-866"
+      },
+      {
+        "path": "web/src/app/dashboard/plants/[plantId]/page.tsx",
+        "lines": "80-82"
+      }
+    ],
+    "description": "createPlantRenderer captures motionOK once at construction (line 303-305). The pointer listeners (pointerdown/move/up/cancel) AND the rAF loop are wired ONLY inside `if (motionOK)` (856-866). So when a user has prefers-reduced-motion: reduce, the chamber detail page still renders the hint 'Swipe across the plant to brush the branches' (page.tsx:81) but the canvas registers zero pointer listeners and never drives physics — brushing does nothing. A single static frame is drawn via draw(0). The instructional copy is desynced from actual behavior.",
+    "impact": "Reduced-motion users (an accessibility-sensitive cohort) see an interaction prompt that silently does nothing. Not a leak — destroy() is safe — but a fragile gating decision: a11y preference disables an unrelated input affordance. Also motionOK is read once, so toggling the OS setting mid-session won't re-wire.",
+    "evidence": {
+      "type": "trace",
+      "command": "grep -n 'motionOK' web/src/components/plant/plantRenderer.ts",
+      "output": "303:  const motionOK =\n305:    !window.matchMedia(\"(prefers-reduced-motion: reduce)\").matches;\n856:  if (motionOK) {\n857:    canvas.addEventListener(\"pointerdown\", onDown);\n... pointermove/up/cancel ...\n864:  if (motionOK) raf = requestAnimationFrame(frame);\n865:  else draw(0);\n\n// page.tsx:81 renders: 'Swipe across the plant to brush the branches.'"
+    },
+    "fix": {
+      "summary": "Decouple input wiring from motion preference: always attach pointer listeners (brushing is discrete, not motion), and gate only the continuous sway/wind animation on motionOK. Run a minimal rAF (or render-on-interaction) loop so physics + dust respond even in reduced-motion. Alternatively hide the 'swipe' hint when !motionOK."
+    },
+    "test_idea": "jsdom/RTL test: mock matchMedia to return matches:true for reduced-motion, mount PlantCanvas mode='chamber', dispatch a pointerdown+pointermove on the canvas, assert a handler ran (e.g. spy on canvas.addEventListener count > 0) — currently 0.",
+    "confidence": 8,
+    "dedupe_key": "ux:web/src/components/plant/plantRenderer.ts:reduced-motion-inert-chamber",
+    "agents": [
+      "alex"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "unaudited",
+    "verification_note": "Not re-run this shift (severity ≤ Medium; outside the Critical+top-High audit worklist). Agent evidence stands as reported."
+  },
+  {
+    "id": "F008",
+    "severity": "medium",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "integration",
+    "title": "Mock and real providers diverge on transfer source — mock cannot surface the deposit duplication bug",
+    "files": [
+      {
+        "path": "src/growpodempire/chain/mock.py",
+        "lines": "56-62"
+      },
+      {
+        "path": "src/growpodempire/chain/algorand.py",
+        "lines": "83-102"
+      }
+    ],
+    "description": "MockChainProvider.transfer_asset ignores sender_mnemonic entirely and ALWAYS debits TREASURY, crediting the receiver. AlgorandProvider honors sender_mnemonic (defaulting to treasury) and resolves receiver==TREASURY to the treasury address. So for deposit() (receiver=TREASURY, no sender), the mock debits TREASURY and credits TREASURY (book net unchanged) while the real provider does a treasury self-transfer that never touches the player's wallet. Because the mock has no per-player external-wallet book, the deposit duplication (finding #1) is structurally invisible to CI. This is provider parity drift: the mock does not faithfully model who-is-debited, so the one place the abstraction matters most for settlement correctness is untested.",
+    "impact": "CI green gives false confidence; settlement correctness bugs that depend on real sender/debit semantics cannot be caught with the current mock.",
+    "evidence": {
+      "type": "trace",
+      "command": "sed -n '56,62p' src/growpodempire/chain/mock.py",
+      "output": "56 def transfer_asset(self, asset_id, receiver, amount, sender_mnemonic=None):\n59   book = self.balances.setdefault(asset_id, {})\n60   book[TREASURY] = book.get(TREASURY, 0) - amount   # always debits TREASURY, ignores sender\n61   book[receiver] = book.get(receiver, 0) + amount"
+    },
+    "fix": {
+      "summary": "Make the mock honor sender (default treasury) and keep a per-address book so a player->treasury vs treasury->player transfer is distinguishable; then deposit() against the mock will reveal that the player's ASA is not being reclaimed."
+    },
+    "test_idea": "Mock transfer with an explicit player sender must debit that player's book, not TREASURY; deposit() must reduce the player's mock-wallet ASA.",
+    "confidence": 8,
+    "dedupe_key": "integration:mock.py:transfer-source-parity-drift",
+    "agents": [
+      "blake"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "unaudited",
+    "verification_note": "Not re-run this shift (severity ≤ Medium; outside the Critical+top-High audit worklist). Agent evidence stands as reported."
+  },
+  {
+    "id": "F012",
+    "severity": "medium",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "test-gap",
+    "title": "MintingService strain-ownership check ('only the breeder can mint') has no test",
+    "files": [
+      {
+        "path": "src/growpodempire/services/minting_service.py",
+        "lines": "79-97"
+      }
+    ],
+    "description": "mint_strain enforces strain.created_by_player_id == player_id (line 84) so a non-breeder cannot mint another player's strain. minting_service.py is the lowest-covered service (76%); term-missing flagged lines 84 (ownership), 122-124 (chain-failure -> FAILED), 132-142 (metadata_for). tests/test_minting.py covered happy-path/idempotency/rarity gate but NOT this ownership branch. An ownership-check regression on a MINT path lets a player mint an NFT of a strain they did not breed.",
+    "impact": "Auth/ownership on a mint path. Medium: mint is gated and DB-authoritative, but a broken check is an asset-theft-shaped bug with no guard.",
+    "evidence": {
+      "type": "test",
+      "command": "PYTHONPATH=src .venv/bin/python -m pytest reports/proposed-tests/test_casey_minting_paths.py --cov=growpodempire.services.minting_service --cov-report=term-missing -q",
+      "output": "5 passed in 1.37s\nminting_service.py  79  14  82% (line 84 ownership + 122-128 + 132-142 now covered; was 76% missing 84,122-124,132-142)"
+    },
+    "fix": {
+      "summary": "Add test_mint_strain_rejects_non_breeder in reports/proposed-tests/test_casey_minting_paths.py: attacker calls mint_strain on breeder's strain -> GameError('Only the breeder...'), row stays un-minted."
+    },
+    "test_idea": "Create two players, add a mintable strain owned by player A, assert MintingService(...).mint_strain(B.id, strain.id) raises and strain.nft_status stays unminted / nft_asset_id is None.",
+    "confidence": 8,
+    "dedupe_key": "test-gap:minting_service:strain-ownership",
+    "agents": [
+      "casey"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "unaudited",
+    "verification_note": "Not re-run this shift (severity ≤ Medium; outside the Critical+top-High audit worklist). Agent evidence stands as reported."
+  },
+  {
+    "id": "F013",
+    "severity": "medium",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "test-gap",
+    "title": "Mint chain-failure path (row -> FAILED, no asset id) is untested for both harvest and strain",
+    "files": [
+      {
+        "path": "src/growpodempire/services/minting_service.py",
+        "lines": "110-128"
+      }
+    ],
+    "description": "_mint marks the row PENDING, calls provider.create_asset, and on ChainError sets nft_status=FAILED and raises GameError (lines 122-124) — leaving a clean retry-able state. This branch was uncovered (term-missing 122-124). If a regression left the row stuck PENDING or attached a partial asset id, retries/idempotency (the documented DB-first/chain-second guarantee) would break.",
+    "impact": "Mint reliability/idempotency. A stuck-PENDING row blocks re-mint and corrupts NFT status. Medium.",
+    "evidence": {
+      "type": "test",
+      "command": "PYTHONPATH=src .venv/bin/python -m pytest reports/proposed-tests/test_casey_minting_paths.py::test_mint_harvest_chain_failure_marks_failed reports/proposed-tests/test_casey_minting_paths.py::test_mint_strain_chain_failure_marks_failed -q",
+      "output": "2 passed\nasserts nft_status==FAILED and nft_asset_id is None after a provider.create_asset that raises ChainError"
+    },
+    "fix": {
+      "summary": "Add the two chain-failure tests (harvest + strain) using a MockChainProvider subclass whose create_asset raises ChainError; assert FAILED status and no asset id."
+    },
+    "test_idea": "Subclass MockChainProvider to raise ChainError in create_asset; mint an eligible harvest/strain; assert GameError raised and row left FAILED with nft_asset_id None.",
+    "confidence": 8,
+    "dedupe_key": "test-gap:minting_service:chain-failure-failed",
+    "agents": [
+      "casey"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "unaudited",
+    "verification_note": "Not re-run this shift (severity ≤ Medium; outside the Critical+top-High audit worklist). Agent evidence stands as reported."
+  },
+  {
+    "id": "F018",
+    "severity": "medium",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "test-gap",
+    "title": "No test covers the 24h per-player withdrawal cap (treasury drain control)",
+    "files": [
+      {
+        "path": "src/growpodempire/services/settlement_service.py",
+        "lines": "54-98"
+      },
+      {
+        "path": "tests/test_settlement.py",
+        "lines": "1-70"
+      }
+    ],
+    "description": "_enforce_daily_cap is the documented defence-in-depth that bounds treasury loss even with a stolen API key, yet tests/test_settlement.py only covers happy-path withdraw/deposit/roundtrip and 'cannot withdraw more than balance'. There is no test asserting that cumulative withdrawals beyond MAX_WITHDRAWAL_PER_DAY are rejected, nor that the just-posted (unflushed) entry isn't double-counted, nor behaviour when the cap is 0 (disabled). A regression here silently removes the only brake on treasury outflow.",
+    "impact": "A refactor could disable or invert the cap unnoticed, exposing the ASA treasury to full drain via a compromised key.",
+    "evidence": {
+      "type": "command",
+      "command": "grep -rn \"daily\\|cap\\|MAX_WITHDRAWAL\\|_enforce_daily\" tests/test_settlement.py",
+      "output": "(no matches — zero test lines reference the daily cap)"
+    },
+    "fix": {
+      "summary": "Add tests: with MAX_WITHDRAWAL_PER_DAY set low, two withdrawals whose sum exceeds the cap — second must raise GameError and roll back the debit (balance unchanged, no ASA transfer). Add a 0-cap test asserting the cap is bypassed. Assert the within-24h boundary using an injected clock.",
+      "diff": ""
+    },
+    "test_idea": "test_withdraw_blocked_by_daily_cap + test_daily_cap_rolls_back_debit + test_cap_zero_disables.",
+    "confidence": 8,
+    "dedupe_key": "test-gap:src/growpodempire/services/settlement_service.py:no-daily-withdrawal-cap-test",
+    "agents": [
+      "dana"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "unaudited",
+    "verification_note": "Not re-run this shift (severity ≤ Medium; outside the Critical+top-High audit worklist). Agent evidence stands as reported."
+  },
+  {
+    "id": "F022",
+    "severity": "medium",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "ux",
+    "title": "Toast region is not a live region — error/success toasts are silent to screen readers (covers money/auth failures)",
+    "files": [
+      {
+        "path": "web/src/components/ui/Toast.tsx",
+        "lines": "46-61"
+      }
+    ],
+    "description": "The toast container is a plain <div> with no aria-live/role. Toasts are the ONLY surfaced feedback for auth and money actions: quick-play/login failures ('Quick play is disabled', 'That API key doesn't match this Player ID', 'Sign in failed'), account creation, and harvest/sell results all route through toast.error/success. A screen-reader or voice-control user gets no announcement that their sign-in or sale failed; the message appears, auto-dismisses after 4s, and is never read. This blocks completing/diagnosing money & auth actions non-visually, which is why it rates above the usual low a11y band.",
+    "impact": "Blind/low-vision users cannot tell a money/auth action failed or succeeded; they may retry a guest login or a sell repeatedly with no feedback.",
+    "evidence": {
+      "type": "trace",
+      "command": "grep -rn 'aria-live\\|role=\"status\"\\|role=\"alert\"' web/src",
+      "output": "web/src/components/ui/Toast.tsx:46:      <div className=\"fixed bottom-4 right-4 z-50 flex w-80 max-w-[90vw] flex-col gap-2\">\n  (toast wrapper has NO aria-live / role; only Spinner.tsx has role=status)\n  api routes errors here: OnboardingPanel.tsx:62 toast.error('Quick play is disabled...'), :196 'That API key doesn't match this Player ID'",
+      "url": "https://www.w3.org/WAI/ARIA/apg/patterns/alert/"
+    },
+    "fix": {
+      "summary": "Add aria-live=\"polite\" (or role=\"status\") plus aria-atomic to the toast wrapper; use role=\"alert\"/aria-live=\"assertive\" for error toasts.",
+      "diff": "<div aria-live=\"polite\" aria-atomic=\"true\" className=\"fixed bottom-4 right-4 ...\"> ... per-toast: role={t.kind===\"error\"?\"alert\":\"status\"}"
+    },
+    "test_idea": "jest-axe / RTL: render ToastProvider, push an error, assert the container has aria-live and the toast text is in an alert role.",
+    "confidence": 8,
+    "dedupe_key": "ux:toast:no-aria-live",
+    "agents": [
+      "evan"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "true",
+    "verification_note": "Spot-check: grep Toast.tsx for aria-live|role => 0. Confirmed."
+  },
+  {
+    "id": "F023",
+    "severity": "medium",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "ux",
+    "title": "No visible keyboard focus indicator on primary controls (Button, Tabs, onboarding tabs) — app-wide",
+    "files": [
+      {
+        "path": "web/src/components/ui/Button.tsx",
+        "lines": "37-48"
+      },
+      {
+        "path": "web/src/components/ui/Tabs.tsx",
+        "lines": "27-37"
+      },
+      {
+        "path": "web/src/app/globals.css",
+        "lines": "0-0"
+      }
+    ],
+    "description": "Buttons and tab controls use only hover/color changes; none add a focus-visible outline/ring, and globals.css defines no :focus / :focus-visible fallback (grep for focus/outline in globals.css returns nothing). The shared Button (used for every CTA incl. 'Play', 'Create account', 'Sign in', 'Harvest & Sell') has no focus:ring/focus-visible utility, so a keyboard user tabbing through onboarding and care actions cannot see which control is focused.",
+    "impact": "Keyboard-only and switch users lose track of focus across the entire app, including the money/auth CTAs — a WCAG 2.4.7 (Focus Visible, AA) failure.",
+    "evidence": {
+      "type": "command",
+      "command": "grep -rn 'focus-visible\\|focus:ring' web/src/components/ui; grep -rn 'focus\\|outline' web/src/app/globals.css",
+      "output": "web/src/components/ui/Field.tsx:4: ...focus:border-grow-500 focus:outline-none  (inputs only)\n(no focus-visible / focus:ring anywhere in components/ui)\n(globals.css: No matches found for focus/outline)\nButton.tsx:41 className=`... transition-colors disabled:cursor-not-allowed ${VARIANTS} ${SIZES} ...`  (no focus style)",
+      "url": "https://www.w3.org/WAI/WCAG21/Understanding/focus-visible.html"
+    },
+    "fix": {
+      "summary": "Add a focus-visible ring to the Button base class and Tabs buttons, e.g. focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grow-400 focus-visible:ring-offset-1 focus-visible:ring-offset-ink-900.",
+      "diff": "Button base: append 'focus-visible:ring-2 focus-visible:ring-grow-400 focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900'"
+    },
+    "test_idea": "Manual: Tab through /onboarding and a plant card; assert every interactive control shows a visible ring. Optionally snapshot the className includes focus-visible:ring.",
+    "confidence": 8,
+    "dedupe_key": "ux:button:no-focus-visible",
+    "agents": [
+      "evan"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "unaudited",
+    "verification_note": "Not re-run this shift (severity ≤ Medium; outside the Critical+top-High audit worklist). Agent evidence stands as reported."
+  },
+  {
+    "id": "F029",
+    "severity": "medium",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "performance",
+    "title": "Compute-on-read catch-up is O(hours) single-threaded; ~410ms per idle-year per plant on one read",
+    "files": [
+      {
+        "path": "src/growpodempire/simulation/engine.py",
+        "lines": "254-283"
+      }
+    ],
+    "description": "catch_up() advances a plant in fixed 1-hour Python steps from last_tick_at to now. A plant read after a year idle runs the full 8760-iteration loop synchronously inside the request. Measured 411ms for 365 days (8760 steps) and 39.8ms for 30 days on this box (in-memory SQLite). The loop mutates the ORM object every hour: cProfile shows ~294k SQLAlchemy attribute __get__ + ~74k attribute set calls dominating (~0.27s of 0.66s tottime), plus per-hour compute_conditions() and a fresh sha256-seeded RNG. Cost scales linearly with idle hours and is paid on the read path (GET /plants/<id>/state -> SimulationService.sync). Each living plant card polls /state every 7s (usePlantState POLL_MS=7000), so the expensive case is the cold first read after a long idle, not steady-state polling.",
+    "impact": "A player returning after weeks/months pays a multi-hundred-ms CPU stall per plant on first load; with a 7s poll fanned out per card across a populated garden, several plants can cold-sync near-simultaneously and saturate a worker. Not launch-blocking at expected scale but a real latency/CPU regression worth bounding (batch, or precompute closed-form for long gaps).",
+    "evidence": {
+      "type": "command",
+      "command": "PYTHONPATH=src .venv/bin/python -c '<bench: setup white-widow plant, catch_up over N days, time.perf_counter>'",
+      "output": "days=  30 hours=   720 catch_up_time=    39.8ms events=7 alive=True\ndays= 365 hours=  8760 catch_up_time=   411.0ms events=9 alive=True\nCAP   hours=8760  catch_up_time=   409.6ms events=9 alive=True\n# cProfile tottime: engine._step 0.137 (8760 calls); sqlalchemy attributes.__get__ 0.116 (294206 calls); attributes.set 0.096 (73834); _health_target 0.094; Random.seed 0.063; compute_conditions 0.050 (8761)"
+    },
+    "fix": {
+      "summary": "For large gaps, vectorize/precompute the deterministic decay+health drift in plain floats and only touch the ORM object once at the end (events still emitted at stage boundaries). Or run catch-up off the request path (background sweep) and serve last-synced state on read. Keep the 1hr fidelity only for the recent window."
+    },
+    "test_idea": "Benchmark/assert catch_up(8760h) completes under a target (e.g. <100ms) and that a long-idle read yields identical plant state to the iterative loop (golden-state regression).",
+    "confidence": 8,
+    "dedupe_key": "performance:simulation/engine.py:catchup-cost",
+    "agents": [
+      "fiona"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "true",
+    "verification_note": "Spot-check: max_catchup_hours clamp confirmed at engine.py:255; a plant idle beyond the cap advances only cap hours/read and never fully catches up. Mechanism verified."
+  },
+  {
+    "id": "F034",
+    "severity": "medium",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "compliance",
+    "title": "README claims \"MIT Licensed\" (badge + footer) but no LICENSE file exists in the repo",
+    "files": [
+      {
+        "path": "README.md",
+        "lines": "32,225"
+      }
+    ],
+    "description": "README ships an MIT license badge (line 32) and a footer \"GrowPod Empire · MIT Licensed\" (line 225), but there is no LICENSE/LICENSE.md/COPYING file anywhere in the repo and pyproject.toml declares no license. The MIT claim is unsubstantiated.",
+    "impact": "Without an actual LICENSE file the code is, by default, all-rights-reserved despite advertising MIT. Contributors/forkers cannot rely on the stated terms; a real compliance gap for a repo that markets itself as open source.",
+    "evidence": {
+      "type": "command",
+      "command": "ls -la LICENSE*; grep -ni license pyproject.toml; grep -ni MIT README.md",
+      "output": "ls: cannot access 'LICENSE*': No such file or directory\n(pyproject.toml: no license match)\nREADME.md:32:![License](.../LICENSE-MIT-...)\nREADME.md:225:<sub>GrowPod Empire · MIT Licensed · Made among the stars</sub>"
+    },
+    "fix": {
+      "summary": "Add a top-level LICENSE file with the MIT text (and set license in pyproject.toml [project]), or change the badge/footer to match the real license status."
+    },
+    "test_idea": "doc check: CI assert a LICENSE file exists when README advertises a license badge",
+    "confidence": 8,
+    "dedupe_key": "compliance:README.md:missing-license-file",
+    "agents": [
+      "gabe"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "unaudited",
+    "verification_note": "Not re-run this shift (severity ≤ Medium; outside the Critical+top-High audit worklist). Agent evidence stands as reported."
+  },
+  {
+    "id": "F004",
+    "severity": "medium",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "economic",
+    "title": "deposit() never reclaims the player's on-chain ASA — withdraw+deposit duplicates real tokens",
+    "files": [
+      {
+        "path": "src/growpodempire/services/settlement_service.py",
+        "lines": "116-134"
+      },
+      {
+        "path": "src/growpodempire/chain/algorand.py",
+        "lines": "83-102"
+      }
+    ],
+    "description": "deposit() calls provider.transfer_asset(asset_id, TREASURY, units) with no sender_mnemonic. In AlgorandProvider.transfer_asset, sender_mnemonic=None makes the SENDER the treasury and receiver==TREASURY resolves to the treasury address, so the on-chain transaction is treasury->treasury (a no-op). Per algosdk semantics the SENDER's holding is what gets debited, so the player's GROW ASA (which was really transferred to their external wallet during withdraw()) is NEVER pulled back. Yet deposit() still credits the player full in-game GROW via post(ASA_DEPOSIT). The DB-side wallet.asa_balance counter only limits the deposit to what was withdrawn, but the actual on-chain ASA stays in the player's wallet. Net effect on the real chain: withdraw 100 (player gets 100 real ASA) -> deposit 100 (in-game GROW restored, player KEEPS the 100 ASA) -> repeat. The player accumulates real tradeable ASA for free while keeping in-game balance whole = value duplication / treasury drain. The Mock provider hides this because it has no model of the player's external wallet and debits TREASURY in both directions.",
+    "impact": "On mainnet/TestNet a linked player can mint unlimited real GROW ASA out of the treasury by looping withdraw->deposit, draining the treasury asset supply. Mock-only CI cannot catch it.",
+    "evidence": {
+      "type": "doc",
+      "command": "grep -n 'TREASURY' src/growpodempire/chain/algorand.py; sed -n '116,134p' settlement_service.py",
+      "output": "settlement_service.py:123 self.provider.transfer_asset(self.asset_id, TREASURY, self._base_units(amount))  # no sender_mnemonic\nalgorand.py:86 sk = mnemonic.to_private_key(sender_mnemonic) if sender_mnemonic else self.treasury_sk\nalgorand.py:96 if receiver == TREASURY: receiver = self.treasury_addr\n-> sender=treasury, receiver=treasury: self-transfer, player ASA never debited.",
+      "url": "https://py-algorand-sdk.readthedocs.io/en/latest/algosdk/transaction.html"
+    },
+    "fix": {
+      "summary": "deposit() must pull the ASA FROM the player's address. Either require a signed player->treasury axfer (game must verify the inbound txid via the indexer before crediting), or treat deposit as off-chain only and never run a provider transfer. Crediting in-game GROW must be gated on a confirmed on-chain receipt of the player's ASA into the treasury, not on a treasury self-transfer."
+    },
+    "test_idea": "Real-provider (or a mock that tracks a separate player wallet book) test: after withdraw(100) the player wallet holds 100 ASA; deposit(100) must leave the player wallet at 0 ASA and treasury restored. Today the player wallet stays at 100.",
+    "confidence": 7,
+    "dedupe_key": "economic:settlement_service.py:deposit-self-transfer-duplication",
+    "agents": [
+      "blake"
+    ],
+    "corroborations": 1,
+    "cap_notes": [
+      "downgraded critical→medium: doc-only evidence"
+    ],
+    "verified": "unverifiable",
+    "verification_note": "Code-trace CONFIRMED: deposit() calls provider.transfer_asset(asset_id, TREASURY, units) with no player-signed inbound transfer — a custodial server cannot pull a user's ASA as written, so the DB debits while the real asset never moves. Exact on-chain effect needs TestNet → unverifiable here. Real pre-mainnet design gap; add to the mainnet checklist."
+  },
+  {
+    "id": "F006",
+    "severity": "medium",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "correctness",
+    "title": "NFT mint is not idempotent across a chain-success / DB-rollback boundary — duplicate on-chain assets",
+    "files": [
+      {
+        "path": "src/growpodempire/services/minting_service.py",
+        "lines": "58-128"
+      }
+    ],
+    "description": "_mint() sets status PENDING, calls provider.create_asset() (irreversible on-chain), then sets nft_asset_id + MINTED. Idempotency in mint_harvest/mint_strain only short-circuits when nft_status==MINTED. If create_asset() succeeds but the surrounding session_scope commit fails (DB error, conflict, crash between create_asset and commit), the on-chain ASA exists but the row is rolled back to its prior status (none/failed) with no asset id. A retry calls create_asset() AGAIN and mints a SECOND on-chain NFT for the same harvest/strain. There is no reconciliation by metadata_hash or url, and no persistence of the asset id before the chain call, so the only durable link (nft_asset_id) is lost on rollback. FAILED rows are intentionally re-mintable, which compounds this.",
+    "impact": "Supply/uniqueness violation: a single eligible harvest/strain can back multiple on-chain NFTs, breaking the 1:1 collectible guarantee and enabling duplicate-NFT sale/trade.",
+    "evidence": {
+      "type": "trace",
+      "command": "sed -n '110,128p' src/growpodempire/services/minting_service.py",
+      "output": "110 def _mint(self, row, asset_name, url, metadata):\n111   row.nft_status = NFTStatus.PENDING.value\n112   self.session.flush()\n113   try:\n114     asset_id = self.provider.create_asset(... )   # irreversible on-chain\n122   except ChainError: row.nft_status = FAILED; raise\n126   row.nft_asset_id = asset_id\n127   row.nft_status = NFTStatus.MINTED.value   # lost if outer commit fails -> retry re-mints"
+    },
+    "fix": {
+      "summary": "Persist a mint-intent (deterministic external key, e.g. harvest_id) and check the chain for an existing asset before create_asset, or record nft_asset_id+txid in a committed step before returning success. At minimum, treat PENDING as 'verify on-chain before re-minting' rather than re-minting unconditionally, and key create_asset off an idempotency token so a retry is a no-op."
+    },
+    "test_idea": "Simulate create_asset success then force a commit failure; on retry, assert create_asset is not called a second time / no duplicate asset id is created.",
+    "confidence": 7,
+    "dedupe_key": "correctness:minting_service.py:mint-nonidempotent-on-rollback",
+    "agents": [
+      "blake"
+    ],
+    "corroborations": 1,
+    "cap_notes": [
+      "downgraded high→medium: trace-only evidence"
+    ],
+    "verified": "unaudited",
+    "verification_note": "Not re-run this shift (severity ≤ Medium; outside the Critical+top-High audit worklist). Agent evidence stands as reported."
+  },
+  {
+    "id": "F007",
+    "severity": "medium",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "security",
+    "title": "Linked Algorand address is not unique and not validated — multiple players can share an address",
+    "files": [
+      {
+        "path": "src/growpodempire/db/models.py",
+        "lines": "46"
+      },
+      {
+        "path": "src/growpodempire/services/game_service.py",
+        "lines": "141-147"
+      }
+    ],
+    "description": "Player.algorand_address is mapped with index=True but NOT unique, and link_wallet() only checks truthiness — no Algorand address format/checksum validation and no ownership proof (no signed challenge). Two or more players can link the same address; withdraw() then sends treasury ASA to a shared/attacker-controlled address. There is no proof the linking player controls the address, so an attacker can link a victim's known address (or a shared exchange address) and have withdrawals routed there.",
+    "impact": "Withdrawals can be misrouted to an unproven or shared address; no wallet-control proof means a linked address is not trustworthy as a settlement target.",
+    "evidence": {
+      "type": "trace",
+      "command": "grep -n 'algorand_address' src/growpodempire/db/models.py; sed -n '141,147p' game_service.py",
+      "output": "models.py:46 algorand_address: Mapped[Optional[str]] = mapped_column(String(64), index=True)  # not unique\ngame_service.py:143 if not algorand_address: raise GameError(...)\ngame_service.py:146 player.algorand_address = algorand_address   # no format check, no control proof"
+    },
+    "fix": {
+      "summary": "Validate the address via algosdk.encoding.is_valid_address, add a uniqueness constraint (or explicit policy if sharing is intended), and require a signed-message challenge proving the player controls the private key before allowing withdrawals to it."
+    },
+    "test_idea": "link_wallet with a malformed address must raise; two players linking the same address must be rejected or flagged.",
+    "confidence": 7,
+    "dedupe_key": "security:game_service.py:wallet-link-no-unique-no-proof",
+    "agents": [
+      "blake"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "unaudited",
+    "verification_note": "Not re-run this shift (severity ≤ Medium; outside the Critical+top-High audit worklist). Agent evidence stands as reported."
+  },
+  {
+    "id": "F019",
+    "severity": "medium",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "security",
+    "title": "Withdrawal daily-cap check is TOCTOU-racey under concurrent requests",
+    "files": [
+      {
+        "path": "src/growpodempire/services/settlement_service.py",
+        "lines": "54-108"
+      }
+    ],
+    "description": "withdraw() posts the debit, then _enforce_daily_cap() sums prior ASA_WITHDRAWAL entries created in the last 24h to decide if the cap is exceeded. With autoflush off, the just-posted entry isn't counted (by design), and there is no row lock or SELECT ... FOR UPDATE on the player's wallet/ledger. Two concurrent withdraw requests for the same player can each read the same 'already withdrawn' total, each pass the cap check, and both commit — letting total withdrawals exceed the configured 24h cap. The wallet.version bump is not used for optimistic-lock enforcement here. Impact is bounded (overshoot ~= one extra request's worth per race window) but it weakens the treasury control.",
+    "impact": "A scripted attacker with a valid/stolen key can modestly exceed the per-day treasury cap by issuing parallel withdrawals; the harder the cap is relied on as the sole brake, the worse this is.",
+    "evidence": {
+      "type": "trace",
+      "command": "src/growpodempire/services/settlement_service.py:91-98",
+      "output": "        entry = post(self.session, player_id, -amount, LedgerEntryType.ASA_WITHDRAWAL, ...)\n        # Then enforce the rolling-24h treasury cap. The just-posted entry isn't\n        # flushed yet (autoflush is off), so it isn't double-counted; ...\n        self._enforce_daily_cap(player_id, amount)\n        # no row lock / SELECT FOR UPDATE -> concurrent txns read stale 'already' sum"
+    },
+    "fix": {
+      "summary": "Serialize per-player withdrawals: take a SELECT ... FOR UPDATE on the wallet row (or use the wallet.version optimistic lock with a retry) before computing the 24h sum, so concurrent withdrawals are ordered and the cap holds. On Postgres, an explicit row lock on Wallet at the top of withdraw() is sufficient.",
+      "diff": ""
+    },
+    "test_idea": "Simulate two interleaved withdraw() calls in separate sessions against the same player with a cap that allows only one; assert exactly one succeeds.",
+    "confidence": 7,
+    "dedupe_key": "security:src/growpodempire/services/settlement_service.py:withdrawal-cap-toctou-race",
+    "agents": [
+      "dana"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "unaudited",
+    "verification_note": "Not re-run this shift (severity ≤ Medium; outside the Critical+top-High audit worklist). Agent evidence stands as reported."
+  },
+  {
+    "id": "F020",
+    "severity": "medium",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "security",
+    "title": "Bump vulnerable web dependencies: Flask-Cors 4.0.0 (and aging Flask/Werkzeug)",
+    "files": [
+      {
+        "path": "src/growpodempire/api/flask_api.py",
+        "lines": "31-37"
+      }
+    ],
+    "description": "The pinned Flask-Cors is 4.0.0, which is affected by published CVEs (CVE-2024-6221: Access-Control-Allow-Private-Network defaulting true; CVE-2024-1681: log injection; later CVEs in the 4.x line around path/origin matching). Flask 2.3.2 and Werkzeug 2.3.7 are also well behind and carry their own advisories. Because CORS here gates which browser origins may use the X-API-Key surface, a CORS-matching bug can broaden cross-origin exposure of authenticated calls.",
+    "impact": "Potential cross-origin request acceptance / private-network access beyond the intended allowlist, and log-injection; weakens the browser-facing security boundary for authenticated API calls.",
+    "evidence": {
+      "type": "command",
+      "command": ".venv/bin/pip list | grep -iE \"flask|cors|werkzeug\"",
+      "output": "Flask             2.3.2\nFlask-Cors        4.0.0\nFlask-Limiter     3.5.0\nWerkzeug          2.3.7"
+    },
+    "fix": {
+      "summary": "Upgrade Flask-Cors to a patched release (>=5.0.x / latest), and bump Flask and Werkzeug to current maintained versions; re-run the suite. Verify CORS resources still restrict to settings.cors_allowed_origins and that Access-Control-Allow-Private-Network is not implicitly enabled.",
+      "diff": ""
+    },
+    "test_idea": "Add a CORS test asserting a disallowed Origin gets no Access-Control-Allow-Origin echo, and that ACAO is never '*' when credentials/keys are in play.",
+    "confidence": 7,
+    "dedupe_key": "security:flask-cors:vulnerable-dependency-versions",
+    "agents": [
+      "dana"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "unaudited",
+    "verification_note": "Not re-run this shift (severity ≤ Medium; outside the Critical+top-High audit worklist). Agent evidence stands as reported."
+  },
+  {
+    "id": "F030",
+    "severity": "medium",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "performance",
+    "title": "max_catchup_hours cap defers, not discards: a multi-year-idle plant needs one ~400ms read per capped year to fully catch up",
+    "files": [
+      {
+        "path": "src/growpodempire/simulation/engine.py",
+        "lines": "254-260"
+      }
+    ],
+    "description": "elapsed_hours is clamped to max_catchup_hours (8760), but the loop only advances plant.last_tick_at by the iterations it actually runs. So a plant idle 3 years processes 8760h on the first read (advancing last_tick_at by exactly 1 year) and is still 730 days behind; full catch-up requires 3 sequential ~400ms reads. The cap therefore bounds a single read's cost but NOT the total work to become current, and for auto-water/auto-feed pods (which keep the plant alive so the death break never fires) every one of those reads pays the full 8760-iteration cost. The cap is sane as a single-read DoS guard but its semantics (work deferred across reads, not collapsed) are easy to misread.",
+    "impact": "An auto-pod plant left idle for years stays perpetually behind unless polled repeatedly, each poll costing ~400ms; a script hammering /state on such a plant extracts ~400ms CPU per request. Bounded per-request, but unbounded in aggregate and surprising.",
+    "evidence": {
+      "type": "command",
+      "command": "PYTHONPATH=src .venv/bin/python -c '<auto_water+auto_feed plant, idle 3yr, single catch_up read, measure advance>'",
+      "output": "1st read of 3yr-idle: 382.2ms, advanced 8760h (1.00yr), alive=True, still_behind=730d"
+    },
+    "fix": {
+      "summary": "Either (a) on a gap larger than the cap, snap last_tick_at = now after one capped pass (accept the documented fidelity loss) so a plant can't stay behind, or (b) close-form the skipped hours. Document the cap's deferral semantics either way."
+    },
+    "test_idea": "Assert that after one catch_up of an N>cap-hour idle plant, (now - last_tick_at) is either ~0 (snap) or exactly N-cap hours, and that a hostile loop of reads has bounded total cost.",
+    "confidence": 7,
+    "dedupe_key": "performance:simulation/engine.py:catchup-cap-semantics",
+    "agents": [
+      "fiona"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "true",
+    "verification_note": "Spot-check: max_catchup_hours clamp confirmed at engine.py:255; a plant idle beyond the cap advances only cap hours/read and never fully catches up. Mechanism verified."
+  },
+  {
+    "id": "F031",
+    "severity": "medium",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "performance",
+    "title": "One rAF loop + ResizeObserver per PlantCanvas; dashboard mounts N independent renderers with no visibility gating",
+    "files": [
+      {
+        "path": "web/src/components/plant/plantRenderer.ts",
+        "lines": "788-865"
+      },
+      {
+        "path": "web/src/components/plant/PlantCanvas.tsx",
+        "lines": "76-84"
+      },
+      {
+        "path": "web/src/components/plant/PlantCard.tsx",
+        "lines": "63-74"
+      }
+    ],
+    "description": "createPlantRenderer() starts its own requestAnimationFrame loop, its own ResizeObserver, and (chamber mode) its own pointer listeners per canvas. PlantCard renders exactly one PlantCanvas per plant, and PodCard/dashboard map PlantCard over every plant in every pod (pod/PodCard.tsx line 61-62, dashboard/page.tsx line 98-99) with no IntersectionObserver/virtualization. So M pods x P plants = M*P concurrent rAF loops. Each frame (throttled to ~30fps via the 33ms gate at plantRenderer.ts:790, but rAF itself still fires ~60Hz per card) clearRects and redraws a full procedural plant: a 24-segment spine, up to 13 nodes each with a flower site of multiple clusters x (bracts+2) pods + hairs + trichomes, plus the apical cola. buildPlant() is rebuilt whenever the key (stage|round(health)|indicaRatio|symptom|alive|seed|mode|WxH) changes, and ResizeObserver fires buildPlant directly on every resize with no debounce.",
+    "impact": "On a populated garden (e.g. 16 plants) this is 16 always-on animation loops compositing fairly heavy 2D canvas work every frame, even for off-screen cards. Noticeable battery/CPU and jank on low-end mobile. Bundle size is fine (renderer is dependency-free; dashboard route 6.76kB / 137kB First Load JS).",
+    "evidence": {
+      "type": "command",
+      "command": "cd web && npm run build  (and grep PlantCanvas/PlantCard usage)",
+      "output": "Route (app)                         Size  First Load JS\n/dashboard                       6.76 kB         137 kB\n/dashboard/plants/[plantId]      3.21 kB         137 kB\n+ First Load JS shared by all             102 kB\n# PlantCard.tsx:64 renders <PlantCanvas .../> ; PodCard.tsx:61 plantIds.map(id=><PlantCard.../>) ; dashboard/page.tsx:98 orphanLocal.map(...). plantRenderer.ts:853 new ResizeObserver(resize); :864 raf=requestAnimationFrame(frame) -- per instance."
+    },
+    "fix": {
+      "summary": "Pause off-screen renderers with a shared IntersectionObserver (stop rAF when not visible), and/or drive all canvases from one shared rAF ticker. Debounce ResizeObserver->buildPlant. Reduced-motion already short-circuits rAF (motionOK gate) -- good."
+    },
+    "test_idea": "Render N PlantCards in jsdom/Playwright and assert only visible canvases have an active rAF (spy requestAnimationFrame/IntersectionObserver), and that scrolling a card off-screen cancels its loop.",
+    "confidence": 7,
+    "dedupe_key": "performance:web/plantRenderer.ts:per-card-raf",
+    "agents": [
+      "fiona"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "unaudited",
+    "verification_note": "Not re-run this shift (severity ≤ Medium; outside the Critical+top-High audit worklist). Agent evidence stands as reported."
+  },
+  {
+    "id": "F043",
+    "severity": "medium",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "correctness",
+    "title": "Breed accepts any strain ids: no ownership/discovery gate and no self-cross guard",
+    "files": [
+      {
+        "path": "src/growpodempire/services/game_service.py",
+        "lines": "467-526"
+      },
+      {
+        "path": "src/growpodempire/api/game_api.py",
+        "lines": "369-386"
+      }
+    ],
+    "description": "GameService.breed fetches parent_a/parent_b by id and charges the fee, but never verifies the player owns or has discovered those strains, and never rejects parent_a_id==parent_b_id. A player can breed using any catalog strain (including the rarest base genetics they never grew) by id, and can self-cross a single strain. cross(genome, genome) runs without error.",
+    "impact": "Bypasses the discovery/collection economy: players synthesize rare lineages from strains they never earned, and selfing is unbounded. Gameplay/economic integrity, not a crash.",
+    "evidence": {
+      "type": "trace",
+      "command": "grep -n 'owns\\|discovered\\|parent_a_id == parent_b' src/growpodempire/services/game_service.py (no matches in breed); game_api.py:369-386 passes ids straight through",
+      "output": "service breed() 467-526: get_strain(parent_a_id)/get_strain(parent_b_id) only; no ownership check; no parent_a!=parent_b check. Route 369-386 forwards client-supplied ids verbatim."
+    },
+    "fix": {
+      "summary": "Require the player to own/have discovered both parents (or restrict to non-base strains they hold), and reject parent_a_id==parent_b_id unless selfing is explicitly intended."
+    },
+    "test_idea": "breed with a strain the player has never grown raises GameError; self-cross (same id twice) is rejected or explicitly allowed by design.",
+    "confidence": 6,
+    "dedupe_key": "correctness:services/game_service.py:breed-no-ownership-or-selfcross-guard",
+    "agents": [
+      "harper"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "unaudited",
+    "verification_note": "Not re-run this shift (severity ≤ Medium; outside the Critical+top-High audit worklist). Agent evidence stands as reported."
+  },
+  {
+    "id": "F037",
+    "severity": "low",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "docs",
+    "title": "Design Codex MAP.md says KB covers \"all 22 catalog strains\" — now 47",
+    "files": [
+      {
+        "path": "docs/memory/MAP.md",
+        "lines": "97"
+      }
+    ],
+    "description": "MAP.md (Layer-1+ Codex master map) describes strain_knowledge.yaml as \"a scientist-grade encyclopedia ... for all 22 catalog strains\". The catalog is now 47 (strains.yaml = 47, KB in 1:1 sync per the enforced test). The 22 figure is from the pre-expansion era. make check-memory passes because it validates links/citations/structure, not numeric counts.",
+    "impact": "The authoritative memory map understates moat content by half; an agent trusting MAP.md would mis-scope the encyclopedia.",
+    "evidence": {
+      "type": "trace",
+      "command": "grep -n 'catalog strains' docs/memory/MAP.md; grep -cE '^  - name:' src/growpodempire/data/strains.yaml",
+      "output": "docs/memory/MAP.md:97: ... cultivation parameters) for all 22 catalog strains, surfaced at\nstrains.yaml name count = 47"
+    },
+    "fix": {
+      "summary": "Change MAP.md:97 \"all 22 catalog strains\" to \"all 47 catalog strains\" (or \"the full catalog\")."
+    },
+    "test_idea": "doc check: assert MAP.md strain count matches len(strains.yaml)",
+    "confidence": 9,
+    "dedupe_key": "docs:MAP.md:strain-count-22-vs-47",
+    "agents": [
+      "gabe"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "unaudited",
+    "verification_note": "Not re-run this shift (severity ≤ Medium; outside the Critical+top-High audit worklist). Agent evidence stands as reported."
+  },
+  {
+    "id": "F010",
+    "severity": "low",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "correctness",
+    "title": "deposit() trusts DB asa_balance counter as 'on-chain ASA balance' but never reads the chain",
+    "files": [
+      {
+        "path": "src/growpodempire/services/settlement_service.py",
+        "lines": "118-120"
+      }
+    ],
+    "description": "deposit()'s guard 'Insufficient on-chain ASA balance' checks wallet.asa_balance, a DB-side counter the game increments on withdraw, NOT the player's actual on-chain holding. This is correct for the DB-authoritative invariant (the game never lets chain state drive gameplay), and no code path reads indexer/chain balance to decide gameplay (verified by grep — good). But the error message is misleading: it claims to validate on-chain balance when it validates a DB mirror. Worth a comment/message fix so operators don't assume an indexer check exists.",
+    "impact": "Misleading invariant signal; no functional impact on the DB-authoritative rule (which is correctly upheld).",
+    "evidence": {
+      "type": "command",
+      "command": "grep -rn 'asset_info\\|indexer\\|account_info\\|balance' src/growpodempire/chain/ src/growpodempire/services/settlement_service.py",
+      "output": "settlement_service.py:119 if (wallet.asa_balance or Decimal('0')) < amount:  # DB counter, not chain\nNo indexer/account_info read feeds gameplay -> DB-authoritative invariant intact."
+    },
+    "fix": {
+      "summary": "Rename the message to 'Insufficient settled ASA balance' and add a comment that asa_balance is a DB mirror, not an on-chain read."
+    },
+    "test_idea": "n/a (doc/message clarity).",
+    "confidence": 8,
+    "dedupe_key": "correctness:settlement_service.py:asa-balance-message-misleading",
+    "agents": [
+      "blake"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "unaudited",
+    "verification_note": "Not re-run this shift (severity ≤ Medium; outside the Critical+top-High audit worklist). Agent evidence stands as reported."
+  },
+  {
+    "id": "F036",
+    "severity": "low",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "docs",
+    "title": "README test badge says \"139 green\" but the suite has 186 tests",
+    "files": [
+      {
+        "path": "README.md",
+        "lines": "30"
+      }
+    ],
+    "description": "The README Tests badge (line 30) reads \"139 green\". The actual test suite has 186 test functions (agent-memory also records 186). The badge is stale by ~47 tests.",
+    "impact": "Misleads readers about test coverage breadth; a vanity badge that undercounts the real suite erodes trust in the other badges.",
+    "evidence": {
+      "type": "command",
+      "command": "grep -rcE 'def test_' tests/ | awk -F: '{s+=$2} END{print s}'; grep -n 'TESTS-' README.md",
+      "output": "total test fns: 186\nREADME.md:30:![Tests](.../TESTS-139_green-...)"
+    },
+    "fix": {
+      "summary": "Bump the README test badge to 186 (or wire it to a generated value so it can't drift)."
+    },
+    "test_idea": "doc check: parse the README test badge number and assert it == collected test count",
+    "confidence": 8,
+    "dedupe_key": "docs:README.md:test-badge-139-vs-186",
+    "agents": [
+      "gabe"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "unaudited",
+    "verification_note": "Not re-run this shift (severity ≤ Medium; outside the Critical+top-High audit worklist). Agent evidence stands as reported."
+  },
+  {
+    "id": "F038",
+    "severity": "low",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "docs",
+    "title": "User-facing Strain Codex manual says \"all 16 founding strains\" — catalog is 47",
+    "files": [
+      {
+        "path": "docs/manual/strain-codex.md",
+        "lines": "14,44"
+      }
+    ],
+    "description": "The player manual strain-codex.md claims \"All 16 founding strains catalogued from the vault\" (line 14) and a \"Master table — all 16 founders\" (line 44), and only lists ~15 entries. The shipped catalog is 47 strains. The manual is two expansions behind.",
+    "impact": "Players consulting the Codex doc believe they've seen the whole catalog when 31 strains are undocumented there.",
+    "evidence": {
+      "type": "trace",
+      "command": "grep -niE '16 (founding|founders)|all 16' docs/manual/strain-codex.md; grep -cE '^  - name:' src/growpodempire/data/strains.yaml",
+      "output": "docs/manual/strain-codex.md:14:*All 16 founding strains catalogued from the vault...\ndocs/manual/strain-codex.md:44:## Master table — all 16 founders\nstrains.yaml name count = 47"
+    },
+    "fix": {
+      "summary": "Regenerate the strain-codex manual from strains.yaml so the count and table reflect all 47 strains."
+    },
+    "test_idea": "doc check: assert the manual lists every slug in strains.yaml",
+    "confidence": 8,
+    "dedupe_key": "docs:strain-codex.md:strain-count-16-vs-47",
+    "agents": [
+      "gabe"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "unaudited",
+    "verification_note": "Not re-run this shift (severity ≤ Medium; outside the Critical+top-High audit worklist). Agent evidence stands as reported."
+  },
+  {
+    "id": "F047",
+    "severity": "low",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "test-gap",
+    "title": "No automated guard for serializer↔TS wire-format parity (drift is silently allowed)",
+    "files": [
+      {
+        "path": "tests/test_openapi.py",
+        "lines": "16-30"
+      },
+      {
+        "path": "web/src/lib/types.ts",
+        "lines": "1-3"
+      }
+    ],
+    "description": "types.ts header states the hand-written TS types ARE the source of truth for the wire format because 'The OpenAPI spec carries no body schemas'. test_openapi.py only asserts path presence and the ApiKeyAuth security scheme — it never validates response body shapes against the serializers. There is no test (Python or web) asserting that serialize.*_dict() key sets match the corresponding TS interfaces. The two drifts above (lifetime_vigor, season) are the live consequence: both landed without any failing test. typecheck passes (`tsc --noEmit` clean) precisely because TS cannot detect backend fields the client never references.",
+    "impact": "Every future serializer field add/rename can desync from the client undetected until a runtime UI bug. Low because no current data corruption; it is a missing integration test.",
+    "evidence": {
+      "type": "command",
+      "command": "cd web && npm run typecheck; .venv/bin/python -m pytest tests/test_openapi.py -q",
+      "output": "tsc --noEmit: (no output — passes)\ntests/test_openapi.py: 8 passed in 2.46s\ntest_openapi.py asserts only: spec['paths'] contains routes, buy['security']==[{'ApiKeyAuth':[]}] — no body schema checks"
+    },
+    "fix": {
+      "summary": "Add a parity test that builds sample ORM rows, serializes them, and asserts each dict's keys are declared in the matching TS interface (parse types.ts or a committed JSON-Schema export). Fail on extra/missing keys."
+    },
+    "test_idea": "reports/proposed-tests/test_serializer_ts_parity.py: for each (serializer_fn, interface) pair, assert set(serialize_fn(sample).keys()) == documented_ts_fields(interface).",
+    "confidence": 8,
+    "dedupe_key": "test-gap:tests/test_openapi.py:serializer-ts-parity",
+    "agents": [
+      "ivy"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "unaudited",
+    "verification_note": "Not re-run this shift (severity ≤ Medium; outside the Critical+top-High audit worklist). Agent evidence stands as reported."
+  },
+  {
+    "id": "F002",
+    "severity": "low",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "correctness",
+    "title": "Renderer rebuild key omits wall-clock grow day, so a live plant never ripens between stage/health changes",
+    "files": [
+      {
+        "path": "web/src/components/plant/plantRenderer.ts",
+        "lines": "125-135,788-803"
+      }
+    ],
+    "description": "deriveDay() (125-135) derives the displayed grow day from Date.now() - plantedAt. But frame() only rebuilds geometry (buildPlant) when `key` changes (794-798), and key is composed of stage|health|indicaRatio|symptom|alive|seed|mode|WxH — it does NOT include the elapsed day. plantedAt is stable per plant, so for a plant whose stage/health are unchanged between 7s polls, budDev/ripe/brown/trich (all functions of the day) stay frozen at the value captured on the last rebuild.",
+    "impact": "Mostly cosmetic: visible ripening only advances when the polled health/stage changes (which they usually do during active grows), so it self-corrects in practice. But on a stable-health flowering plant the buds visually stall. Low because the sim is server-authoritative and health/stage churn masks it.",
+    "evidence": {
+      "type": "trace",
+      "command": "grep -n 'const key' web/src/components/plant/plantRenderer.ts",
+      "output": "794:      const key = `${p.stage}|${Math.round(p.health)}|${p.indicaRatio.toFixed(2)}|${p.symptom}|${p.alive}|${p.seed}|${p.mode}|${W}x${H}`;\n// deriveDay (125-135) uses Date.now(); day is not in key, so devParams(d) is frozen until another field changes"
+    },
+    "fix": {
+      "summary": "Include a coarse day bucket in the rebuild key, e.g. append `|${Math.floor(deriveDay(p.stage, p.plantedAt))}` so geometry rebuilds at least once per grow-day even when health/stage are steady."
+    },
+    "test_idea": "Unit-test a key builder helper: same props but plantedAt 2 days earlier should yield a different key.",
+    "confidence": 7,
+    "dedupe_key": "correctness:web/src/components/plant/plantRenderer.ts:rebuild-key-missing-day",
+    "agents": [
+      "alex"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "unaudited",
+    "verification_note": "Not re-run this shift (severity ≤ Medium; outside the Critical+top-High audit worklist). Agent evidence stands as reported."
+  },
+  {
+    "id": "F014",
+    "severity": "low",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "test-gap",
+    "title": "metadata_for() ARC-3 metadata helper (harvest/strain/unknown/missing) had no coverage",
+    "files": [
+      {
+        "path": "src/growpodempire/services/minting_service.py",
+        "lines": "130-142"
+      }
+    ],
+    "description": "metadata_for serves the ARC-3 JSON for the /api/game/nft/<kind>/<id>.json route. term-missing flagged lines 132-142 (all four arms: harvest, strain, missing-row GameError, unknown-kind GameError) as uncovered. Low risk (read path) but it is the public metadata endpoint backing minted NFTs.",
+    "impact": "Public NFT metadata endpoint. Low severity (read-only, no money), but a 500 here breaks wallet/marketplace metadata resolution.",
+    "evidence": {
+      "type": "test",
+      "command": "PYTHONPATH=src .venv/bin/python -m pytest reports/proposed-tests/test_casey_minting_paths.py::test_metadata_for_harvest_and_strain reports/proposed-tests/test_casey_minting_paths.py::test_metadata_for_unknown_kind_and_missing -q",
+      "output": "2 passed\ncovers harvest dict, strain dict, 'Unknown metadata kind' and missing-row 'not found' GameErrors"
+    },
+    "fix": {
+      "summary": "Add the two metadata_for tests covering valid harvest/strain plus unknown-kind and missing-id GameError arms."
+    },
+    "test_idea": "Call metadata_for('harvest'|'strain', valid id) -> non-empty dict; call with bogus kind and missing ids -> GameError.",
+    "confidence": 7,
+    "dedupe_key": "test-gap:minting_service:metadata-for",
+    "agents": [
+      "casey"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "unaudited",
+    "verification_note": "Not re-run this shift (severity ≤ Medium; outside the Critical+top-High audit worklist). Agent evidence stands as reported."
+  },
+  {
+    "id": "F024",
+    "severity": "low",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "ux",
+    "title": "Text inputs strip the focus outline without an equivalent (focus:outline-none, border-only replacement)",
+    "files": [
+      {
+        "path": "web/src/components/ui/Field.tsx",
+        "lines": "3-4"
+      }
+    ],
+    "description": "inputClass sets focus:outline-none and replaces it only with a 1px border color change (focus:border-grow-500). A subtle border recolor on a dark field is a weak focus indicator and removes the UA outline entirely. Used by every TextInput/Select incl. the API-key and Player-ID fields on the import/sign-in flow.",
+    "impact": "Keyboard users may not perceive which field is focused when filling the sign-in (auth) form; borderline WCAG 2.4.7 / 1.4.11 (non-text contrast of focus indicator).",
+    "evidence": {
+      "type": "trace",
+      "command": "grep -rn 'outline-none' web/src",
+      "output": "web/src/components/ui/Field.tsx:4:  \"w-full rounded-md border border-ink-600 bg-ink-900 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-grow-500 focus:outline-none\";",
+      "url": "https://www.w3.org/WAI/WCAG21/Understanding/focus-visible.html"
+    },
+    "fix": {
+      "summary": "Replace focus:outline-none with a focus ring: focus-visible:ring-2 focus-visible:ring-grow-500 (keep border change as secondary)."
+    },
+    "test_idea": "Manual keyboard tab through the 'I have a key' form; confirm focused field has a clearly visible ring.",
+    "confidence": 7,
+    "dedupe_key": "ux:field:outline-none",
+    "agents": [
+      "evan"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "unaudited",
+    "verification_note": "Not re-run this shift (severity ≤ Medium; outside the Critical+top-High audit worklist). Agent evidence stands as reported."
+  },
+  {
+    "id": "F025",
+    "severity": "low",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "ux",
+    "title": "PlantCanvas aria-label is non-descriptive ('<stage> plant') — omits health, strain, and stress state the visual encodes",
+    "files": [
+      {
+        "path": "web/src/components/plant/PlantCanvas.tsx",
+        "lines": "86-95"
+      }
+    ],
+    "description": "The new canvas role=img has aria-label={`${stage} plant`}, e.g. 'flowering plant'. The render encodes health (color/droop), dominant stress symptom (nute burn, rot, pests, dead), and morphology from indicaRatio — none of which reach AT. A sighted player sees a wilting/dead plant; a screen-reader user hears only 'flowering plant'. The companion StatBars expose numbers elsewhere, but the canvas itself (often the focal element on a card) is uninformative.",
+    "impact": "Screen-reader users lose the at-a-glance health/stress signal the canvas is designed to convey; mild because the same data exists in StatBars/badges nearby.",
+    "evidence": {
+      "type": "trace",
+      "command": "grep -rn 'aria-label' web/src/components/plant/PlantCanvas.tsx",
+      "output": "92:        role=\"img\"\n93:        aria-label={`${stage} plant`}\n(props include health, flags, indicaRatio, alive — none used in the label)",
+      "url": "https://www.w3.org/WAI/tutorials/images/complex/"
+    },
+    "fix": {
+      "summary": "Build a richer label from props, e.g. `${alive ? '' : 'Dead '}${stage} plant, health ${Math.round(health)}%${dom.condition!=='healthy' ? `, ${dom.label}` : ''}`."
+    },
+    "test_idea": "RTL: render PlantCanvas with symptom=root_rot, health=20, alive=false; assert aria-label mentions 'Dead' and the condition.",
+    "confidence": 7,
+    "dedupe_key": "ux:plantcanvas:weak-aria-label",
+    "agents": [
+      "evan"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "unaudited",
+    "verification_note": "Not re-run this shift (severity ≤ Medium; outside the Critical+top-High audit worklist). Agent evidence stands as reported."
+  },
+  {
+    "id": "F026",
+    "severity": "low",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "ux",
+    "title": "Gauge SVG (VPD/scientist readouts) has no accessible name or text alternative — value invisible to AT",
+    "files": [
+      {
+        "path": "web/src/components/ui/Gauge.tsx",
+        "lines": "52-76"
+      }
+    ],
+    "description": "The radial Gauge renders value/label purely as SVG <text>; the <svg> has no role/aria-label and the numeric readout is not exposed as a meter or labeled image. SVG text is inconsistently read by screen readers, and there is no role=img + aria-label fallback, so the gauge's value (e.g. VPD) and in/out-of-band state may be skipped entirely.",
+    "impact": "Screen-reader users may not get the gauge value or whether it's in the optimal band; low because gauges are advisory scientist readouts, not blocking actions.",
+    "evidence": {
+      "type": "trace",
+      "command": "grep -rn 'role=\\|aria' web/src/components/ui/Gauge.tsx",
+      "output": "(no matches — Gauge.tsx has no role/aria attributes)\n54:      <svg width={size} height={size}>\n66:        <text ... fontSize=\"16\">{value...toFixed(2)}</text>  // value only in SVG text\n75:      <div className=\"instrument-label mt-1\">{label}</div>",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/meter_role"
+    },
+    "fix": {
+      "summary": "Add role=\"img\" + aria-label to the <svg> (or role=\"meter\" with aria-valuenow/min/max/aria-label), e.g. aria-label={`${label}: ${value ?? 'no reading'} ${unit ?? ''}${inBand ? ', in range' : ', out of range'}`}."
+    },
+    "test_idea": "RTL: render Gauge label='VPD' value=1.2 optimal=[0.8,1.2]; query by role img/meter and assert accessible name includes the value and 'in range'.",
+    "confidence": 7,
+    "dedupe_key": "ux:gauge:no-accessible-name",
+    "agents": [
+      "evan"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "unaudited",
+    "verification_note": "Not re-run this shift (severity ≤ Medium; outside the Critical+top-High audit worklist). Agent evidence stands as reported."
+  },
+  {
+    "id": "F027",
+    "severity": "low",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "ux",
+    "title": "Onboarding tab buttons lack tab semantics and type=button (custom TabButton, not the shared Tabs)",
+    "files": [
+      {
+        "path": "web/src/components/onboarding/OnboardingPanel.tsx",
+        "lines": "104-123"
+      }
+    ],
+    "description": "The Quick-play/New-account/I-have-a-key switcher uses a local TabButton that renders a bare <button> with no role=tab, no aria-selected, and no type attribute. It is not wired to a tablist/tabpanel, so AT announces three generic buttons with no selected state and no relationship to the form below. (The shared Tabs.tsx component does set role=tab/aria-selected and would be the correct primitive here.)",
+    "impact": "Screen-reader users on the primary onboarding screen can't tell which onboarding mode is active or that the three buttons form a tab set; low-medium because they can still operate the forms.",
+    "evidence": {
+      "type": "trace",
+      "command": "grep -rn 'role=\\|aria-selected\\|type=' web/src/components/onboarding/OnboardingPanel.tsx",
+      "output": "113:    <button\n114:      onClick={onClick}\n115:      className={`flex-1 rounded-md px-3 py-1.5 text-sm transition-colors ${...}`}\n116:    >  // no role=tab, no aria-selected, no type\n(contrast: components/ui/Tabs.tsx:29 role=\"tab\" :30 aria-selected={on})",
+      "url": "https://www.w3.org/WAI/ARIA/apg/patterns/tabs/"
+    },
+    "fix": {
+      "summary": "Reuse the shared Tabs component, or add role=\"tab\" aria-selected={active} type=\"button\" to TabButton and wrap the row in role=\"tablist\" with the form as the tabpanel."
+    },
+    "test_idea": "RTL: render OnboardingPanel; assert getAllByRole('tab') length 3 and the active one has aria-selected=true.",
+    "confidence": 7,
+    "dedupe_key": "ux:onboarding:tabbutton-semantics",
+    "agents": [
+      "evan"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "unaudited",
+    "verification_note": "Not re-run this shift (severity ≤ Medium; outside the Critical+top-High audit worklist). Agent evidence stands as reported."
+  },
+  {
+    "id": "F039",
+    "severity": "low",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "docs",
+    "title": "lifetime_vigor / care-over-time yield mechanic is undocumented in the player game-manual",
+    "files": [
+      {
+        "path": "docs/manual/game-manual.md",
+        "lines": "194-197"
+      }
+    ],
+    "description": "The new mechanic (yield is driven by integrated lifetime care — Plant.lifetime_health_sum/lifetime_hours → lifetime_vigor → harvest weight; DECISIONS 2026-06-10) is documented in dev memory (BACKLOG, DECISIONS, .env-adjacent code) but not in the player-facing game-manual. The manual only describes the base `vigor` gene (line 194), not that sustained health over the whole grow determines yield.",
+    "impact": "Players have no documented signal that neglect mid-grow permanently lowers yield (it's not recoverable by a good harvest-moment snapshot). A core balance lever is invisible in the only player doc.",
+    "evidence": {
+      "type": "trace",
+      "command": "grep -niE 'lifetime|vigor' docs/manual/game-manual.md",
+      "output": "194:| `vigor` | 0.0–1.0 | 0.10 | hidden | General hardiness |\n197:  (resistances, vigor) silently shape how the plant behaves in the simulation but\n(no 'lifetime' / care-over-time mechanic described)"
+    },
+    "fix": {
+      "summary": "Add a short game-manual section: yield reflects average plant health across the entire grow (lifetime_vigor), so consistent care beats a last-minute fix."
+    },
+    "test_idea": "n/a",
+    "confidence": 7,
+    "dedupe_key": "docs:game-manual.md:lifetime-vigor-undocumented",
+    "agents": [
+      "gabe"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "unaudited",
+    "verification_note": "Not re-run this shift (severity ≤ Medium; outside the Critical+top-High audit worklist). Agent evidence stands as reported."
+  },
+  {
+    "id": "F044",
+    "severity": "low",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "test-gap",
+    "title": "compute-on-read cadence-invariance is correct but untested at the suite level",
+    "files": [
+      {
+        "path": "src/growpodempire/simulation/engine.py",
+        "lines": "237-283"
+      }
+    ],
+    "description": "catch_up is deterministic and cadence-invariant FOR A FIXED plant id: a single 720h jump equals 120 incremental 6h reads (delta 0.0 once the per-plant RNG stream is held fixed). The apparent divergence seen with two different plants is expected (different UUID -> different pest-spawn RNG stream), not a bug. There is no suite test pinning this invariance, so a future regression (e.g. moving _env_for inside the loop, or fractional-hour truncation) would go uncaught.",
+    "impact": "Latent risk to the core determinism invariant; no current correctness bug.",
+    "evidence": {
+      "type": "test",
+      "command": ".venv/bin/python -m pytest -q reports/proposed-tests/test_harper_catchup_divergence_probe.py -s",
+      "output": "A sum=4800.0 hours=48.0 health=100.0 water=45.0 nutrient=45.0\nB sum=4800.0 hours=48.0 health=100.0 water=45.0 nutrient=45.0\ndivergence delta=0.0\n1 passed"
+    },
+    "fix": {
+      "summary": "Add a suite test asserting single-jump == incremental catch_up for one plant (RNG-neutralized or by snapshotting), guarding compute-on-read determinism."
+    },
+    "test_idea": "Parametrize read cadence over a fixed plant and assert identical lifetime_health_sum/height.",
+    "confidence": 7,
+    "dedupe_key": "test-gap:simulation/engine.py:catchup-cadence-invariance",
+    "agents": [
+      "harper"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "unaudited",
+    "verification_note": "Not re-run this shift (severity ≤ Medium; outside the Critical+top-High audit worklist). Agent evidence stands as reported."
+  },
+  {
+    "id": "F003",
+    "severity": "low",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "correctness",
+    "title": "PlantCanvas writes propsRef.current during render (render-phase side effect)",
+    "files": [
+      {
+        "path": "web/src/components/plant/PlantCanvas.tsx",
+        "lines": "65-74"
+      }
+    ],
+    "description": "propsRef.current is assigned in the component body (65-74), i.e. during render, not in an effect. The ref-funnel pattern is intentional and works here (the renderer reads getProps() each frame, so it always sees the latest committed value), and it is not stale. But mutating a ref during render is technically a render-phase side effect that React's docs advise against; under React 18 StrictMode/concurrent double-render or a bailed-out render the timing is benign here only because the rAF read happens post-commit.",
+    "impact": "Low: no observed bug — the value the renderer reads is always the most recent assignment, and there is exactly one renderer instance. Flagged as a fragile-pattern note, not a defect. Confidence capped (trace-only, no failing command).",
+    "evidence": {
+      "type": "doc",
+      "command": "trace web/src/components/plant/PlantCanvas.tsx:65-74",
+      "output": "65:  propsRef.current = {\n66:    stage: toRenderStage(stage),\n... assigned in component body (render phase), not in useEffect ...\n74:  };",
+      "url": "https://react.dev/reference/react/useRef#caveats"
+    },
+    "fix": {
+      "summary": "Optional: move the propsRef assignment into a useEffect (or useLayoutEffect) keyed on the inputs to keep render pure. Behavior is unchanged; this only satisfies the 'do not write refs during render' guidance."
+    },
+    "test_idea": "N/A behavioral; lint rule react-hooks could be augmented but no functional test warranted.",
+    "confidence": 6,
+    "dedupe_key": "correctness:web/src/components/plant/PlantCanvas.tsx:ref-write-in-render",
+    "agents": [
+      "alex"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "unaudited",
+    "verification_note": "Not re-run this shift (severity ≤ Medium; outside the Critical+top-High audit worklist). Agent evidence stands as reported."
+  },
+  {
+    "id": "F021",
+    "severity": "low",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "security",
+    "title": "require_player distinguishes 404 (no such player) from 403 (bad key), enabling player-id enumeration",
+    "files": [
+      {
+        "path": "src/growpodempire/api/auth.py",
+        "lines": "30-38"
+      }
+    ],
+    "description": "require_player returns 404 'Player not found' when the player_id doesn't exist and 403 'Invalid API key' when it does but the key is wrong. The differing status/message lets an unauthenticated caller enumerate valid player_ids (UUIDs, so practically hard to brute, but the oracle still exists and pairs with the guest-login username oracle). The hmac.compare_digest comparison itself is correct/constant-time; the leak is the branch before it.",
+    "impact": "Player-id existence disclosure; low on its own (UUID space) but compounds enumeration when combined with the guest endpoint.",
+    "evidence": {
+      "type": "trace",
+      "command": "src/growpodempire/api/auth.py:31-37",
+      "output": "            player = s.get(Player, player_id)\n            if player is None:\n                return jsonify({\"error\": \"Player not found\"}), 404\n            expected = player.api_key or \"\"\n        if not expected or not hmac.compare_digest(provided, expected):\n            return jsonify({\"error\": \"Invalid API key\"}), 403"
+    },
+    "fix": {
+      "summary": "Return a uniform 401/403 with a generic message for both 'no such player' and 'bad key' on write/owner-scoped routes, so the response does not reveal whether a player_id exists. Keep the constant-time compare.",
+      "diff": ""
+    },
+    "test_idea": "Assert that GET/POST on a non-existent player_id and on an existing player_id with a wrong key return the same status code and body.",
+    "confidence": 6,
+    "dedupe_key": "security:src/growpodempire/api/auth.py:player-existence-enumeration-oracle",
+    "agents": [
+      "dana"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "unaudited",
+    "verification_note": "Not re-run this shift (severity ≤ Medium; outside the Critical+top-High audit worklist). Agent evidence stands as reported."
+  },
+  {
+    "id": "F028",
+    "severity": "low",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "ux",
+    "title": "Shared Tabs widget incomplete: no tabpanel association, no arrow-key roving focus, buttons lack type",
+    "files": [
+      {
+        "path": "web/src/components/ui/Tabs.tsx",
+        "lines": "22-48"
+      }
+    ],
+    "description": "Tabs sets role=tablist and role=tab/aria-selected (good) but: tabs are not linked to their panels (no id + aria-controls, no role=tabpanel/aria-labelledby on consumers), there is no Left/Right arrow-key roving-tabindex navigation (APG tab pattern), and the <button>s have no type=button. Per the ARIA Authoring Practices tab pattern, tablists should support arrow-key movement and associate tabs with panels.",
+    "impact": "Keyboard users must Tab through every tab instead of arrowing; AT users don't get the tab/panel relationship. Low — purely navigational, all content remains reachable.",
+    "evidence": {
+      "type": "trace",
+      "command": "grep -rn 'aria-controls\\|tabpanel\\|onKeyDown\\|type=' web/src/components/ui/Tabs.tsx",
+      "output": "(no matches for aria-controls / tabpanel / onKeyDown / type in Tabs.tsx)\n27:          <button key={t.key} role=\"tab\" aria-selected={on} onClick={...}>  // no id/aria-controls/onKeyDown/type",
+      "url": "https://www.w3.org/WAI/ARIA/apg/patterns/tabs/#keyboardinteraction"
+    },
+    "fix": {
+      "summary": "Add type=\"button\", id/aria-controls per tab, role=\"tabpanel\"+aria-labelledby on panels, and an onKeyDown handler implementing ArrowLeft/ArrowRight roving tabindex."
+    },
+    "test_idea": "RTL: render Tabs, focus active tab, fire ArrowRight, assert focus moves to next tab and onChange fires.",
+    "confidence": 6,
+    "dedupe_key": "ux:tabs:no-keyboard-pattern",
+    "agents": [
+      "evan"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "unaudited",
+    "verification_note": "Not re-run this shift (severity ≤ Medium; outside the Critical+top-High audit worklist). Agent evidence stands as reported."
+  },
+  {
+    "id": "F032",
+    "severity": "low",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "performance",
+    "title": "set_environment syncs every plant in a pod in a Python loop; cost stacks with catch-up amplification",
+    "files": [
+      {
+        "path": "src/growpodempire/services/simulation_service.py",
+        "lines": "205-213"
+      }
+    ],
+    "description": "set_environment() queries all living plants in a pod and calls self.sync(plant) (engine.catch_up) for each in a Python for-loop so they catch up under the old environment before new readings apply. This is correct, but if multiple plants in a pod are long-idle, the per-plant catch-up cost (up to ~400ms/idle-year, see engine finding) multiplies by the plant count within a single write request. The query itself is fine (one filtered .all(), no N+1), but the per-row catch_up makes one set_environment call potentially capacity*400ms.",
+    "impact": "A single environment update on a full pod of long-idle plants could take capacity x several-hundred ms. Minor at expected idle gaps but compounds the engine catch-up cost; worth noting alongside it.",
+    "evidence": {
+      "type": "trace",
+      "command": "",
+      "output": "src/growpodempire/services/simulation_service.py:207-213\n        plants = (\n            self.session.query(Plant)\n            .filter(Plant.pod_id == pod_id, Plant.harvested.is_(False), Plant.is_alive.is_(True))\n            .all()\n        )\n        for plant in plants:\n            self.sync(plant)"
+    },
+    "fix": {
+      "summary": "Same remedy as the engine finding -- a cheaper long-gap catch-up makes this loop cheap. No N+1 query issue; the cost is purely the per-plant simulation work."
+    },
+    "test_idea": "Time set_environment on a pod of capacity N long-idle plants; assert it scales acceptably after catch-up optimization.",
+    "confidence": 6,
+    "dedupe_key": "performance:simulation_service.py:set-env-sync-loop",
+    "agents": [
+      "fiona"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "true",
+    "verification_note": "Spot-check: max_catchup_hours clamp confirmed at engine.py:255; a plant idle beyond the cap advances only cap hours/read and never fully catches up. Mechanism verified."
+  },
+  {
+    "id": "F033",
+    "severity": "low",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "performance",
+    "title": "compute_conditions() runs every catch-up hour, doubling the per-step work for onset-event diffing",
+    "files": [
+      {
+        "path": "src/growpodempire/simulation/engine.py",
+        "lines": "268-277"
+      }
+    ],
+    "description": "Inside the per-hour catch_up loop, compute_conditions(plant, sim) is called every iteration (8761 calls for a year) purely to diff condition onsets and emit condition_onset events. cProfile shows compute_conditions at ~0.05s tottime over a year plus the surrounding set/get churn. Condition transitions are rare relative to hours; recomputing the full flag set every hour is wasted work in the common case where nothing changes.",
+    "impact": "A constant multiplier on the already-linear catch-up cost. Small in isolation but part of why an idle-year read is ~400ms rather than tens of ms.",
+    "evidence": {
+      "type": "command",
+      "command": "PYTHONPATH=src .venv/bin/python -c '<cProfile of catch_up(8760h)>'",
+      "output": "     8761    0.050    0.000    0.110    0.000 .../simulation/reactions.py:14(compute_conditions)\n# called once per hour inside the loop (engine.py:269) plus once at the end (engine.py:282)"
+    },
+    "fix": {
+      "summary": "Only recompute conditions when a driving level crosses a threshold (cheap guard on water/nutrient/pest/disease deltas), or compute onsets from the state trajectory in bulk for large gaps rather than per-hour."
+    },
+    "test_idea": "Assert identical emitted condition_onset events before/after the optimization across a representative trajectory (golden test).",
+    "confidence": 6,
+    "dedupe_key": "performance:simulation/engine.py:per-hour-compute-conditions",
+    "agents": [
+      "fiona"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "true",
+    "verification_note": "Spot-check: max_catchup_hours clamp confirmed at engine.py:255; a plant idle beyond the cap advances only cap hours/read and never fully catches up. Mechanism verified."
+  },
+  {
+    "id": "F015",
+    "severity": "low",
+    "severity_disputed": null,
+    "disputed": false,
+    "category": "test-gap",
+    "title": "chain/algorand.py real provider is 0% covered; chain/factory.py provider selection 47%",
+    "files": [
+      {
+        "path": "src/growpodempire/chain/algorand.py",
+        "lines": "13-124"
+      },
+      {
+        "path": "src/growpodempire/chain/factory.py",
+        "lines": "17-48"
+      }
+    ],
+    "description": "The real Algorand provider (algorand.py) is 0% covered (lines 13-124) and chain/factory.py provider-selection is 47% (lines 17-26,41-43,48). Per project invariants CI must never require a live key, so algorand.py legitimately can't be exercised end-to-end in CI — but the factory's mock/real selection logic and config validation are CI-safe and only partially tested. This is a LEAD (confidence <6 on it being a true defect) — flagged for visibility, not a runnable failure.",
+    "impact": "The mock/real swap is a security-relevant config boundary (a misconfig could send a real key path in CI or a mock in prod). Currently only the mock branch is well covered.",
+    "evidence": {
+      "type": "command",
+      "command": "PYTHONPATH=src .venv/bin/python -m pytest --cov=growpodempire --cov-report=term-missing -q",
+      "output": "chain/algorand.py   52  52   0%  13-124\nchain/factory.py    17   9  47%  17-26, 41-43, 48"
+    },
+    "fix": {
+      "summary": "Add a CI-safe test that asserts shared_provider() returns MockChainProvider when no real key/config is present, and that an explicit real-provider request without a key raises rather than silently falling back."
+    },
+    "test_idea": "Drive chain.factory selection with env/config permutations (no key -> mock; explicit real + missing key -> error) without any network call.",
+    "confidence": 5,
+    "dedupe_key": "test-gap:chain_factory:provider-selection",
+    "agents": [
+      "casey"
+    ],
+    "corroborations": 1,
+    "cap_notes": [],
+    "verified": "unaudited",
+    "verification_note": "Not re-run this shift (severity ≤ Medium; outside the Critical+top-High audit worklist). Agent evidence stands as reported."
+  }
+]

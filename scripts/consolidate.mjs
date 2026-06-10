@@ -69,6 +69,12 @@ for (const file of files) {
     let f;
     try { f = JSON.parse(line); } catch { bad++; continue; }
     parsed++;
+    // Normalize before validating — agents vary on case ("Medium" vs "medium").
+    // Be liberal in what we accept so a casing slip never drops a real finding.
+    if (typeof f.severity === "string") f.severity = f.severity.toLowerCase().trim();
+    if (typeof f.category === "string") f.category = f.category.toLowerCase().trim();
+    if (f.evidence && typeof f.evidence.type === "string")
+      f.evidence.type = f.evidence.type.toLowerCase().trim();
     // schema floor
     if (!VALID_SEV.has(f.severity) || !nonEmpty(f.title) || !nonEmpty(f.dedupe_key)) {
       rejected.push({ ...f, _reason: "schema: bad severity/title/dedupe_key", _agent: agent });

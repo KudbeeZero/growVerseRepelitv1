@@ -119,11 +119,12 @@ class Settings:
         # --- Dev "quick play" guest login (TESTING CONVENIENCE) ------------
         # When enabled, POST /players/guest lets someone sign in with just a
         # username — it finds-or-creates the account and returns its API key,
-        # skipping the manual key-copy step. This trades security for a frictionless
-        # test login (anyone who knows the name can claim the account), so it is
-        # meant for playtests, not production. Disable with GPE_DEV_LOGIN=false.
+        # skipping the manual key-copy step. Because it hands an existing account's
+        # API key to anyone who knows the username (account takeover), it is
+        # SECURE-BY-DEFAULT OFF. Opt in for a playtest deploy with GPE_DEV_LOGIN=true;
+        # never enable it in an environment holding real accounts or value.
         self.dev_login_enabled: bool = (
-            os.environ.get("GPE_DEV_LOGIN", "true").lower() == "true"
+            os.environ.get("GPE_DEV_LOGIN", "false").lower() == "true"
         )
 
 

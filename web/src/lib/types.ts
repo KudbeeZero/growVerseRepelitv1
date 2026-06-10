@@ -86,6 +86,8 @@ export interface Strain {
   parent_a_id: string | null;
   parent_b_id: string | null;
   is_base_catalog: boolean;
+  /** Seasonal availability gate ("all" = always); emitted by strain_dict. */
+  season?: string;
   genome: Record<string, { value: number; dominance: string }> | null;
   nft_asset_id: number | null;
   nft_status: NftStatus;
@@ -123,6 +125,8 @@ export interface Plant {
   planted_at: string | null;
   height: number;
   health: number;
+  /** Time-integrated average health over the plant's life (0..100); sizes yield. */
+  lifetime_vigor: number;
   water_level: number;
   nutrient_level: number;
   pest_level: number;

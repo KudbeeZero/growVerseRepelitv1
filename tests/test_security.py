@@ -51,10 +51,23 @@ def _plant_a_seed(client, pid, key):
 
 
 # ----- Anti-cheat: server-authoritative harvest --------------------------
+def _force_flowering(plant_id):
+    """Push a plant to a harvestable stage directly in the DB (the harvest gate
+    blocks immature plants; this test is about weight authority, not maturity)."""
+    from growpodempire.db.session import session_scope
+    from growpodempire.db.models import Plant
+
+    with session_scope() as s:
+        p = s.get(Plant, plant_id)
+        p.growth_stage = "flowering"
+        p.is_alive = True
+
+
 def test_harvest_value_is_server_authoritative(client):
     """A client cannot inflate harvest weight/quality to mint currency."""
     pid, key = _new_player(client, "cheater")
     plant_id = _plant_a_seed(client, pid, key)
+    _force_flowering(plant_id)
 
     r = client.post(
         f"/api/game/players/{pid}/plants/{plant_id}/harvest",

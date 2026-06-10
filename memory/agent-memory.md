@@ -6,7 +6,13 @@
 > standing review heuristics. Never store secrets, mnemonics, or API keys here.
 
 ## L3 — Run log (≤40 lines/run, appended)
-- (none yet — this is cycle #1)
+- **2026-06-10 @ d96cff2** · focus: live-game readiness · 9/9 night agents, 47 findings →
+  47 consolidated (0 evidence-rejected). Audit re-ran 2 Critical + 5 High (all verified true) +
+  3 spot Medium; F004 unverifiable (no TestNet). P0 opened: 2 Criticals **fixed in-cycle**
+  (instant-harvest gate; GPE_DEV_LOGIN secure-default-off) + dead-plant gate + serializer↔TS drift.
+  Suite 186→192 green, coverage 79.47%. Blake↔Casey withdrawal-cap dispute resolved by re-run
+  (latent, not exploitable via current HTTP). Consolidator bug found+fixed: severity casing
+  normalization (was rejecting 18 valid findings).
 
 ## L4 — Lessons & standing heuristics (≤200 lines, rewritten by Jordan each cycle)
 
@@ -41,6 +47,24 @@
   SSR/`window` access, reduced-motion path, perf with many cards.
 - **+25 catalog strains** in `data/strains.yaml` + `data/strain_knowledge.yaml` (now 47).
   Sync invariant: every catalog slug has a KB entry and vice-versa (tests enforce).
+
+### Lessons from cycle 2026-06-10 (standing heuristics)
+- **Harvest must be gated.** Yield is currency; the server-authoritative harvest path
+  (`weight_g is None`) MUST require `is_alive` + stage ≥ flowering. Any new yield/payout path
+  needs the same "did it actually grow?" guard. Faucets without a maturity gate are exploits.
+- **`lifetime_vigor` falls back to `health` when `lifetime_hours==0`** — fine for grown plants
+  (catch_up ticks them) but full-value for never-ticked rows. Don't add new paths that read vigor
+  without ensuring the plant was simulated.
+- **Security flags are secure-by-default OFF.** A convenience bypass (e.g. `GPE_DEV_LOGIN`) that
+  discloses credentials must default off and be opt-in per environment; never ship default-on.
+- **`session` is `autoflush=False`** — any "sum prior rows in this window" guard (withdrawal cap,
+  rate limits) misses un-flushed same-session rows. Flush before summing, or lock the row.
+- **Custodial chain pulls need a player signature.** `deposit()` (player→treasury) cannot move a
+  user's ASA from server code alone; real-provider inbound transfers require the player to sign.
+- **One canvas renderer per card = N always-on rAF loops.** Virtualize / IntersectionObserver-gate
+  `PlantCanvas`; pause rAF when off-screen. Reduced-motion already short-circuits correctly.
+- **Consolidator: normalize severity/category case** before validating (agents emit "Medium" and
+  "medium"). Be liberal in what you accept so a casing slip never drops a real finding.
 
 ### Stack command cheatsheet (use REAL commands as evidence)
 - Python deps live in `.venv` (NOT system python — system has a PyYAML collision).

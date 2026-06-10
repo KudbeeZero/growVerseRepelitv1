@@ -787,6 +787,23 @@ class GameService:
         # how it was actually grown.
         engine.catch_up(self.session, plant, self.clock.now(), self.cfg)
 
+        # Server-authoritative harvest gate. The only network-reachable path
+        # (POST .../harvest) passes no weight, so the server computes yield — and
+        # that yield must reflect a REAL grow. Block harvesting a dead plant or
+        # one that hasn't reached flowering. Without this, buy->plant->harvest in
+        # the same hour mints full-band weight via the lifetime_vigor health
+        # fallback (an unbounded currency faucet), and dead plants still pay out.
+        # Callers that supply an explicit weight_g (test/admin fixtures) bypass
+        # this intentionally.
+        if weight_g is None:
+            if not plant.is_alive:
+                raise GameError("Cannot harvest a dead plant")
+            if plant.growth_stage not in (
+                GrowthStage.FLOWERING.value,
+                GrowthStage.HARVEST.value,
+            ):
+                raise GameError("Plant is not ready to harvest — wait until it flowers")
+
         strain = self.get_strain(plant.strain_id)
         fx = self._research(player_id)  # research-tree modifiers
 
