@@ -28,6 +28,29 @@ once they appear here. Last reconciled: **2026-06-10**.
     confirm it goes green on GitHub before relying on it.
   - 🟡 ⬜ **Flip `GPE_DEV_LOGIN` off for public launch** (keep on for the test deploy only).
 
+## 🟢 Remediation cycle 2026-06-10 (5-agent crew + systems engineer + rebuttals)
+Shipped (verified, suite 214 green, coverage 79.80%): a11y (Toast live-region, focus-visible,
+tab roles), LICENSE + doc-count fixes, breed self-cross/ownership guard (F043), wallet-address
+structural validation + uniqueness (F007), withdrawal-cap flush fix (F005), mint same-process
+idempotency (F006). Full adjudication in `reports/2026-06-10/DEBATE.md`.
+Durable follow-ups the rebuttals/systems-review surfaced (the pre-mainnet hardening queue):
+- 🔴 ⬜ **NEW-1 — faucet-invariant + determinism property-test harness** (Vera, highest leverage):
+  `sum(ledger)==cached_balance` after any op sequence; sim reads partition-invariant under
+  `(plant_id,hour)`; "double-invoke ⇒ single credit" across every payout path. Catches F040/F006
+  class. *Do before more features.*
+- 🔴 ⬜ **NEW-4 / F004 — redesign `deposit()`** as player-signed, chain-confirmed, txid-idempotent;
+  never credit GROW off the DB `asa_balance` mirror. **Mainnet blocker.**
+- 🟠 ⬜ **F006 durable** — committed `minted_asset(external_key UNIQUE, asset_id)` + indexer reconcile
+  (current registry is single-process only). Mainnet blocker before multi-worker.
+- 🟠 ⬜ **F005/F007 concurrency** — `SELECT … FOR UPDATE`/per-day counter for the withdrawal cap;
+  DB unique index on `Player.algorand_address`; **checksum** address validation before real
+  withdrawals (blocker once `withdraw()` hits a real network).
+- 🟠 ⬜ **NEW-2 — `CUP_PRIZE_PAYOUT`** may pay without asserting `payouts <= prize_pool` (faucet); gate it.
+- 🟠 ⬜ **NEW-5 / F029-F030 — catch-up converge-to-now + analytic fast-forward** (currently defers, not discards).
+- 🟡 ⬜ **NEW-3 — `REWARD` entry type overloaded** (achievements + contracts); audit for double-credit.
+- 🟡 ⬜ Breed `owns_harvest` access — confirm against `design/02-genetics.md` (seeds-only?); a11y tabpanel
+  wiring in `lab/strains/[id]` + `market` pages + `Tabs` arrow-key handler.
+
 ## 🔴 Immediate (do now — correctness, truth, or unblocks others)
 - ✅ Add `CLAUDE.md` + `docs/memory/` memory-layer system (this change).
 - 🔴 ⬜ **Reconcile `docs/ROADMAP.md` with reality** — Sprints 1–3 are shipped but still show

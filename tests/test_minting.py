@@ -90,5 +90,7 @@ def test_link_wallet(db):
     with session_scope() as s:
         svc = GameService(s)
         p = svc.create_player("walletuser")
-        svc.link_wallet(p.id, "ABC123ALGOADDRESS")
-        assert svc.get_player(p.id).algorand_address == "ABC123ALGOADDRESS"
+        # A structurally-valid 58-char base32 address (F007 now validates format).
+        addr = "A" * 58
+        svc.link_wallet(p.id, addr)
+        assert svc.get_player(p.id).algorand_address == addr

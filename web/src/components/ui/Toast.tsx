@@ -43,10 +43,17 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={api}>
       {children}
-      <div className="fixed bottom-4 right-4 z-50 flex w-80 max-w-[90vw] flex-col gap-2">
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="false"
+        className="fixed bottom-4 right-4 z-50 flex w-80 max-w-[90vw] flex-col gap-2"
+      >
         {toasts.map((t) => (
           <div
             key={t.id}
+            role={t.kind === "error" ? "alert" : undefined}
+            aria-live={t.kind === "error" ? "assertive" : undefined}
             className={`rounded-lg border px-4 py-3 text-sm shadow-lg ${
               t.kind === "success"
                 ? "border-grow-600 bg-grow-900/90 text-grow-100"

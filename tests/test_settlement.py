@@ -24,7 +24,7 @@ def test_withdraw_mirrors_to_chain(db):
     with session_scope() as s:
         gs = GameService(s)
         p = gs.create_player("settler")
-        gs.link_wallet(p.id, "ALGOADDR123")
+        gs.link_wallet(p.id, "A" * 58)  # valid 58-char base32 (F007 validation)
         start = balance(s, p.id)
 
         result = _svc(s).withdraw(p.id, 100)
@@ -52,7 +52,7 @@ def test_withdraw_then_deposit_roundtrips(db):
     with session_scope() as s:
         gs = GameService(s)
         p = gs.create_player("rt")
-        gs.link_wallet(p.id, "ADDR")
+        gs.link_wallet(p.id, "A" * 58)  # valid 58-char base32 (F007 validation)
         svc = _svc(s)
         svc.withdraw(p.id, 200)
         before = balance(s, p.id)
@@ -65,6 +65,6 @@ def test_cannot_withdraw_more_than_balance(db):
     with session_scope() as s:
         gs = GameService(s)
         p = gs.create_player("broke")
-        gs.link_wallet(p.id, "ADDR")
+        gs.link_wallet(p.id, "A" * 58)  # valid 58-char base32 (F007 validation)
         with pytest.raises(InsufficientFundsError):
             _svc(s).withdraw(p.id, 100000)

@@ -5,6 +5,10 @@ setup(
     version="2.0.0",
     description="GROWv2 — cannabis cultivation game (economy, genetics, real-time sim, on-chain assets)",
     author="GROWv2",
+    license="MIT",
+    classifiers=[
+        "License :: OSI Approved :: MIT License",
+    ],
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     python_requires=">=3.8",

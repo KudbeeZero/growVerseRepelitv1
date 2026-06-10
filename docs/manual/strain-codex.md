@@ -11,9 +11,11 @@
 [🛸 Lore](lore.md) ·
 [📡 Glossary](glossary.md)
 
-*All 16 founding strains catalogued from the vault — full genomes, hidden
-resistances, terpene profiles, and breeding tier lists. The complete genetic
-arsenal you start the game with.*
+*The vault now ships **47 catalog strains**. The 16 **founding** strains below are
+catalogued in full — genomes, hidden resistances, terpene profiles, and breeding
+tier lists — and anchor the genetic arsenal you start the game with; the remaining
+expansion strains are seeded into the catalog and surfaced live at
+`GET /strains/<id>/knowledge`.*
 
 </div>
 

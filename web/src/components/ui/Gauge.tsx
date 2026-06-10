@@ -49,9 +49,15 @@ export function Gauge({
   }
   const inBand = optimal ? v >= optimal[0] && v <= optimal[1] : true;
 
+  const readout =
+    value === null || value === undefined ? "no reading" : `${value.toFixed(2)}${unit ? ` ${unit}` : ""}`;
+  const bandText = optimal ? `, optimal ${optimal[0]}–${optimal[1]}` : "";
+  const ariaLabel = `${label}: ${readout}${bandText}${optimal ? (inBand ? ", in range" : ", out of range") : ""}`;
+
   return (
     <div className="flex flex-col items-center">
-      <svg width={size} height={size}>
+      <svg width={size} height={size} role="img" aria-label={ariaLabel}>
+        <title>{ariaLabel}</title>
         <path d={arcPath(START, START + SWEEP)} fill="none" stroke="#21262d" strokeWidth={stroke} strokeLinecap="round" />
         {bandPath && (
           <path d={bandPath} fill="none" stroke="#356010" strokeWidth={stroke} strokeLinecap="round" opacity={0.9} />

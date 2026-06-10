@@ -158,9 +158,9 @@ Defaults when a pod has no sensor snapshot yet: temp **24**, humidity **50**, pH
 
 ## 5 · Seeds & strains
 
-A **strain** is a genetic line in the catalog (16 founders ship at launch; you
-create more by breeding). A **seed** is a purchasable instance of a strain that
-you plant to start a grow.
+A **strain** is a genetic line in the catalog (47 catalog strains ship at launch,
+16 catalogued in full; you create more by breeding). A **seed** is a purchasable
+instance of a strain that you plant to start a grow.
 
 **Seed price = 25 × rarity multiplier:**
 

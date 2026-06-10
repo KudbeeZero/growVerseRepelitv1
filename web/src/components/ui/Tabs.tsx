@@ -26,8 +26,12 @@ export function Tabs({
         return (
           <button
             key={t.key}
+            type="button"
             role="tab"
+            id={`tab-${t.key}`}
             aria-selected={on}
+            aria-controls={`tabpanel-${t.key}`}
+            tabIndex={on ? 0 : -1}
             onClick={() => onChange(t.key)}
             className={`relative -mb-px rounded-t-md border-b-2 px-4 py-2 text-sm transition-colors ${
               on

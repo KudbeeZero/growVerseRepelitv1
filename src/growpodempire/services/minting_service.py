@@ -8,6 +8,23 @@ Flow is DB-first / chain-second and idempotent:
   4. persist the returned asset id + MINTED status.
 If the chain call fails the row is marked FAILED and a GameError is raised. An
 already-MINTED asset is returned unchanged (no double-mint).
+
+IDEMPOTENCY / DOUBLE-MINT (F006):
+The DB-status guard (``nft_status == MINTED``) alone is NOT enough. Consider:
+the chain ``create_asset`` succeeds (a real ASA now exists on-chain), then the
+surrounding DB transaction *fails to commit and rolls back*. The row reverts to
+its pre-mint state (status not MINTED, ``nft_asset_id`` NULL), so a retry sails
+past the status guard and mints a SECOND on-chain asset — a permanent,
+irreversible duplicate.
+
+To make minting safe across that chain-success -> commit-fail -> retry window
+we reconcile against a side record that does NOT live in the rolled-back DB
+session: a provider-scoped reconciliation registry keyed by a stable external
+key (kind + row id + metadata hash). The asset id is recorded the instant the
+chain call returns — before any DB commit — so a retry finds it and ADOPTS the
+existing asset instead of minting again. The external key is also the natural
+hook for cross-process reconciliation against a chain indexer in production
+(see residual-risk note in the rebuttal).
 """
 
 from typing import Optional
@@ -68,6 +85,7 @@ class MintingService:
         metadata = md.harvest_metadata(harvest, strain)
         minted = self._mint(
             harvest,
+            kind="harvest",
             asset_name=f"{strain.name} Harvest"[:32],
             url=self._nft_url("harvest", harvest.id),
             metadata=metadata,
@@ -99,6 +117,7 @@ class MintingService:
         metadata = md.strain_metadata(strain)
         minted = self._mint(
             strain,
+            kind="strain",
             asset_name=strain.name[:32],
             url=self._nft_url("strain", strain.id),
             metadata=metadata,
@@ -106,8 +125,46 @@ class MintingService:
         leveling_service.award(self.session, player_id, "mint", self.cfg)
         return minted
 
+    # ----- idempotency / reconciliation ----------------------------------
+    @staticmethod
+    def _mint_registry(provider) -> dict:
+        """Provider-scoped {external_key -> asset_id} map of completed mints.
+
+        Lives on the chain provider (a process-wide singleton via
+        ``shared_provider``), NOT in the DB session, so it survives a DB
+        transaction rollback. That is precisely what lets a retry detect an
+        already-minted on-chain asset after a chain-success -> commit-fail.
+        """
+        reg = getattr(provider, "_mint_reconciliation", None)
+        if reg is None:
+            reg = {}
+            # Stored on the provider instance; harmless for mock and real alike.
+            provider._mint_reconciliation = reg
+        return reg
+
+    def _external_key(self, kind: str, row_id: str, metadata: dict) -> str:
+        """Stable idempotency key for a (row, metadata) mint.
+
+        Bound to the row identity AND the metadata hash so the same logical
+        asset always maps to one on-chain mint, while a genuinely different
+        asset (different content) gets its own.
+        """
+        return f"{kind}:{row_id}:{md.metadata_hash(metadata).hex()}"
+
     # ----- shared mint path ----------------------------------------------
-    def _mint(self, row, asset_name: str, url: str, metadata: dict):
+    def _mint(self, row, kind: str, asset_name: str, url: str, metadata: dict):
+        registry = self._mint_registry(self.provider)
+        ext_key = self._external_key(kind, row.id, metadata)
+
+        # Reconcile FIRST: if we already created this asset on-chain in a prior
+        # attempt (whose DB commit may have been rolled back), adopt it instead
+        # of minting a duplicate. This is the F006 double-mint guard.
+        existing = registry.get(ext_key)
+        if existing is not None:
+            row.nft_asset_id = existing
+            row.nft_status = NFTStatus.MINTED.value
+            return row
+
         row.nft_status = NFTStatus.PENDING.value
         self.session.flush()
         try:
@@ -122,6 +179,12 @@ class MintingService:
         except ChainError as exc:
             row.nft_status = NFTStatus.FAILED.value
             raise GameError(f"On-chain mint failed: {exc}") from exc
+
+        # Record the mapping IMMEDIATELY, before touching anything that depends
+        # on the DB commit succeeding. If the commit later fails and the row
+        # rolls back, this registry entry remains and the next retry adopts the
+        # asset above rather than minting again.
+        registry[ext_key] = asset_id
 
         row.nft_asset_id = asset_id
         row.nft_status = NFTStatus.MINTED.value

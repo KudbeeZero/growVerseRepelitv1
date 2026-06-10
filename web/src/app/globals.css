@@ -18,6 +18,16 @@ body {
   font-family: var(--font-sans), system-ui, sans-serif;
 }
 
+/* ---- Keyboard focus visibility (WCAG 2.4.7) ----
+   A single, theme-consistent focus ring for any keyboard-focused element.
+   Pointer focus is left untouched (`:focus-visible` only). Components that
+   set `focus:outline-none` rely on this rule for a visible replacement. */
+:focus-visible {
+  outline: 2px solid #76c024;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
 /* ---- Plant body animations (intensity scaled via --stress 0..1) ---- */
 @keyframes gpe-sway {
   0%,

@@ -52,7 +52,7 @@ repo-relative (under `src/growpodempire/` unless noted); every ✅ here is check
 |-----------|-------------------------|-------------|
 | `design/00-game-vision.md` | cross-cutting — see the moat/pillar dashboard below | mixed |
 | `design/01-simulation-horticulture.md` | `simulation/engine.py` · `simulation/horticulture.py` · `simulation/curing.py` · `simulation/reactions.py` · `data/balance.yaml` (`simulation:`) | 🔨 Phase A done |
-| `design/02-genetics.md` | `genetics/traits.py` · `genetics/breeding.py` · `data/strains.yaml` · `data/strain_knowledge.yaml` · `services/game_service.py` (breed/stabilize/verify/knowledge) | 🔨 14-trait core; 22-strain KB |
+| `design/02-genetics.md` | `genetics/traits.py` · `genetics/breeding.py` · `data/strains.yaml` · `data/strain_knowledge.yaml` · `services/game_service.py` (breed/stabilize/verify/knowledge) | 🔨 14-trait core; 47-strain KB |
 | `design/03-grower-skills.md` | `services/leveling_service.py` · `services/research_service.py` · `services/progression_service.py` · `data/balance.yaml` (`research`/`leveling`) | 🔨 no skill trees yet |
 | `design/04-honesty-and-trust.md` | `simulation/engine.py` (`_rng_for`) · `services/game_service.py` (`verify_strain`) · `api/game_api.py` (`/provenance`) · `economy/ledger.py` · `services/advisor_service.py` | 🔨 fairness shipped for breeding |
 | `design/05-events-and-competition.md` | `services/cup_service.py` · `economy/pricing.py` (`cup_score`) · `data/balance.yaml` (`cannabis_cup`) · `db/models.py` (`CannabisCup`/`CupEntry`) · `api/game_api.py` (`/cup/*`) | ✅ seasonal Cup + lifetime rewards |
@@ -94,7 +94,7 @@ real; TestNet/IPFS deferred — Sprint 4).
   .../courses/<key>/{enroll,complete}`, `POST /players/<id>/degrees/<key>/claim`, `GET
   .../courses/<key>/lecture`.
 - **Strain knowledge base:** `data/strain_knowledge.yaml` — a scientist-grade encyclopedia (lineage,
-  origin, cannabinoid/terpene detail, cultivation parameters) for all 22 catalog strains, surfaced at
+  origin, cannabinoid/terpene detail, cultivation parameters) for all 47 catalog strains, surfaced at
   public `GET /strains/<id>/knowledge`. A test enforces 1:1 sync between the catalog and the KB. It's
   grounded by a peer-reviewed research reference:
   `docs/research/2026-06-08-cannabis-strain-genetics-and-cultivation.md` (a 5-agent deep-research

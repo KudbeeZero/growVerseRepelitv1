@@ -69,6 +69,22 @@ class GameError(Exception):
     """Domain error surfaced to the API as a 400."""
 
 
+_ALGORAND_ADDRESS_ALPHABET = frozenset("ABCDEFGHIJKLMNOPQRSTUVWXYZ234567")
+
+
+def _is_valid_algorand_address(address: str) -> bool:
+    """Basic structural validation of an Algorand address: 58 characters drawn
+    from the base32 alphabet (RFC 4648, uppercase A-Z plus digits 2-7). This is a
+    cheap format guard, not a checksum verification — it rejects obviously bogus
+    input (empty, wrong length, lowercase, padding, hex, etc.) without pulling in
+    the algosdk dependency."""
+    return (
+        isinstance(address, str)
+        and len(address) == 58
+        and all(c in _ALGORAND_ADDRESS_ALPHABET for c in address)
+    )
+
+
 class GameService:
     def __init__(
         self,
@@ -139,11 +155,36 @@ class GameService:
         return player
 
     def link_wallet(self, player_id: str, algorand_address: str) -> Player:
-        """Associate a player with an Algorand address (Phase 3)."""
+        """Associate a player with an Algorand address (Phase 3).
+
+        Validates the address as a well-formed Algorand address (58-char base32,
+        alphabet A-Z2-7) and enforces uniqueness: an address may only be linked to
+        one player. The app-level uniqueness check below is the authoritative guard
+        today; a DB unique constraint should follow (see rebuttal note).
+        """
         if not algorand_address:
             raise GameError("algorand_address is required")
+        address = algorand_address.strip()
+        if not _is_valid_algorand_address(address):
+            raise GameError("Invalid Algorand address")
         player = self.get_player(player_id)
-        player.algorand_address = algorand_address
+
+        # Uniqueness: reject if another player already linked this address.
+        # Flush first so any pending same-session links are visible (the session
+        # is autoflush=False — see L4 lessons).
+        self.session.flush()
+        clash = (
+            self.session.query(Player)
+            .filter(
+                Player.algorand_address == address,
+                Player.id != player_id,
+            )
+            .first()
+        )
+        if clash is not None:
+            raise GameError("That Algorand address is already linked to another player")
+
+        player.algorand_address = address
         return player
 
     def get_wallet(self, player_id: str) -> Wallet:
@@ -464,6 +505,49 @@ class GameService:
         return plant
 
     # ----- Breeding -------------------------------------------------------
+    def _player_has_strain_access(self, player_id: str, strain: Strain) -> bool:
+        """Whether a player may use this strain as breeding stock.
+
+        Access = the strain is base-catalog (publicly buyable), the player bred it,
+        or the player currently holds a seed / plant / harvest of it. Mirrors the
+        ownership patterns already used across this service (SeedInventory / Plant /
+        Harvest filtered by player_id). Flushes first because the session is
+        autoflush=False, so a just-purchased seed in this same session is visible.
+        """
+        if strain.is_base_catalog:
+            return True
+        if strain.created_by_player_id == player_id:
+            return True
+
+        self.session.flush()
+        owns_seed = (
+            self.session.query(SeedInventory.id)
+            .filter(
+                SeedInventory.player_id == player_id,
+                SeedInventory.strain_id == strain.id,
+                SeedInventory.quantity > 0,
+            )
+            .first()
+            is not None
+        )
+        if owns_seed:
+            return True
+        owns_plant = (
+            self.session.query(Plant.id)
+            .filter(Plant.player_id == player_id, Plant.strain_id == strain.id)
+            .first()
+            is not None
+        )
+        if owns_plant:
+            return True
+        owns_harvest = (
+            self.session.query(Harvest.id)
+            .filter(Harvest.player_id == player_id, Harvest.strain_id == strain.id)
+            .first()
+            is not None
+        )
+        return owns_harvest
+
     def breed(
         self,
         player_id: str,
@@ -473,8 +557,30 @@ class GameService:
         offspring_name: Optional[str] = None,
     ) -> Strain:
         self.get_player(player_id)
+
+        # F043: a cross needs two DISTINCT parents. Crossing a strain with itself
+        # is selfing/stabilization — that has its own path (stabilize_strain) which
+        # raises stability deliberately; routing it through breed would let a player
+        # mint a "bred" generation off a single line for the breed reward.
+        if parent_a_id == parent_b_id:
+            raise GameError(
+                "Cannot cross a strain with itself — use stabilize to self a line"
+            )
+
         parent_a = self.get_strain(parent_a_id)
         parent_b = self.get_strain(parent_b_id)
+
+        # F043: a player may only breed strains they have access to — a base-catalog
+        # strain, a strain they bred, or one they hold a seed/plant/harvest of.
+        # Without this, any player could cross arbitrary strain ids (including other
+        # players' private bred lines) just by knowing the id.
+        for parent in (parent_a, parent_b):
+            if not self._player_has_strain_access(player_id, parent):
+                raise GameError(
+                    f"You don't have access to strain '{parent.name}' — "
+                    "you must own a seed, plant, or harvest of it (or it must be a "
+                    "catalog strain)"
+                )
 
         fee = pricing.breeding_fee(parent_a.rarity, parent_b.rarity, self.cfg)
         disc = min(0.9, self._research(player_id).get("breeding_discount_pct", 0.0))

@@ -27,7 +27,7 @@ export function OnboardingPanel() {
         title="Welcome to GrowPod Empire"
         subtitle="Pick a name and start cultivating — no key required."
       />
-      <div className="mb-4 flex gap-2">
+      <div role="tablist" aria-label="Sign-in method" className="mb-4 flex gap-2">
         <TabButton active={tab === "quick"} onClick={() => setTab("quick")}>
           Quick play
         </TabButton>
@@ -112,6 +112,9 @@ function TabButton({
 }) {
   return (
     <button
+      type="button"
+      role="tab"
+      aria-selected={active}
       onClick={onClick}
       className={`flex-1 rounded-md px-3 py-1.5 text-sm transition-colors ${
         active ? "bg-grow-700 text-white" : "bg-ink-700 text-gray-300 hover:bg-ink-600"

@@ -56,10 +56,29 @@ class SettlementService:
 
         Defence in depth around the treasury: even with a stolen API key, an
         attacker can't drain more than the configured daily limit.
+
+        INVARIANT: the rolling-24h sum MUST include the withdrawal currently
+        being processed. ``withdraw`` posts the debit row *before* calling this
+        guard; because the session runs ``autoflush=False`` that row is not yet
+        visible to a plain query, so we ``flush()`` first to make the in-flight
+        debit count. (The previous code summed only previously-flushed rows and
+        then added ``amount`` separately — but two debits posted in the *same*
+        un-flushed session both saw zero prior rows, so the pair could exceed
+        the cap. Flushing here folds the in-flight row(s) into the sum, so the
+        Nth withdrawal in a session is always measured against the real total.)
+
+        TOCTOU / true concurrency: a real row-lock (``SELECT ... FOR UPDATE`` on
+        the player's withdrawal window, or a serialized per-player counter) is
+        required to make this safe against parallel committed transactions on
+        Postgres. That exceeds this lane (schema/locking) — see
+        reports/2026-06-10/rebuttals/sloan.md. The flush fix below closes the
+        single-session undercount, which is the exploitable path today.
         """
         cap = to_money(self.settings.max_withdrawal_per_day)
         if cap <= 0:  # cap disabled
             return
+        # Make the just-posted (un-flushed) debit visible to the sum below.
+        self.session.flush()
         since = datetime.now(timezone.utc) - timedelta(hours=24)
         rows = (
             self.session.query(LedgerEntry)
@@ -70,10 +89,14 @@ class SettlementService:
             )
             .all()
         )
-        # Withdrawal entries are negative; sum their magnitudes.
-        already = sum((-r.amount for r in rows), Decimal("0"))
-        if already + amount > cap:
-            remaining = cap - already
+        # Withdrawal entries are negative; sum their magnitudes. This total now
+        # INCLUDES the in-flight debit, so we compare the post-debit total
+        # directly against the cap (no separate `+ amount`).
+        total = sum((-r.amount for r in rows), Decimal("0"))
+        if total > cap:
+            # `total` already includes this withdrawal; the headroom that was
+            # available *before* it is cap minus the prior total (total-amount).
+            remaining = cap - (total - amount)
             raise GameError(
                 f"Daily withdrawal limit reached (cap {cap}/24h, "
                 f"{remaining if remaining > 0 else 0} remaining)"
@@ -92,9 +115,9 @@ class SettlementService:
             self.session, player_id, -amount, LedgerEntryType.ASA_WITHDRAWAL,
             ref_type="asa", ref_id=str(self.asset_id),
         )
-        # Then enforce the rolling-24h treasury cap. The just-posted entry isn't
-        # flushed yet (autoflush is off), so it isn't double-counted; a violation
-        # raises and the surrounding transaction rolls the debit back.
+        # Then enforce the rolling-24h treasury cap. The cap guard flushes so the
+        # just-posted debit (autoflush is off) is counted in the rolling sum — a
+        # violation raises and the surrounding transaction rolls the debit back.
         self._enforce_daily_cap(player_id, amount)
         try:
             txid = self.provider.transfer_asset(

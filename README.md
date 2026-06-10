@@ -27,7 +27,7 @@ an Algorand on-chain asset layer where your rarest strains become NFTs.
 
 ![Status](https://img.shields.io/badge/STATUS-IN__ORBIT-22C55E?style=for-the-badge&labelColor=0B0E2C)
 ![Phase](https://img.shields.io/badge/BUILD-Phases_1--3_+_expansion-7C3AED?style=for-the-badge&labelColor=0B0E2C)
-![Tests](https://img.shields.io/badge/TESTS-139_green-22C55E?style=for-the-badge&labelColor=0B0E2C)
+![Tests](https://img.shields.io/badge/TESTS-190%2B_green-22C55E?style=for-the-badge&labelColor=0B0E2C)
 ![Chain](https://img.shields.io/badge/ALGORAND-TestNet-000000?style=for-the-badge&labelColor=0B0E2C)
 ![License](https://img.shields.io/badge/LICENSE-MIT-FACC15?style=for-the-badge&labelColor=0B0E2C)
 
@@ -75,7 +75,7 @@ fastest routes to a stabilized, mintable, money-printing line.
 
 ### 🧬 [Strain Codex](docs/manual/strain-codex.md)
 **The orbital seed vault.**
-A Pokédex-style catalog of all 16 founding strains — full genome stats,
+A Pokédex-style catalog of all 47 catalog strains — full genome stats,
 terpene profiles, difficulty, and a breeding tier list.
 
 </td>
@@ -131,6 +131,12 @@ plants are **simulated in real time**: they drink, feed, droop, attract pests,
 catch mildew, recover, and flower on their own genetic clock. Neglect a plant and
 it withers; tend it well and it rewards you at harvest.
 
+> 🌱 **Yield rewards a whole healthy life, not a last-minute rescue.** Harvest
+> weight is driven by your plant's *lifetime care* — the running average of its
+> health across every hour it lived — so the longer you keep a plant thriving, the
+> bigger the harvest. You can't neglect a grow and then cram nutrients in at the
+> end to fake a big payout.
+
 But cultivation is only the engine. The **game** is the loop around it:
 
 ```
@@ -171,7 +177,7 @@ But cultivation is only the engine. The **game** is the loop around it:
 # 1. Install
 pip install -r requirements.txt
 
-# 2. Create the schema + seed the 16 founding strains (idempotent)
+# 2. Create the schema + seed the 47 catalog strains (idempotent)
 alembic upgrade head
 python -m growpodempire.db.seed
 
