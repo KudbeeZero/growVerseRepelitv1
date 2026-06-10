@@ -34,10 +34,12 @@ tab roles), LICENSE + doc-count fixes, breed self-cross/ownership guard (F043), 
 structural validation + uniqueness (F007), withdrawal-cap flush fix (F005), mint same-process
 idempotency (F006). Full adjudication in `reports/2026-06-10/DEBATE.md`.
 Durable follow-ups the rebuttals/systems-review surfaced (the pre-mainnet hardening queue):
-- 🔴 ⬜ **NEW-1 — faucet-invariant + determinism property-test harness** (Vera, highest leverage):
-  `sum(ledger)==cached_balance` after any op sequence; sim reads partition-invariant under
-  `(plant_id,hour)`; "double-invoke ⇒ single credit" across every payout path. Catches F040/F006
-  class. *Do before more features.*
+- 🔴 ✅ **NEW-1 — faucet-invariant + determinism property-test harness** (built 2026-06-10):
+  `tests/test_invariants.py` — (1) ledger conservation (`cached_balance==sum(ledger)`, never
+  negative) over random REAL service op sequences; (2) compute-on-read determinism: catch-up is
+  partition-invariant (RNG held constant) + idempotent; (3) no double-credit at every payout/charge
+  entry point (harvest, sell, daily stipend, achievement). 7 tests; catches the F040/F006 class by
+  construction. *Extend it whenever a new payout path or sim state field is added.*
 - 🔴 ⬜ **NEW-4 / F004 — redesign `deposit()`** as player-signed, chain-confirmed, txid-idempotent;
   never credit GROW off the DB `asa_balance` mirror. **Mainnet blocker.**
 - 🟠 ⬜ **F006 durable** — committed `minted_asset(external_key UNIQUE, asset_id)` + indexer reconcile

@@ -66,6 +66,14 @@
 - **Consolidator: normalize severity/category case** before validating (agents emit "Medium" and
   "medium"). Be liberal in what you accept so a casing slip never drops a real finding.
 
+### Invariant harness (use it; extend it)
+- `tests/test_invariants.py` is the system-level safety net (built 2026-06-10): ledger conservation,
+  compute-on-read partition-invariance + idempotence, and no-double-credit at every payout path.
+  When you add a **new faucet/payout** (a `LedgerEntryType` credit) add it to the no-double-credit
+  layer; when you add **sim state**, add the field to `_state()` in the partition/idempotence tests.
+  The sim RNG is `(plant_id, hour)`-seeded, so determinism tests MUST hold the RNG constant —
+  never compare two different plant ids.
+
 ### Stack command cheatsheet (use REAL commands as evidence)
 - Python deps live in `.venv` (NOT system python — system has a PyYAML collision).
 - Tests: `.venv/bin/python -m pytest -q tests/<file>.py` (full suite ~80s, 186 tests).
