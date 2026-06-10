@@ -170,3 +170,18 @@ the event vocabulary (consumers treat `event_type` as opaque — verified); the 
 risk (many first-reads in one burst) stays on ARCHITECTURE's watch list with background
 materialization as the eventual answer. Tests: `tests/test_simulation.py` (bounded step count,
 one-read convergence, stage-clock pause, normal-read parity, death path).
+
+### 2026-06-10 (night shift) — Environment input validation reuses the weather clamps as its authority
+**Decision:** `SimulationService.set_environment` now coerces all five pod-environment inputs to
+finite floats and rejects values outside `balance.yaml simulation.weather.clamps` (a clean
+`GameError`/400); the guard lives at the service chokepoint, not the route. **Why:** the route
+only checked key *presence*, so `{"temperature": "hot"}` or `{"humidity": null}` was stored raw
+on the pod and the next engine sync TypeError'd every read of every plant in that pod. The clamps
+are the bounds the weather system already enforces on the same fields — reusing them adds **no
+new tuning surface** (one authority, already data-driven) and keeps the engine pure. Placing the
+guard in the service protects both callers (API route, weather service) and any future one.
+**Consequences:** out-of-range API writes that previously stored absurd-but-numeric values (e.g.
+temperature 99) now 400 — the slider-reachable UI range is well inside the clamps, so legitimate
+play is unaffected; weather rolls clamp to the same bounds and always pass. Tests:
+`tests/test_simulation.py` (coercion, non-numeric/null/NaN/inf rejection, boundary acceptance,
+engine round-trip regression).
