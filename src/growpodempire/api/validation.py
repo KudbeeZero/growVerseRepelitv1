@@ -45,6 +45,23 @@ def bounded_int(value, field: str, *, default: int, low: int, high: int) -> int:
     return max(low, min(high, n))
 
 
+def number(value, field: str, *, low: float, high: float) -> float:
+    """Coerce `value` to a finite float in [low, high]; raise GameError otherwise.
+
+    Used for sensor/environment inputs that flow into the simulation engine — a
+    non-numeric value would otherwise TypeError deep in a later read and surface
+    as a generic 500.
+    """
+    try:
+        n = float(value)
+    except (TypeError, ValueError):
+        raise GameError(f"{field} must be a number")
+    # NaN/inf fail this range test (all comparisons with NaN are False).
+    if not (low <= n <= high):
+        raise GameError(f"{field} must be between {low} and {high}")
+    return n
+
+
 def positive_money(value, field: str, *, maximum: Decimal = MAX_MONEY) -> Decimal:
     """Coerce `value` to a positive Decimal amount in (0, maximum]."""
     if value is None:

@@ -4,11 +4,15 @@
 > the end of every chat; read by `/handoff-audit` at the start of the next. If this file and
 > the code disagree, the code wins — fix the baton. See `docs/SESSION_PROTOCOL.md`.
 
-**Last rewritten:** 2026-06-10 · **By:** concurrency-hardening chat (+ PR #6 web fixes merged)
-**Active branch:** `claude/concurrency-idempotency-hardening`
-**Merged to main:** PR #3 (protocol + gates + sim cap), PR #8 (fleet sweep + SQLite parity),
-PR #9 (concurrency core), PR #6 (web viz lifecycle fixes) — all CI-green.
-**Open PR awaiting audit:** _next chat runs `/handoff-audit`._
+**Last rewritten:** 2026-06-10 · **By:** API-validation-hardening chat
+**Active branch:** `claude/api-validation-hardening`
+**Merged to main:** PR #3 (protocol+gates+sim cap), #8 (fleet sweep + SQLite parity),
+#9 (concurrency core), #10 (web viz fixes, lands #6) — all CI-green. **This chat:** validation
+500s→400 + money-endpoint HTTP tests (coverage 79.3%→**80.0%**, 197 tests).
+**Held cross-session PRs (need rebase, not button-merge):** #7 (maintenance, baton conflicts),
+#2 (stale-base forecast), #5 (docs + prod-deploy), #4 (**migration fork — would break prod** +
+`GPE_DEV_LOGIN` default-on).
+**Open PR awaiting audit:** _this branch's PR; next chat runs `/handoff-audit`._
 
 > **Bomb Squad addendum (2026-06-10, same day, separate branch):** fixed two lifecycle
 > defects in `web/src/components/viz/Constellation.tsx` — (1) reduced-motion users got a
@@ -82,10 +86,10 @@ Landed the **concurrency core** of RISK #6 (the root cause from the fleet sweep)
 | 5 | — | SessionStart hook was phantom. | was `BACKLOG.md` | **FIXED 2026-06-10**. |
 | 6 | HIGH | **No concurrency control on money/state paths.** Check-then-act, no row lock; `Wallet.version` dead. | `economy/ledger.py`, `db/models.py`, `simulation_service.py:41-45` | **CORE FIXED 2026-06-10** — wallet optimistic lock + `CHECK>=0` + harvest-once + 409 (migration `f1a2b3c4d5e6`); test-backed. SQLite parity fixed (PR #8). **Remaining:** idempotency-key header + stipend/achievement uniqueness (NEXT ACTION); `/state` duplicate-PlantEvents (C1) still open. |
 | 7 | HIGH | **Chain deposit trusts no on-chain proof.** Treasury→treasury no-op + DB-only `asa_balance` gate → withdraw/move-off/re-deposit drains treasury. No txid replay protection, no reconciliation, no address validation. | `settlement_service.py:116-140`, `db/models.py:92`, `game_service.py:123-129` | OPEN — blocks any real value moving (Sprint 4 gate). |
-| 8 | HIGH | **Web safety net is phantom** — e2e/vitest stubbed to `echo`, absent from devDeps + CI; `game_api.py` money/mint endpoints 40% covered, no HTTP auth/IDOR/validation tests; treasury-cap + chain-failure rollback untested; F5 limiter test order-flaky. | `web/package.json`, `.github/workflows/ci.yml`, coverage | OPEN. |
+| 8 | HIGH | **Web safety net is phantom** — e2e/vitest stubbed to `echo`, absent from devDeps + CI; treasury-cap + chain-failure rollback untested. | `web/package.json`, `.github/workflows/ci.yml`, coverage | PARTIAL — money-endpoint HTTP auth/IDOR/validation tests **added** (withdraw/deposit), F5 limiter fixed (PR #9). Remaining: real vitest/Playwright in CI, treasury-cap (F2) + chain-failure-rollback (F3) tests. |
 | 9 | MED | **Sim dormancy semantics** — shifts `stage_entered_at`, can delay an earned harvest if `max_catchup_hours` is lowered below a stage; skips lethal decay. Masked at default cap. | `simulation/engine.py:285-294` | OPEN — needs a design decision + knob guard. |
 | 10 | MED | **Web: no global 401/403 handler** — stale key = "logged in" to a broken dashboard, no re-auth path. | `web/src/lib/api/client.ts`, `RequireAuth.tsx` | OPEN. |
-| 11 | LOW | Validation 500s (dup-email, username, `set_environment`, auto-care budget); rate-limiter `memory://` per-worker (set Redis); `get_level` public oracle. | see fleet-sweep | OPEN — batch cleanup. |
+| 11 | LOW | Validation 500s (dup-email, username, `set_environment`, auto-care budget); rate-limiter `memory://` per-worker (set Redis); `get_level` public oracle. | see fleet-sweep | PARTIAL — **validation 500s→400 FIXED** (test-backed; `set_environment`, auto-care, dup-email, blank username). Remaining: Redis rate-limit storage (config), `get_level` gating. |
 
 > Reassuring (verified solid, not assumed): **no IDOR**, auth/authz server-authoritative; **AI
 > SpendGuard** unescapable + CI never hits a live key; ledger correct single-threaded; **no

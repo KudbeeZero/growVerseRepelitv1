@@ -24,7 +24,7 @@ from ..services import leveling_service
 from ..economy.ledger import InsufficientFundsError
 from .auth import require_player
 from .ratelimit import limiter
-from .validation import positive_int, bounded_int, positive_money
+from .validation import positive_int, bounded_int, positive_money, number
 from . import serialize as S
 
 game_bp = Blueprint("game", __name__, url_prefix="/api/game")
@@ -564,8 +564,21 @@ def plant_auto_care(player_id, plant_id):
         return _error("Auto-care is disabled", 403)
 
     data = request.get_json(force=True, silent=True) or {}
-    budget = data.get("budget")
-    max_actions = data.get("max_actions")
+    # Validate inputs to a clean 400 first — a non-numeric budget/max_actions
+    # previously raised ValueError inside the service and escaped as a 500.
+    # (Done outside the main try so it isn't mapped to the 404 used for
+    # "plant not found".)
+    try:
+        budget = (
+            positive_money(data.get("budget"), "budget")
+            if data.get("budget") is not None else None
+        )
+        max_actions = (
+            positive_int(data.get("max_actions"), "max_actions", maximum=100)
+            if data.get("max_actions") is not None else None
+        )
+    except GameError as e:
+        return _error(str(e))
     try:
         with session_scope() as s:
             result = AutoCareService(s).run(
@@ -646,11 +659,19 @@ def set_environment(player_id, pod_id):
     if not all(k in data for k in required):
         return _error("temperature, humidity, co2_level, light_intensity, ph_level required")
     try:
+        # Validate the five sensor inputs to a clean 400 — raw non-numeric values
+        # were stored as-is and TypeError'd on the next sim read of every plant in
+        # the pod. Bounds are generous physical sanity limits; the engine still
+        # clamps to its optimal bands.
+        temperature = number(data["temperature"], "temperature", low=-20, high=80)
+        humidity = number(data["humidity"], "humidity", low=0, high=100)
+        co2_level = number(data["co2_level"], "co2_level", low=0, high=5000)
+        light_intensity = number(data["light_intensity"], "light_intensity", low=0, high=10000)
+        ph_level = number(data["ph_level"], "ph_level", low=0, high=14)
         with session_scope() as s:
             pod = SimulationService(s).set_environment(
                 player_id, pod_id,
-                data["temperature"], data["humidity"], data["co2_level"],
-                data["light_intensity"], data["ph_level"],
+                temperature, humidity, co2_level, light_intensity, ph_level,
             )
             payload = S.pod_dict(pod)
         return jsonify(payload)
