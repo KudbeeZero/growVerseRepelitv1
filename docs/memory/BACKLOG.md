@@ -4,7 +4,7 @@ Status: `⬜ todo · 🔨 doing · ✅ done · ❄️ parked`. Standups may *pro
 once they appear here. Last reconciled: **2026-06-10**.
 
 ## 🟢 Shipped 2026-06-10 (branch `claude/grow-chamber-plants-6ud1q4` — PR open, not merged)
-- 🟢 ✅ **Procedural pod-particle plant renderer** — `web/.../plantRenderer.ts` + `PlantCanvas.tsx`;
+- 🟢 ✅ **Procedural pod-particle plant renderer** — `web/src/components/plant/plantRenderer.ts` + `web/src/components/plant/PlantCanvas.tsx`;
   buds at every node + apical cola; morphology from `indica_ratio`; ripening + stress visuals; swipe
   physics in chamber mode. Replaces the static SVG in card + detail.
 - 🟢 ✅ **Lifetime care → yield** — engine integrates hourly health into `lifetime_vigor`; harvest
@@ -16,8 +16,16 @@ once they appear here. Last reconciled: **2026-06-10**.
   - 🟠 ⬜ **Surface `lifetime_vigor` in the plant UI** (it's on the wire, nothing renders it).
   - 🟡 ⬜ **First-class airflow/fan sim input** with its own stress band, wired to the renderer wind.
   - 🟡 ⬜ **`PlantCanvas` snapshot/visual test** (fixed state → stable frame), per Prompt 4's contract.
-  - 🔴 ⬜ **Restore `scripts/check_memory.py` + `scripts/check_single_head.py`** — referenced by the
-    Makefile/CI but absent in this checkout, so the memory + single-head gates can't run locally.
+  - 🔴 ✅ **Restored the missing tooling artifacts** (2026-06-10) — recreated `scripts/check_memory.py`
+    (link / ✅-claim / codex-drift gate) and `scripts/check_single_head.py` (Alembic fork gate), plus
+    `.claude/hooks/session-start.sh` + `.claude/settings.json` (auto-provision the venv on session
+    start). All three were cited as done in the docs but absent from this checkout. `make check-memory`
+    and `make check-migrations` now pass; fixed one stale doc path the gate caught.
+  - 🔴 ⬜ **Recreate the GitHub Actions CI workflow** — `.github/` is absent in this checkout, so the
+    documented "CI: lint + migrations + seed + pytest on push/PR" doesn't actually run here. The gate
+    scripts + `make` targets it should call are verified working locally; wire a `ci.yml` (backend:
+    `make setup`→`lint`/`check-memory`/`check-migrations`/`test`; web: typecheck/lint/build) and
+    confirm it goes green on GitHub before relying on it.
   - 🟡 ⬜ **Flip `GPE_DEV_LOGIN` off for public launch** (keep on for the test deploy only).
 
 ## 🔴 Immediate (do now — correctness, truth, or unblocks others)
