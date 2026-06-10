@@ -49,9 +49,11 @@ once) gets a property test that hammers a mutation with the same key concurrentl
   the death path — all asserted in `tests/test_simulation.py`. Benchmarked 311 ms → 0.1 ms.
 - SessionStart hook fires (observed at session start).
 
+- **CI verified green on a real runner** (PR #3, 2026-06-10): backend + web jobs both pass.
+  The first run caught pre-existing `web/package-lock.json` drift (missing `@emnapi/*` entries
+  broke `npm ci`) — fixed, lockfile resynced.
+
 **Device/human-verifiable (owner, please confirm):**
-- `.github/workflows/ci.yml` goes **green on first push/PR** — commands are locally verified; the
-  GitHub Actions run (esp. the web job's `npm ci && npm run build`) has never executed on a runner.
 - A fresh web session auto-installs deps via the hook (harness-dependent).
 
 ---
@@ -60,7 +62,7 @@ once) gets a property test that hammers a mutation with the same key concurrentl
 
 | # | Sev | Risk | Evidence | Status |
 |---|-----|------|----------|--------|
-| 1 | HIGH | **Phantom integrity gates** (`check_memory.py`, `check_single_head.py`, CI itself absent despite ✅ claims). | was `Makefile`; `BACKLOG.md` | **FIXED 2026-06-10** — built + teeth-tested + green. CI-green-on-runner still owner-verifiable. |
+| 1 | HIGH | **Phantom integrity gates** (`check_memory.py`, `check_single_head.py`, CI itself absent despite ✅ claims). | was `Makefile`; `BACKLOG.md` | **FIXED 2026-06-10** — built + teeth-tested; **CI verified green on a real runner** (PR #3, both jobs). |
 | 2 | HIGH | **Sim compute-on-read O(elapsed hours), unbounded convergence.** | was `BACKLOG.md`; standup 2026-06-08 | **FIXED 2026-06-10** — dormancy-snap; bounded + parity + convergence tests in `tests/test_simulation.py`; ADR in `DECISIONS.md`. Residual at-scale burst risk on ARCHITECTURE watch list. |
 | 3 | HIGH | **No idempotency keys on mutations.** Retries/double-clicks can double-post the ledger. | `BACKLOG.md`; standup 2026-06-08 §1 (Backend) | OPEN → this is the NEXT ACTION |
 | 4 | MED | **Chain fully mocked.** No funded TestNet, `ASA_ID` unset, metadata not on IPFS. | `BACKLOG.md`; standup 2026-06-08 §1 (Chain) | OPEN |
