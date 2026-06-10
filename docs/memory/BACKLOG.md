@@ -1,7 +1,24 @@
 # Backlog (Layer 3) — single source of priority
 
 Status: `⬜ todo · 🔨 doing · ✅ done · ❄️ parked`. Standups may *propose* items; they're only real
-once they appear here. Last reconciled: **2026-06-08**.
+once they appear here. Last reconciled: **2026-06-10**.
+
+## 🟢 Shipped 2026-06-10 (branch `claude/grow-chamber-plants-6ud1q4` — PR open, not merged)
+- 🟢 ✅ **Procedural pod-particle plant renderer** — `web/.../plantRenderer.ts` + `PlantCanvas.tsx`;
+  buds at every node + apical cola; morphology from `indica_ratio`; ripening + stress visuals; swipe
+  physics in chamber mode. Replaces the static SVG in card + detail.
+- 🟢 ✅ **Lifetime care → yield** — engine integrates hourly health into `lifetime_vigor`; harvest
+  weight reads the average (migration `c1d2e3f4a5b6`). DECISIONS 2026-06-10.
+- 🟢 ✅ **Dev quick-play login** — `POST /players/guest` behind `GPE_DEV_LOGIN`. DECISIONS 2026-06-10.
+- 🟢 ✅ **Catalog 22 → 47 strains** — +25 with genome + encyclopedia entries (5-agent draft, central
+  validation). Rarity rebalanced (1 legendary).
+- Follow-ups from this work:
+  - 🟠 ⬜ **Surface `lifetime_vigor` in the plant UI** (it's on the wire, nothing renders it).
+  - 🟡 ⬜ **First-class airflow/fan sim input** with its own stress band, wired to the renderer wind.
+  - 🟡 ⬜ **`PlantCanvas` snapshot/visual test** (fixed state → stable frame), per Prompt 4's contract.
+  - 🔴 ⬜ **Restore `scripts/check_memory.py` + `scripts/check_single_head.py`** — referenced by the
+    Makefile/CI but absent in this checkout, so the memory + single-head gates can't run locally.
+  - 🟡 ⬜ **Flip `GPE_DEV_LOGIN` off for public launch** (keep on for the test deploy only).
 
 ## 🔴 Immediate (do now — correctness, truth, or unblocks others)
 - ✅ Add `CLAUDE.md` + `docs/memory/` memory-layer system (this change).

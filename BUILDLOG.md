@@ -130,3 +130,32 @@ health-observability, ci-github-actions, dockerize, openapi-docs,
 strain-search-favorites, leaderboards, market-auctions, weather-events,
 pod-automation, strain-stabilization, asa-wallet-settlement, contracts-orders,
 plus test-coverage-property. Tests: 79 -> 123, all green. No broken merges.
+
+## Grow-chamber plants, dev login & lifetime-yield (live-game polish)
+- `claude/grow-chamber-plants-6ud1q4` · Three player-facing upgrades plus a catalog
+  expansion, all on one branch (PR open, not yet merged to `main`):
+  - **Procedural pod-particle plant renderer.** Replaced the static SVG plant with a
+    canvas renderer (`web/src/components/plant/plantRenderer.ts` + `PlantCanvas.tsx`),
+    ported from the GROVERS Grow Chamber prototype and driven by live plant state.
+    Flower sites build at **every node** plus a fat apical cola, so buds run up the
+    whole stem (the long-standing "no buds along the stems" ask). Budding morphology
+    (nodal/hybrid/spiral) is selected from the strain's `indica_ratio`; colour vitality,
+    droop and leaf-claw track health + dominant stress; ripening (pistil browning,
+    trichome frost) advances with the grow day. Card view = plant only; detail view =
+    chamber backdrop + swipe-to-brush physics + trichome dust. 30fps cap, reduced-motion
+    static fallback. Swapped into `PlantCard` and the plant detail page.
+  - **Dev "quick play" login.** `POST /players/guest` finds-or-creates by username and
+    returns the API key so a playtester signs in with one word — no key copy step.
+    Gated behind `GPE_DEV_LOGIN` (default on; turn OFF for public deploys). New
+    "Quick play" tab is the default on onboarding.
+  - **Lifetime care drives yield.** The engine now integrates hourly health into a
+    `lifetime_vigor` average (`plants.lifetime_health_sum` / `lifetime_hours`, migration
+    `c1d2e3f4a5b6`), and `harvest_plant` sizes wet weight off that average — so weeks of
+    neglect can't be undone by one good final day. Quality still reflects condition at
+    harvest. Exposed as `lifetime_vigor` on the plant serializer.
+  - **+25 catalog strains (22 → 47).** Each with a canonical genome (`strains.yaml`) and a
+    scientist-grade encyclopedia entry (`strain_knowledge.yaml`) in lockstep. Drafted by a
+    5-agent research workforce (5 strains each), validated + assembled centrally for schema,
+    range, and cross-file consistency. Rarity tuned so the apex tier stays scarce.
+  - Tests: 186 passed (151 → 186 over the previous turns), coverage 79.3% (gate 78%).
+    Web `tsc` / `next lint` / `next build` green.

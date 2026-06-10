@@ -152,3 +152,25 @@ caveats to the KB header. **Why:** the peer-reviewed evidence is strong and conv
 enrichment adds a `terpene_cluster` per strain and models assayed THC as an inflation-biased
 distribution; the research also confirms light (PPFD/DLI→yield, ~linear to ~1500–1800) as the
 best-evidenced Phase B sim lever, and validates today's VPD/DLI bands as defensible (vendor-tier).
+
+### 2026-06-10 — Yield is driven by lifetime care, not the harvest-moment snapshot
+**Decision:** The engine integrates hourly `health` into `Plant.lifetime_health_sum` /
+`lifetime_hours` (the average is `lifetime_vigor`), and `harvest_plant` sizes wet weight off that
+average instead of the instantaneous health at harvest. Quality still reflects condition at harvest.
+Forward-only migration `c1d2e3f4a5b6` adds the two columns. **Why:** the owner's north star is "how
+does nature do it?" — a real plant that's neglected for weeks loses bulk that one good final day
+can't restore, but the old code let a last-minute correction harvest at full weight. **Consequences:**
+the engine's per-hour step does one extra add; the catch-up stays a pure function of state + elapsed
+time (the accumulator is part of state). `lifetime_vigor` is exposed on the plant serializer but not
+yet surfaced in the UI (backlog). Care over the whole life is now the yield lever, which strengthens
+the retention loop the harder media are meant to create.
+
+### 2026-06-10 — Dev "quick play" login is a gated, test-only bypass
+**Decision:** Add `POST /players/guest` (find-or-create by username, returns the API key) behind
+`config.dev_login_enabled` (`GPE_DEV_LOGIN`, default on), so a playtester can sign in with one word
+and skip the API-key copy step. **Why:** the owner needs a friend to get into the live test build and
+create rooms / breed without onboarding friction. **Consequences:** this deliberately trades security
+for convenience — anyone who knows a username can claim that account — so it MUST be turned off for any
+public/production deploy (documented in `.env.example`). It does not weaken the core invariant that
+writes require an API key; it only automates issuing/returning one. Revisit before launch: replace
+with a proper guest/session flow or keep it strictly behind the dev flag.
