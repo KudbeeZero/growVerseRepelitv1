@@ -7,6 +7,20 @@
 
 ## 2026-06-10 — Night-shift autonomous run (branch `claude/night-shift-2026-06-10`)
 
+### Entry 8 — Plant render (owner request) + public-surface auth verification
+- **What:** Rendered two plants side-by-side at **30%** (vegetative, day 28) and
+  **80%** (flowering, day 60) growth and sent the image to the owner. Method: a
+  throwaway `/shot` Next route mounting the **real** `GrowChamber` with hardcoded
+  growth props (no API/auth), screenshotted via headless Chrome (`--headless=new`,
+  virtual-time budget for the canvas RAF, 2× scale). Harness deleted after.
+- **🔒 Auth posture verified (advisor prompt):** over the live public tunnel,
+  writes correctly reject — `POST /breed` → **401** without `X-API-Key`. `POST
+  /players` returns 201 by design: onboarding is intentionally public **but
+  rate-limited (30/hr)** (you need it before you have credentials). All other
+  mutations use `@require_player`. **No vulnerability** — posture is sound. (Minor:
+  the 30/hr onboarding faucet is the only unauthenticated money-creating path;
+  bounded, fine for test.)
+
 ### Prioritized backlog for the next shift (priority stack order)
 > Generated from the KB + repo. `🔴` blocks / `🟠` next / `🟡` later. `[GATE]` =
 > economy/auth/payments/NFT → **stop for owner sign-off before merge**.
