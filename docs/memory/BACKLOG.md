@@ -47,9 +47,18 @@ Durable follow-ups the rebuttals/systems-review surfaced (the pre-mainnet harden
 - 🟠 ⬜ **F005/F007 concurrency** — `SELECT … FOR UPDATE`/per-day counter for the withdrawal cap;
   DB unique index on `Player.algorand_address`; **checksum** address validation before real
   withdrawals (blocker once `withdraw()` hits a real network).
-- 🟠 ⬜ **NEW-2 — `CUP_PRIZE_PAYOUT`** may pay without asserting `payouts <= prize_pool` (faucet); gate it.
+- 🟠 ✅ **NEW-2 — `CUP_PRIZE_PAYOUT` faucet gated** (2026-06-10): `judge()` now pays rank-by-rank
+  from a budget of `prize_pool + cannabis_cup.house_sponsorship` (new balance.yaml key, 5600 =
+  full prize table 5700 − one min entry fee), clamping each payout to the remaining budget and
+  recording the ACTUAL amount in `entry.prize_grow`. Invariant: sum(CUP_PRIZE_PAYOUT per cup)
+  ≤ entries×fee + house_sponsorship. `_prize_for` now returns Decimal (no float in the money
+  path). Tests: bound + rank-priority in `tests/test_cup.py`, conservation in `tests/test_invariants.py`.
 - 🟠 ⬜ **NEW-5 / F029-F030 — catch-up converge-to-now + analytic fast-forward** (currently defers, not discards).
-- 🟡 ⬜ **NEW-3 — `REWARD` entry type overloaded** (achievements + contracts); audit for double-credit.
+- 🟡 ✅ **NEW-3 — `REWARD` overload audited + pinned** (2026-06-10): code is correct — the
+  achievement claim-once check filters on `ref_type="achievement"` and contract fulfill is
+  guarded by `status != "open"`, so the shared `LedgerEntryType.REWARD` cannot cross-contaminate.
+  Pinned with regression tests in `tests/test_invariants.py` (layer 3): contract double-fulfill,
+  contract-REWARD-vs-achievement ref_id collision, cup double-judge, cup prize-budget conservation.
 - 🟡 ⬜ Breed `owns_harvest` access — confirm against `design/02-genetics.md` (seeds-only?); a11y tabpanel
   wiring in `lab/strains/[id]` + `market` pages + `Tabs` arrow-key handler.
 

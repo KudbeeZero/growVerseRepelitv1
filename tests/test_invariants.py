@@ -16,24 +16,32 @@ construction rather than one point-test at a time:
      test holds the RNG constant — comparing two different plant ids would seed
      two different pest streams (a known pitfall).
   3. NO DOUBLE-CREDIT — every payout/charge entry point is idempotent: invoking
-     it twice never moves money twice (harvest, sell, daily stipend, achievement).
+     it twice never moves money twice (harvest, sell, daily stipend, achievement,
+     contract, cup judging). Plus the REWARD-overload guard (contracts and
+     achievements share LedgerEntryType.REWARD, disambiguated by ref_type) and
+     the cup faucet bound (payouts <= prize_pool + house_sponsorship).
 
 No new deps: randomized over fixed seeds, same style as test_properties.py.
 """
 
+import copy
 import os
 import random
 import sys
 from datetime import datetime, timedelta
+from decimal import Decimal
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 import pytest
 
 from growpodempire.db.session import session_scope
-from growpodempire.db.models import Strain
-from growpodempire.economy.config import load_economy_config
-from growpodempire.economy.ledger import balance, recompute_balance
+from growpodempire.db.models import LedgerEntry, Strain
+from growpodempire.economy.config import EconomyConfig, load_economy_config
+from growpodempire.economy.ledger import balance, post, recompute_balance
+from growpodempire.enums import LedgerEntryType
+from growpodempire.services.contract_service import ContractService
+from growpodempire.services.cup_service import CupService
 from growpodempire.services.game_service import GameService, GameError
 from growpodempire.services.progression_service import ProgressionService
 from growpodempire.economy.ledger import InsufficientFundsError
@@ -230,6 +238,119 @@ def test_daily_stipend_is_not_double_creditable(db):
         clock.advance(hours=23)
         prog.claim_daily(p.id)
         assert balance(s, p.id) > bal_after_first
+
+
+def _common_contract_cfg():
+    """A single deterministic common-rarity template, so fulfill() is reachable
+    without rarity-roll loops."""
+    raw = copy.deepcopy(CFG.raw)
+    raw["contracts"]["templates"] = [
+        {"rarity": "common", "grams": 50, "reward": 250, "xp": 0, "weight": 1}
+    ]
+    return EconomyConfig(raw=raw)
+
+
+def _unsold_common_harvest(s, gs, player_id, grams=60):
+    """One unsold common-rarity harvest (blue-dream is a common catalog strain)."""
+    strain = s.query(Strain).filter(Strain.slug == "blue-dream").one()
+    stack = gs.buy_seed(player_id, strain.id)
+    pod = gs.create_pod(player_id, "T", capacity=4, charge=False)
+    plant = gs.plant_seed(player_id, stack.id, pod.id)
+    return gs.harvest_plant(player_id, plant.id, weight_g=grams, quality=80, sell=False)
+
+
+def test_contract_is_not_double_creditable(db):
+    """NEW-3: fulfilling a contract twice must raise and not move money twice
+    (guarded by `status != "open"`, not by the REWARD ledger entry)."""
+    with session_scope() as s:
+        clock = FrozenClock(BASE)
+        gs = GameService(s, clock=clock)
+        p = gs.create_player("contract_idem")
+        _unsold_common_harvest(s, gs, p.id)
+        cs = ContractService(s, config=_common_contract_cfg(), clock=clock)
+        contract = cs.offer(p.id, rng_seed=1)
+        cs.fulfill(p.id, contract.id)
+        bal_after_first = balance(s, p.id)
+        with pytest.raises(GameError):
+            cs.fulfill(p.id, contract.id)  # already fulfilled
+        assert balance(s, p.id) == bal_after_first
+        assert _conserved(s, p.id)
+
+
+def test_contract_reward_does_not_mark_achievement_claimed(db):
+    """NEW-3 cross-contamination guard: contracts and achievements BOTH post
+    LedgerEntryType.REWARD; the achievement claim-once check must filter on
+    ref_type="achievement" so a contract REWARD whose ref_id collides with an
+    achievement key never marks that achievement claimed."""
+    with session_scope() as s:
+        clock = FrozenClock(BASE)
+        gs = GameService(s, clock=clock)
+        prog = ProgressionService(s, clock=clock)
+        p = gs.create_player("reward_overload")
+        # Adversarial: a contract-flavored REWARD whose ref_id IS an achievement key.
+        post(
+            s, p.id, Decimal("10"), LedgerEntryType.REWARD,
+            ref_type="contract", ref_id="first_harvest",
+        )
+        ach = {a["key"]: a for a in prog.list_achievements(p.id)}
+        assert ach["first_harvest"]["claimed"] is False  # not contaminated
+        # Unlock it for real; the claim must still work — and pay exactly once.
+        _unsold_common_harvest(s, gs, p.id)
+        before = balance(s, p.id)
+        prog.claim_achievement(p.id, "first_harvest")
+        assert balance(s, p.id) > before  # the real claim paid out
+        with pytest.raises(GameError):
+            prog.claim_achievement(p.id, "first_harvest")  # claim-once holds
+        assert _conserved(s, p.id)
+
+
+def test_cup_judging_is_not_double_payable(db):
+    """NEW-3 (cup leg of the no-double-credit layer): judging a closed cup again
+    — directly or via the auto-judge-on-read path — must not pay prizes twice."""
+    with session_scope() as s:
+        gs = GameService(s)
+        p = gs.create_player("cup_idem_inv")
+        h = _unsold_common_harvest(s, gs, p.id)
+        CupService(s, clock=FrozenClock(BASE)).enter(p.id, h.id)
+        late = CupService(s, clock=FrozenClock(BASE + timedelta(days=91)))
+        cup = late.current_cup()  # window closed -> judges
+        assert cup.status == "judged"
+        bal_after_judge = balance(s, p.id)
+        late.judge(cup)        # explicit re-judge: must be a no-op
+        late.get_cup(cup.id)   # auto-judge-on-read path: also a no-op
+        assert balance(s, p.id) == bal_after_judge
+        assert _conserved(s, p.id)
+
+
+def test_cup_payouts_conserve_prize_budget(db):
+    """NEW-2 conservation invariant: after judging, the sum of CUP_PRIZE_PAYOUT
+    ledger entries for a cup never exceeds entries*fee + house_sponsorship —
+    the house's per-cup emission is bounded by the balance.yaml sponsorship."""
+    with session_scope() as s:
+        gs = GameService(s)
+        early = CupService(s, clock=FrozenClock(BASE))
+        n_entries = 3
+        for i in range(n_entries):
+            p = gs.create_player(f"cup_cons_{i}")
+            h = _unsold_common_harvest(s, gs, p.id, grams=60 + i * 20)
+            early.enter(p.id, h.id)
+        cup = CupService(s, clock=FrozenClock(BASE + timedelta(days=91))).current_cup()
+        assert cup.status == "judged"
+        s.flush()
+        paid = Decimal("0")
+        for e in (
+            s.query(LedgerEntry)
+            .filter(
+                LedgerEntry.entry_type == LedgerEntryType.CUP_PRIZE_PAYOUT.value,
+                LedgerEntry.ref_type == "cup",
+                LedgerEntry.ref_id == cup.id,
+            )
+            .all()
+        ):
+            paid += e.amount
+        sponsorship = Decimal(str(CFG.raw["cannabis_cup"]["house_sponsorship"]))
+        assert paid <= n_entries * cup.entry_fee + sponsorship
+        assert cup.prize_pool == n_entries * cup.entry_fee  # fees fund the pool
 
 
 def test_achievement_is_not_double_creditable(db):

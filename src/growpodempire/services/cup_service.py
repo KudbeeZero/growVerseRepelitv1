@@ -9,7 +9,8 @@ season window closes the Cup **auto-judges on read** (compute-on-read, like the
 sim): entries are ranked, prizes paid, and the champion earns LIFETIME prestige —
 a one-of-a-kind commemorative legendary strain (seeded to their inventory) plus a
 permanent `cannabis_cup_title`. Idempotent throughout; the ledger is the guard
-against double payouts.
+against double payouts. Prizes are a BOUNDED faucet: total payouts per cup never
+exceed `prize_pool` (entry fees) + `cannabis_cup.house_sponsorship` (balance.yaml).
 """
 
 from datetime import timedelta
@@ -197,12 +198,22 @@ class CupService:
             .all()
         )
         prizes = self._cfg.get("prizes", {})
+        # FAUCET BOUND (invariant): the sum of CUP_PRIZE_PAYOUT ledger entries
+        # for this cup must never exceed `prize_pool + house_sponsorship`.
+        # `prize_pool` is funded entirely by entry fees (a sink), so the house's
+        # net emission per cup is capped at `house_sponsorship` from balance.yaml.
+        # We enforce it constructively: pay rank-by-rank from a decrementing
+        # budget, clamping each payout to what remains.
+        budget = cup.prize_pool + Decimal(
+            str(self._cfg.get("house_sponsorship", 0))
+        )
         for i, entry in enumerate(entries):
             rank = i + 1
             entry.rank = rank
-            prize = self._prize_for(rank, prizes)
+            prize = min(self._prize_for(rank, prizes), budget)
             if prize > 0:
-                entry.prize_grow = Decimal(str(prize))
+                entry.prize_grow = prize  # the ACTUAL amount paid (post-clamp)
+                budget -= prize
                 post(
                     self.session, entry.player_id, entry.prize_grow,
                     LedgerEntryType.CUP_PRIZE_PAYOUT, ref_type="cup", ref_id=cup.id,
@@ -226,16 +237,17 @@ class CupService:
         self.session.flush()
         return cup
 
-    def _prize_for(self, rank: int, prizes: dict) -> float:
+    def _prize_for(self, rank: int, prizes: dict) -> Decimal:
+        """Configured prize for a rank, as Decimal (money path — no floats)."""
         if rank == 1:
-            return float(prizes.get("first", 0))
+            return Decimal(str(prizes.get("first", 0)))
         if rank == 2:
-            return float(prizes.get("second", 0))
+            return Decimal(str(prizes.get("second", 0)))
         if rank == 3:
-            return float(prizes.get("third", 0))
+            return Decimal(str(prizes.get("third", 0)))
         if rank <= int(prizes.get("top_n", 10)):
-            return float(prizes.get("top_each", 0))
-        return 0.0
+            return Decimal(str(prizes.get("top_each", 0)))
+        return Decimal("0")
 
     def _mint_champion(self, cup: CannabisCup, entry: CupEntry) -> Optional[Strain]:
         """A one-of-a-kind LEGENDARY strain derived from the winning genetics —

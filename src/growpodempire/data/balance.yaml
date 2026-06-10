@@ -329,6 +329,13 @@ cannabis_cup:
   duration_days: 90              # the competition window (a season)
   entry_fee: 100                 # GROW to submit one harvest (a sink)
   max_entries_per_player: 3
+  # The house's bounded contribution per cup — THE faucet bound. judge() pays
+  # rank-by-rank against a budget of `prize_pool + house_sponsorship`, so the
+  # sum of CUP_PRIZE_PAYOUT entries for a cup can never exceed it. 5600 = the
+  # full prize table below (2500+1200+600+7*200 = 5700) minus one minimum
+  # entry's fee (100), so any cup with at least one entry can still pay the
+  # configured table in full while the house's exposure stays fixed.
+  house_sponsorship: 5600
   # Prize payouts (a faucet, gated by the entry-fee sink + real grow effort).
   prizes:
     first: 2500

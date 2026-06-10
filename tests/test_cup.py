@@ -4,14 +4,16 @@ import copy
 import os
 import sys
 from datetime import datetime, timedelta
+from decimal import Decimal
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 import pytest
 
-from growpodempire.db.models import Strain, SeedInventory
+from growpodempire.db.models import CupEntry, LedgerEntry, Strain, SeedInventory
 from growpodempire.economy.config import EconomyConfig, load_economy_config
 from growpodempire.economy.ledger import balance
+from growpodempire.enums import LedgerEntryType
 from growpodempire.economy import pricing
 from growpodempire.services.game_service import GameService, GameError
 from growpodempire.services.cup_service import CupService
@@ -133,6 +135,59 @@ def test_judging_is_idempotent(session):
     assert cup2.status == "judged"
     assert balance(session, p.id) == bal
     assert session.query(Strain).filter(Strain.rarity == "legendary").count() == legendaries
+
+
+def test_prize_payouts_bounded_by_pool_plus_sponsorship(session):
+    """The faucet bound: with a tiny house sponsorship, a single-entry cup pays
+    exactly prize_pool + house_sponsorship — NOT the full configured first prize."""
+    raw = copy.deepcopy(CFG.raw)
+    raw["cannabis_cup"]["house_sponsorship"] = 150
+    cfg = EconomyConfig(raw=raw)
+    svc = GameService(session)
+    p = svc.create_player("capped")
+    h = _harvest(svc, p.id)
+    CupService(session, config=cfg, clock=FrozenClock(BASE)).enter(p.id, h.id)
+    before = balance(session, p.id)
+
+    cup = CupService(session, config=cfg, clock=FrozenClock(LATE)).current_cup()
+    assert cup.status == "judged"
+    # budget = pool (1 entry * 100 fee) + sponsorship (150) = 250 < first (2500)
+    assert balance(session, p.id) == before + Decimal("250")
+    entry = session.query(CupEntry).filter(CupEntry.cup_id == cup.id).one()
+    assert entry.prize_grow == Decimal("250")  # ACTUAL paid amount recorded
+    # The ledger-level invariant: sum(CUP_PRIZE_PAYOUT) <= pool + sponsorship.
+    session.flush()
+    paid = [
+        e.amount
+        for e in session.query(LedgerEntry).filter(
+            LedgerEntry.entry_type == LedgerEntryType.CUP_PRIZE_PAYOUT.value,
+            LedgerEntry.ref_type == "cup",
+            LedgerEntry.ref_id == cup.id,
+        )
+    ]
+    assert sum(paid, Decimal("0")) <= cup.prize_pool + Decimal("150")
+
+
+def test_prize_budget_pays_top_ranks_first(session):
+    """With zero sponsorship the budget is the pool alone; first place absorbs
+    it and lower ranks get nothing rather than overdrawing the faucet."""
+    raw = copy.deepcopy(CFG.raw)
+    raw["cannabis_cup"]["house_sponsorship"] = 0
+    cfg = EconomyConfig(raw=raw)
+    svc = GameService(session)
+    a = svc.create_player("rich_a")
+    b = svc.create_player("rich_b")
+    early = CupService(session, config=cfg, clock=FrozenClock(BASE))
+    early.enter(a.id, _harvest(svc, a.id, grams=120, quality=100).id)
+    early.enter(b.id, _harvest(svc, b.id, grams=80, quality=50).id)
+    a_before, b_before = balance(session, a.id), balance(session, b.id)
+
+    cup = CupService(session, config=cfg, clock=FrozenClock(LATE)).current_cup()
+    assert cup.status == "judged"
+    # budget = pool only = 200; first (configured 2500) is clamped to 200,
+    # exhausting the budget; second gets 0. Net house emission: zero.
+    assert balance(session, a.id) == a_before + Decimal("200")
+    assert balance(session, b.id) == b_before
 
 
 def test_cannot_enter_after_close(session):
