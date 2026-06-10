@@ -89,3 +89,18 @@ suite stayed green (185), proving no latent FK violations. **Reassuring:** no ID
 unescapable, CI never hits a live key, no model↔migration drift, the old "401 race" doesn't
 reproduce. New carried risks #6–#11 logged in the baton; NEXT ACTION re-scoped to full
 concurrency+idempotency hardening (was just idempotency keys).
+
+---
+
+## Addendum (fourth unit) — concurrency core hardened (RISK #6)
+Acted on the fleet sweep's narrowed root cause. The money paths were check-then-act with no row
+lock and `Wallet.version` was dead code. Landed DB-enforced fixes: wallet **optimistic locking**
+(`version_id_col`, manual bump removed), **`CHECK(cached_balance >= 0)`** backstop, **harvest-once**
+unique index (migration `f1a2b3c4d5e6`, `compare_metadata` clean), and a **409-on-conflict** mapping
+(was a 500). Also fixed the F5 flaky rate-limit test (limiter reset per `client` fixture). +4 tests
+in `tests/test_concurrency.py` proving double-spend is blocked, harvest is once-only, and the CHECK
+floor holds — **189 passed, 79.26%**. Double-spend / double-harvest / negative-balance are now
+DB-impossible regardless of worker concurrency. Remaining for the next chat: the general
+`Idempotency-Key` header (duplicate → original response, not a 409), one-shot-grant uniqueness
+(stipend/achievements), and the `/state` duplicate-PlantEvents race (C1). ADR in `DECISIONS.md`;
+ARCHITECTURE invariant #3 updated.

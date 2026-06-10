@@ -170,3 +170,22 @@ the event vocabulary (consumers treat `event_type` as opaque — verified); the 
 risk (many first-reads in one burst) stays on ARCHITECTURE's watch list with background
 materialization as the eventual answer. Tests: `tests/test_simulation.py` (bounded step count,
 one-read convergence, stage-clock pause, normal-read parity, death path).
+
+### 2026-06-10 — Concurrency safety via DB-enforced invariants + optimistic locking
+**Decision:** Close the highest-value concurrency exploits (carried RISK #6) at the **database
+level**, not just in application checks: (1) wire `Wallet.version` as SQLAlchemy `version_id_col`
+so two concurrent debits can't both commit — the loser gets `StaleDataError`, rolls back, and the
+API maps it to a clean **409**; (2) a `CHECK(cached_balance >= 0)` backstop so a wallet can never
+persist negative even on an app bug; (3) a unique index on `harvests.plant_id` so a plant is
+harvested exactly once (a raced double-harvest can't mint duplicate currency). Migration
+`f1a2b3c4d5e6` (single head; `compare_metadata` clean). **Why:** the prior guards were
+check-then-act with no row lock, and `Wallet.version` was dead code — on prod `gunicorn -w 2`,
+two requests double-spend / double-harvest. Declarative DB constraints hold under *any*
+concurrency model and are portable SQLite↔Postgres, so correctness no longer depends on Python
+evaluation order. Chose to remove the manual `wallet.version += 1` in `ledger.post()` (SQLAlchemy
+now owns the column). **Consequences:** concurrent conflicting writes fail safe (409 + rollback,
+client retries) instead of corrupting; +4 concurrency tests (`tests/test_concurrency.py`) prove
+double-spend, harvest-once, and the CHECK floor; the F5 flaky rate-limit test is fixed (limiter
+storage reset per `client` fixture). **Still open (next baton):** a general `Idempotency-Key`
+header so a duplicate returns the *original* response instead of a 409 (nicer UX), plus
+one-shot-grant uniqueness (daily stipend, achievements). 189 tests, 79.26%.

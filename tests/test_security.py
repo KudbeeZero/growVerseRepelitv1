@@ -18,7 +18,18 @@ from growpodempire.api.flask_api import create_app
 
 @pytest.fixture()
 def client(db):
-    return create_app(init_database=False).test_client()
+    app = create_app(init_database=False)
+    # The rate limiter uses a process-global in-memory store keyed by IP, which
+    # is NOT reset between tests; without this, prior tests' player-creates leak
+    # into the per-IP bucket and make the rate-limit assertion order-dependent.
+    with app.app_context():
+        try:
+            from growpodempire.api.ratelimit import limiter
+
+            limiter.reset()
+        except Exception:
+            pass
+    return app.test_client()
 
 
 def _new_player(client, username="sec"):

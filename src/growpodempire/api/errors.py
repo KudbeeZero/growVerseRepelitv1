@@ -8,6 +8,7 @@ and returned as a generic 500 (no internals leaked).
 import logging
 
 from flask import jsonify
+from sqlalchemy.orm.exc import StaleDataError
 from werkzeug.exceptions import HTTPException
 
 log = logging.getLogger("growpodempire")
@@ -23,6 +24,16 @@ def register_error_handlers(app) -> None:
     @app.errorhandler(HTTPException)
     def _handle_http(exc: HTTPException):
         return jsonify({"error": exc.description, "status": exc.code}), exc.code
+
+    @app.errorhandler(StaleDataError)
+    def _handle_conflict(exc: StaleDataError):
+        # Optimistic-lock loss: a concurrent write to the same row won the race.
+        # The transaction is rolled back, so no state changed — the client should
+        # simply retry. Surface a clean 409 rather than a generic 500.
+        return (
+            jsonify({"error": "Conflicting concurrent update; please retry", "status": 409}),
+            409,
+        )
 
     @app.errorhandler(Exception)
     def _handle_unexpected(exc: Exception):
