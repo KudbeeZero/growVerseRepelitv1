@@ -625,3 +625,310 @@ super-lemon-haze:
     height: "tall (1.5-2.4 m)"
     resilience: "vigorous, resinous; stretchy sativa that rewards training"
   notes: "A two-time Cannabis Cup winner — explosively lemony and energizing; a modern Haze benchmark."
+
+g13:
+  aka: ["G-13", "Government Indica Strain #13", "G Thirteen"]
+  lineage: "Unknown Afghan indica landrace or derivative — allegedly cultivated by the U.S. government NIDA program at the University of Mississippi in the late 1960s–70s. No verified parent strains; the clone-only single cut is real, the lab-origin story is cannabis mythology. Founding parent of G13 Haze (G13 × Hawaiian/NYC Diesel) and 88 G13 Hashplant."
+  origin: "Unknown (rumored USA, Mississippi)"
+  type: photoperiod
+  genotype: "70% Indica / 30% Sativa"
+  aroma: [earthy, pine, woody, musky, subtle skunk]
+  flavor: [earthy, pine, herbal, sweet finish]
+  effects: [deeply relaxing, euphoric, sedating, sleepy, couch-lock]
+  medical: [stress, pain, anxiety, insomnia]
+  terpenes:
+    myrcene: "earthy, musky — primary sedation; couch-lock pillar of the G13 body effect"
+    caryophyllene: "peppery, spicy — anti-inflammatory; adds the bite to the hash-plant character"
+    pinene: "pine — counteracts some sedation; sharpens the early euphoric onset"
+  cannabinoids: {thc: "20-24%", cbd: "<0.5%", cbg: "low-moderate", thcv: "trace"}
+  morphology: "Short to medium, bushy, classic broad-leaf indica structure; wide lateral spread; extremely dense, resin-heavy flowers"
+  grow:
+    difficulty: easy
+    environment: [indoor, greenhouse, outdoor]
+    flowering_weeks: "8-10"
+    photoperiod: "flip to 12/12 to flower; responds well to CO2 supplementation"
+    optimal: {temp_c: "21-27", rh_veg_pct: "60-70", rh_flower_pct: "40-50", vpd_kpa: "0.8-1.3", dli: "35-45"}
+    yield_indoor_g_m2: "400-600"
+    yield_outdoor_g_plant: "500-700"
+    height: "short-medium (0.9-1.5 m)"
+    resilience: "very resilient; beginner-friendly; wide feeding tolerance; adapts to most environments"
+  notes: "The most mythologized strain in cannabis culture. Whether government lab or clever marketing, the genetics are exceptional — a pure-indica workhorse with world-class potency for its era and exceptional grow ease. The only Legendary-tier base catalog strain."
+
+wedding-cake:
+  aka: ["Triangle Mints #23", "Pink Cookies"]
+  lineage: "Triangle Kush × Animal Mints. Bred by Seed Junky Genetics (JBeezy). Triangle Kush is a Florida OG Kush phenotype; Animal Mints = Animal Cookies × SinMint Cookies. Some Canadian sources sell as 'Pink Cookies.' Technically a numbered Triangle Mints pheno, not a distinct named cross, but 'Wedding Cake' became the global market identity."
+  origin: "USA (California)"
+  type: photoperiod
+  genotype: "60% Indica / 40% Sativa"
+  aroma: [vanilla, sweet earth, tangy pepper, light floral, cake frosting]
+  flavor: [vanilla cream, sweet cookie, spicy pepper, kush earth]
+  effects: [relaxed, euphoric, hungry, happy, body-stoned]
+  medical: [pain, insomnia, appetite-loss, stress, depression]
+  terpenes:
+    caryophyllene: "peppery, spicy — dominant; the warm bite on exhale; anti-inflammatory CB2 binding"
+    limonene: "citrus, tangy — lightens the heavy indica body with mood elevation"
+    myrcene: "earthy-sweet base — deepens the relaxation; sedative synergy with caryophyllene"
+  cannabinoids: {thc: "22-30%", cbd: "<0.25%", cbg: "low", thcv: "trace"}
+  morphology: "Stout, bushy; dense frosted buds with purple and green hues; compact OG-style architecture up to 170 cm"
+  grow:
+    difficulty: moderate
+    environment: [indoor, greenhouse]
+    flowering_weeks: "8-9"
+    photoperiod: "flip to 12/12; watch veg-to-flower transition — hermaphroditism risk under temperature stress"
+    optimal: {temp_c: "21-26", rh_veg_pct: "50-60", rh_flower_pct: "40-50", vpd_kpa: "0.9-1.4", dli: "38-48"}
+    yield_indoor_g_m2: "450-600"
+    yield_outdoor_g_plant: "500-700"
+    height: "medium (1.0-1.7 m)"
+    resilience: "nutrient-sensitive; hermaphroditism risk under heat or light stress; not recommended for beginners"
+  notes: "One of the most influential hybrids of the 2010s — the Seed Junky triangle that put California dessert genetics on the global map. High potency ceiling makes it a go-to for experienced growers chasing that cake nose."
+
+runtz:
+  aka: ["Runtz OG", "White Runtz", "Pink Runtz"]
+  lineage: "Zkittlez × Gelato #33. Bred by Cookies Fam (Berner). Zkittlez = Grape Ape × Grapefruit × [undisclosed]; Gelato #33 = Sunset Sherbet × Thin Mint GSC. Leafly Strain of the Year 2020. The candy fruit of Zkittlez stacked on Gelato's creamy density and THC ceiling."
+  origin: "USA (California)"
+  type: photoperiod
+  genotype: "50% Indica / 50% Sativa"
+  aroma: [sugary fruit candy, sour berries, creamy vanilla, peppery gas]
+  flavor: [candy fruit, cream, berry, sweet exhale, light pepper finish]
+  effects: [euphoric, uplifted, creative, balanced body-and-mind, socially enhanced]
+  medical: [anxiety, depression, stress, mild pain]
+  terpenes:
+    caryophyllene: "peppery — the gassy undercurrent beneath all that candy; anti-inflammatory anchor"
+    limonene: "citrus-sweet — primary fruity uplift; mood elevation"
+    myrcene: "berry-musk — softens the candy profile; gentle body relaxation"
+  cannabinoids: {thc: "19-29%", cbd: "0.5-0.7%", cbg: "low", thcv: "trace"}
+  morphology: "Compact, dense nugs with vibrant purple and green coloration; moderate stretch; crystal-frosted calyx clusters"
+  grow:
+    difficulty: moderate
+    environment: [indoor, greenhouse]
+    flowering_weeks: "8-9"
+    photoperiod: "flip to 12/12; night-time temp drop in final 2 weeks intensifies purple pigmentation"
+    optimal: {temp_c: "21-27", rh_veg_pct: "50-60", rh_flower_pct: "40-45", vpd_kpa: "0.9-1.4", dli: "38-48"}
+    yield_indoor_g_m2: "450-500"
+    yield_outdoor_g_plant: "400-450"
+    height: "medium (1.0-1.6 m)"
+    resilience: "dense colas trap moisture — botrytis risk above 45% RH in late flower; manage humidity strictly"
+  notes: "The candy bar of cannabis — Leafly's 2020 Strain of the Year and a cultural phenomenon. A high-potency balanced hybrid that introduced dessert genetics to a mainstream audience."
+
+gelato-33:
+  aka: ["Larry Bird", "Gelato", "Cookie Fam Gelato #33"]
+  lineage: "Sunset Sherbet × Thin Mint Girl Scout Cookies. Bred by Cookie Fam Genetics (San Francisco Bay Area). Sunset Sherbet = GSC × Pink Panties; Thin Mint GSC = OG Kush × Durban Poison select mint pheno. Gelato #33 — 'Larry Bird' (jersey number 33) — is the most prized pheno from the original Gelato run."
+  origin: "USA (San Francisco Bay Area)"
+  type: photoperiod
+  genotype: "55% Indica / 45% Sativa"
+  aroma: [sweet citrus, earthy lavender, berry, vanilla cream, mint diesel]
+  flavor: [creamy berry, sweet citrus, vanilla, mint, diesel exhale]
+  effects: [mentally alert, mood-elevated, body-relaxed, euphoric, creative]
+  medical: [anxiety, depression, chronic pain, stress]
+  terpenes:
+    caryophyllene: "peppery, warm — dominant; the GSC inheritance; anti-inflammatory backbone"
+    limonene: "citrus, bright — elevates mood; the 'Larry Bird' clarity note"
+    myrcene: "earthy-sweet — rounds the body effect; Sunset Sherbet depth"
+  cannabinoids: {thc: "20-29%", cbd: "<0.5%", cbg: "low", thcv: "trace"}
+  morphology: "Dense, colorful buds; purple-to-lavender hues in cool temps; extremely resin-coated; strong structural integrity"
+  grow:
+    difficulty: hard
+    environment: [indoor, greenhouse]
+    flowering_weeks: "8-9"
+    photoperiod: "flip to 12/12; night temp drop to 65-68°F in final 2 weeks for color expression"
+    optimal: {temp_c: "20-27", rh_veg_pct: "55-60", rh_flower_pct: "40-45", vpd_kpa: "0.9-1.4", dli: "40-50"}
+    yield_indoor_g_m2: "500-600"
+    yield_outdoor_g_plant: "500-700"
+    height: "medium-tall (1.2-2.0 m indoors)"
+    resilience: "temperature-sensitive; dense bud structure demands strong airflow; rewards experienced growers with world-class resin and flavor"
+  notes: "Arguably the most influential modern hybrid — every dessert-genetics strain traces back to this San Francisco phenotype. 'Larry Bird' became the Bay Area's most celebrated clone and a defining moment in craft cannabis."
+
+zkittlez:
+  aka: ["Skittles", "The Original Z", "Zkittles"]
+  lineage: "Grape Ape × Grapefruit × [undisclosed third parent]. Bred by 3rd Gen Family (Brandon Parker) and Terp Hogz (Green R. Fieldz, Tony Mendocino) in California. The third parent has never been publicly confirmed; speculation ranges from OG Kush to Skunk #1 derivatives. Officially rebranded 'The Original Z' (2023) after trademark pressure."
+  origin: "USA (California)"
+  type: photoperiod
+  genotype: "60% Indica / 40% Sativa"
+  aroma: [tropical fruit, grape, mixed berry candy, citrus, light floral]
+  flavor: [sweet candy, grape, tropical fruit, smooth citrus finish]
+  effects: [calming, euphoric, happy, mood-elevated, sociable]
+  medical: [stress, mild pain, social anxiety, appetite]
+  terpenes:
+    caryophyllene: "pepper — depth beneath the candy sweetness; anti-inflammatory underpinning"
+    limonene: "citrus-bright — the tropical pop on opening a jar; mood elevation"
+    myrcene: "berry, earthy — deepens the indica relaxation; Grape Ape heritage"
+  cannabinoids: {thc: "18-25%", cbd: "<1%", cbg: "low", thcv: "trace"}
+  morphology: "Medium height with dense, colorful buds; green and purple hues; thick resin; well-branched canopy"
+  grow:
+    difficulty: easy
+    environment: [indoor, greenhouse, outdoor]
+    flowering_weeks: "8-9"
+    photoperiod: "flip to 12/12; warm climate preferred; cool nights develop purple color"
+    optimal: {temp_c: "20-27", rh_veg_pct: "50-60", rh_flower_pct: "40-50", vpd_kpa: "0.9-1.3", dli: "35-45"}
+    yield_indoor_g_m2: "500-600"
+    yield_outdoor_g_plant: "600+"
+    height: "medium (1.0-1.7 m)"
+    resilience: "forgiving and pest-resistant; one of the more beginner-friendly exotic strains"
+  notes: "The strain that brought candy-forward terpene profiles to the mainstream. Multiple Cannabis Cup wins; a breeder's favorite parent for modern fruit-forward hybrids. Third parent remains a trade secret — a real-world genetic mystery."
+
+mimosa:
+  aka: ["Mimosa V6", "Purple Mimosa"]
+  lineage: "Clementine × Purple Punch. Bred by Symbiotic Genetics. Clementine = Tangie × Lemon Skunk; Purple Punch = Larry OG × Granddaddy Purple. The pairing captures a citrus-dominant sativa top end riding an indica-heavy base for body effect."
+  origin: "USA (California)"
+  type: photoperiod
+  genotype: "70% Sativa / 30% Indica"
+  aroma: [orange zest, grapefruit peel, sweet berry, light earthy-floral]
+  flavor: [citrus, orange, tropical fruit, floral, herbal exhale]
+  effects: [cerebral uplift, focused energy, sociable, mood-elevating, daytime clarity]
+  medical: [depression, fatigue, morning use, stress, mild anxiety]
+  terpenes:
+    limonene: "orange-citrus, dominant — the mimosa namesake; the fastest mood-lift in the catalog"
+    myrcene: "earthy-sweet — the Purple Punch inheritance; grounds the sativa top"
+    caryophyllene: "pepper, spice — depth and body warmth; Clementine backbone"
+  cannabinoids: {thc: "19-27%", cbd: "<1%", cbg: "low-moderate", thcv: "trace"}
+  morphology: "Medium-to-tall sativa stretch; significant early-flower elongation; dense buds with orange pistil haze; purple phenotypes possible"
+  grow:
+    difficulty: moderate
+    environment: [indoor, greenhouse, outdoor]
+    flowering_weeks: "9-10"
+    photoperiod: "flip to 12/12; top or train early to manage sativa stretch; heavy feeder in late veg"
+    optimal: {temp_c: "20-28", rh_veg_pct: "50-60", rh_flower_pct: "40-50", vpd_kpa: "0.9-1.4", dli: "38-48"}
+    yield_indoor_g_m2: "450-550"
+    yield_outdoor_g_plant: "550+"
+    height: "medium-tall (1.3-2.0 m)"
+    resilience: "moderate; sativa stretch requires height management; responds well to nitrogen-heavy veg feed"
+  notes: "The brunch strain — the most citrus-forward profile in modern cannabis and the go-to for daytime function. Limonene dominance makes it the catalog's premier mood-elevator."
+
+permanent-marker:
+  aka: ["Perm", "Permanent"]
+  lineage: "Biscotti S1 × Sherb BX × Jealousy. Bred by Seed Junky Genetics (JBeezy). Biscotti = Gelato #25 × Sour Florida OG; Sherb BX = Garlic Mushroom Cookies × Sunset Sherbet; Jealousy = Gelato × Sherbet backcross. A Gelato-stack lineage with multiple generations of GSC, Sherbet, and OG stacked for maximum potency and terpene density."
+  origin: "USA (California)"
+  type: photoperiod
+  genotype: "70% Indica / 30% Sativa"
+  aroma: [minty, peppery, gassy solvent, cookie sweetness, sweet berries]
+  flavor: [mint, cookie dough, gas, pepper, creamy berry exhale]
+  effects: [instant cerebral euphoria, creative mental daze, full-body relaxation, sedating at high doses]
+  medical: [insomnia, chronic pain, stress, anxiety, evening use]
+  terpenes:
+    caryophyllene: "peppery, spicy — dominant; the 'marker cap' chemical sharpness on opening the jar"
+    limonene: "citrus-mint — lifts the dense indica stone; Jealousy's brightness"
+    myrcene: "earthy-sweet — Sherbet depth; anchors the body lock"
+  cannabinoids: {thc: "25-35%", cbd: "<0.5%", cbg: "low", thcv: "trace"}
+  morphology: "Short, stout, and compact; dense multi-layered bud sites; significant trichome density; 1.8-2.2× stretch after flip"
+  grow:
+    difficulty: easy
+    environment: [indoor, greenhouse]
+    flowering_weeks: "9-10"
+    photoperiod: "flip to 12/12; LST, lollipopping, and defoliation recommended; robust and vigorous"
+    optimal: {temp_c: "22-26", rh_veg_pct: "55-60", rh_flower_pct: "40-50", vpd_kpa: "0.9-1.4", dli: "40-50"}
+    yield_indoor_g_m2: "450-600"
+    yield_outdoor_g_plant: "500-700"
+    height: "short-medium (0.8-1.4 m)"
+    resilience: "robust and vigorous; dense foliage requires defoliation; humidity management critical for bud rot prevention"
+  notes: "The highest THC ceiling in the current catalog — Gelato lineage stacked three generations deep. The name is earned: the solvent-marker gas on opening the jar is unmistakable. One of Seed Junky's crowning achievements."
+
+mac-1:
+  aka: ["Miracle Alien Cookies 1", "MAC", "Capulator's Cut"]
+  lineage: "Alien Cookies × (Colombian landrace × Starfighter). Bred by Capulator. Only one seed survived an accidental washing-machine disaster — dubbed 'Miracle 15' — and became the father. Alien Cookies = Alien Dawg × Girl Scout Cookies; Starfighter = Alien Tahoe OG × Rare Dankness #2 (approx). MAC 1 is the stable clone-only cut from the original MAC population."
+  origin: "USA"
+  type: photoperiod
+  genotype: "50% Indica / 50% Sativa"
+  aroma: [sweet cookie dough, sour citrus, spicy herbal musk, cream]
+  flavor: [orange tic-tac, creamy cookie, tart gas, herbal finish]
+  effects: [balanced relaxation, clear mental uplift, creative, happy, functional]
+  medical: [anxiety, depression, chronic pain, stress]
+  terpenes:
+    limonene: "citrus, sour-sweet dominant — the 'orange tic-tac' note; clear mental uplift"
+    caryophyllene: "peppery, spicy — Alien Cookies backbone; anti-inflammatory anchor"
+    pinene: "pine, fresh — focus, counteracts memory fog; Starfighter heritage"
+  cannabinoids: {thc: "20-28%", cbd: "0.1-0.5%", cbg: "low-moderate", thcv: "trace"}
+  morphology: "Medium height (110-150 cm); extremely dense trichome coverage; slow vegetative growth; dense, pale-green nugs caked in white resin"
+  grow:
+    difficulty: hard
+    environment: [indoor, greenhouse]
+    flowering_weeks: "9"
+    photoperiod: "flip to 12/12; slow veg — be patient; pH 5.8-6.2 is critical for resin development"
+    optimal: {temp_c: "20-27", rh_veg_pct: "55-60", rh_flower_pct: "40-45", vpd_kpa: "0.9-1.4", dli: "38-48"}
+    yield_indoor_g_m2: "450-600"
+    yield_outdoor_g_plant: "500-700"
+    height: "medium (1.1-1.5 m)"
+    resilience: "slow grower; pH-sensitive (above 6.2 visibly reduces trichome density); rewards precision with world-class resin coverage"
+  notes: "One seed survived a laundry accident and became one of the most celebrated modern cultivars. MAC 1 is unique in the catalog as the only strain with Colombian landrace genetics stacked under GSC ancestry — a terpene and resin outlier."
+
+animal-cookies:
+  aka: ["Animal Crackers"]
+  lineage: "Girl Scout Cookies (2013 HTMC LA cut) × Fire OG Bx3. Bred by BC Bud Depot (Canada). GSC = OG Kush × Durban Poison; Fire OG = OG Kush × SFV OG Kush. The Bx3 (third-generation backcross) of Fire OG amplifies OG potency and bud density."
+  origin: "Canada (BC Bud Depot)"
+  type: photoperiod
+  genotype: "75% Indica / 25% Sativa"
+  aroma: [sweet dough, earthy gas, kush spice, vanilla cream, fermented pungency]
+  flavor: [cookie sweetness, peppery kush, vanilla, fuel finish]
+  effects: [heavy body relaxation, sedating, euphoric, mentally quieting, couch-lock]
+  medical: [insomnia, chronic pain, stress, appetite-loss]
+  terpenes:
+    myrcene: "earthy, musky — primary sedative; GSC and OG Kush double-dose; the couch is real"
+    caryophyllene: "peppery-spice — anti-inflammatory bite; Fire OG signature"
+    limonene: "citrus — the only uplifting note in an otherwise deeply indica profile"
+  cannabinoids: {thc: "19-26%", cbd: "0.5-1%", cbg: "low", thcv: "trace"}
+  morphology: "Medium height, stout lateral spread; very dense, slowly developing buds; dark olive green with orange hairs and heavy resin"
+  grow:
+    difficulty: hard
+    environment: [indoor, greenhouse]
+    flowering_weeks: "9-10"
+    photoperiod: "flip to 12/12; start nutrients low and build gradually — picky feeder; strong airflow mandatory"
+    optimal: {temp_c: "20-26", rh_veg_pct: "50-60", rh_flower_pct: "40-50", vpd_kpa: "0.8-1.3", dli: "35-45"}
+    yield_indoor_g_m2: "280-340"
+    yield_outdoor_g_plant: "350-500"
+    height: "medium (1.0-1.6 m)"
+    resilience: "low; highly susceptible to botrytis in dense buds; requires strict humidity and nutrition discipline — experienced growers only"
+  notes: "The hardest grow and lowest yield in the catalog, offset by a devastatingly effective OG-dominant stone. Not for the impatient — but the experienced grower who hits the harvest window gets some of the most medically potent flowers available."
+
+gary-payton:
+  aka: ["GP", "The Glove"]
+  lineage: "The Y × Snowman. Collaborative breed by Cookies Fam (Berner) and Powerzzzup Genetics (Kenny Dumetz), developed in Colorado (~2013), public release ~2019. Snowman is a GSC male phenotype; The Y is a proprietary Cookies/Powerzzzup select — believed to be a GSC derivative. Both parents trace to OG Kush × Durban Poison. 1st place 2022 Errl Cup; 2nd place 2022 Emerald Cup."
+  origin: "USA (Colorado/California)"
+  type: photoperiod
+  genotype: "50% Indica / 50% Sativa"
+  aroma: [diesel fuel, pine, skunk, black pepper, apricot, citrus]
+  flavor: [fruit loops, peach, diesel, pine, peppery finish]
+  effects: [giggly, relaxed, euphoric, balanced body-and-mind, versatile]
+  medical: [anxiety, depression, stress, mild pain]
+  terpenes:
+    caryophyllene: "black pepper, gas — dominant; the fuel edge beneath the fruit"
+    limonene: "citrus, apricot, peach — the fruity pop that makes this strain unforgettable"
+  cannabinoids: {thc: "25-30%", cbd: "<0.5%", cbg: "low", thcv: "trace"}
+  morphology: "Medium to tall with dense bud sites; medium internodal spacing; heavy trichome layer; susceptible to moisture retention in thick nugs"
+  grow:
+    difficulty: hard
+    environment: [indoor, greenhouse]
+    flowering_weeks: "8-10"
+    photoperiod: "flip to 12/12; defoliation and topping required; RH must drop to 40% in flower — botrytis is the #1 killer of this cultivar"
+    optimal: {temp_c: "21-29", rh_veg_pct: "55-60", rh_flower_pct: "35-40", vpd_kpa: "1.0-1.5", dli: "40-50"}
+    yield_indoor_g_m2: "400-550"
+    yield_outdoor_g_plant: "500-700"
+    height: "medium-tall (1.2-1.8 m)"
+    resilience: "good pest/disease resistance offset by extreme bud-rot susceptibility; strict humidity control non-negotiable"
+  notes: "Named for the Hall of Famer's legendary defense — and this strain defends its right to the top shelf. The Cookies × Powerzzzup collaboration that delivers both fruit-loops aroma and serious potency. Multiple Cannabis Cup wins confirm the hype."
+
+dam-diddy-purp:
+  aka: ["DDP", "Dam Diddy"]
+  lineage: "Granddaddy Purple × Permanent Marker. First strain ever bred in the GROWv2 simulation. GDP brings deep indica body, vivid anthocyanin-rich purple expression, and that legendary grape-candy nose; Permanent Marker's three-generation Gelato stack pushes the THCA ceiling to an extraordinary 38.9% — beyond any commercial test result on record. A legend born in the pod."
+  origin: "GROWv2 Simulation (first ever player-bred strain)"
+  type: photoperiod
+  genotype: "80% Indica / 20% Sativa"
+  aroma: [grape candy, vanilla gas, deep purple earth, sweet berry, mint-spice]
+  flavor: [grape cream, vanilla cookie, peppery kush, purple berry finish]
+  effects: [powerful euphoric onset, deeply sedating, heavy body-lock, dreamlike mental state]
+  medical: [severe insomnia, chronic pain, extreme stress]
+  terpenes:
+    myrcene: "grape-earth, deeply musky — GDP's hallmark doubled; maximum couch-lock contribution"
+    caryophyllene: "peppery vanilla-spice — the Permanent Marker inheritance stacked under the purple"
+    limonene: "citrus — the only thing preventing complete sedation at lower doses"
+  cannabinoids: {thc: "38.9% THCA (GROWv2 sim record)", cbd: "~1%", cbg: "moderate", thcv: "trace"}
+  morphology: "Dense indica structure with vivid purple coloration throughout; extremely thick trichome layer; broad leaf spread; heavy bud weight"
+  grow:
+    difficulty: moderate
+    environment: [indoor, greenhouse]
+    flowering_weeks: "9"
+    photoperiod: "flip to 12/12; cool nights deepen the purple; stable indoor environment preserves the legendary THC expression"
+    optimal: {temp_c: "20-24", rh_veg_pct: "55-65", rh_flower_pct: "40-50", vpd_kpa: "0.8-1.3", dli: "35-45"}
+    yield_indoor_g_m2: "380-450"
+    yield_outdoor_g_plant: "400-550"
+    height: "medium (1.0-1.5 m)"
+    resilience: "moderate; inherits GDP's mold awareness and Permanent Marker's vigorous growth; manageable with standard indoor protocol"
+  notes: "The first strain ever to emerge from the GROWv2 simulation. 38.9% THCA — a number that doesn't exist in the commercial market — born from the marriage of Granddaddy Purple's purple genetics and Permanent Marker's Gelato-stacked THC ceiling. A piece of GROWv2 history."
