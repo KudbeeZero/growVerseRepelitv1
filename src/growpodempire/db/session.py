@@ -9,7 +9,7 @@ rolls back on error.
 from contextlib import contextmanager
 from typing import Iterator, Optional
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -20,13 +20,32 @@ _engine: Optional[Engine] = None
 _SessionLocal: Optional[sessionmaker] = None
 
 
+def _apply_sqlite_pragmas(engine: Engine) -> None:
+    """Bring dev/test SQLite in line with prod Postgres semantics.
+
+    SQLite defaults leave foreign keys UNenforced, so FK/orphan bugs that
+    Postgres rejects would pass the whole test suite and only surface in prod.
+    WAL + a busy_timeout also let the second writer queue instead of getting an
+    immediate "database is locked" — relevant because compute-on-read writes on
+    every `/state`. Postgres ignores all of this.
+    """
+    @event.listens_for(engine, "connect")
+    def _set_sqlite_pragma(dbapi_conn, _record):  # pragma: no cover - driver hook
+        cur = dbapi_conn.cursor()
+        cur.execute("PRAGMA foreign_keys=ON")
+        cur.execute("PRAGMA busy_timeout=5000")
+        cur.execute("PRAGMA journal_mode=WAL")
+        cur.close()
+
+
 def get_engine() -> Engine:
     """Return (creating on first use) the global SQLAlchemy engine."""
     global _engine
     if _engine is None:
         settings = get_settings()
         connect_args = {}
-        if settings.database_url.startswith("sqlite"):
+        is_sqlite = settings.database_url.startswith("sqlite")
+        if is_sqlite:
             # Allow cross-thread use under Flask's dev server.
             connect_args["check_same_thread"] = False
         _engine = create_engine(
@@ -35,6 +54,8 @@ def get_engine() -> Engine:
             future=True,
             connect_args=connect_args,
         )
+        if is_sqlite:
+            _apply_sqlite_pragmas(_engine)
     return _engine
 
 
@@ -79,13 +100,14 @@ def reset_engine_for_tests(database_url: str) -> None:
     global _engine, _SessionLocal
     if _engine is not None:
         _engine.dispose()
+    is_sqlite = database_url.startswith("sqlite")
     _engine = create_engine(
         database_url,
         future=True,
-        connect_args={"check_same_thread": False}
-        if database_url.startswith("sqlite")
-        else {},
+        connect_args={"check_same_thread": False} if is_sqlite else {},
     )
+    if is_sqlite:
+        _apply_sqlite_pragmas(_engine)
     _SessionLocal = sessionmaker(
         bind=_engine, autoflush=False, expire_on_commit=False, future=True
     )

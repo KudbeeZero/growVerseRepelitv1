@@ -73,3 +73,19 @@ auditable `dormancy` event): **311 ms once ever, 0.1 ms after**; near-term reads
 (parity-tested). +3 tests → **185 passed**, coverage **79.26%**, floor ratcheted **78 → 79**.
 ADR in `DECISIONS.md`; ARCHITECTURE risk list updated (residual: first-read bursts at scale →
 background materialization). Next per the baton: idempotency keys (risk #3).
+
+---
+
+## Addendum (third unit) — 10-agent fleet sweep + dev/prod parity fix
+Ran 10 independent read-only auditors across auth, economy, sim, chain, API-sec, DB, web, AI,
+tests/CI, and concurrency. Full notes in `docs/audits/2026-06-10-fleet-sweep.md`. **Narrowed root
+cause:** no concurrency control on any state-mutating path (check-then-act, no row lock;
+`Wallet.version` is dead code) → double-spend / double-harvest / double-stipend / treasury-cap
+overrun / duplicate PlantEvents on `/state`. Second blocker: chain deposit trusts no on-chain proof
+(treasury drain once ASA has value). Third: the web safety net is phantom (e2e/vitest stubbed to
+`echo`, not in CI). **Fixed this session:** dev/prod parity — SQLite now enforces FKs +
+`busy_timeout`/WAL (`db/session.py`), so the test suite can finally catch the FK/orphan class;
+suite stayed green (185), proving no latent FK violations. **Reassuring:** no IDOR, AI SpendGuard
+unescapable, CI never hits a live key, no model↔migration drift, the old "401 race" doesn't
+reproduce. New carried risks #6–#11 logged in the baton; NEXT ACTION re-scoped to full
+concurrency+idempotency hardening (was just idempotency keys).
