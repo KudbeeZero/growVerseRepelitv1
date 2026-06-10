@@ -116,6 +116,16 @@ class Settings:
             os.environ.get("ENABLE_AUTO_CARE", "true").lower() == "true"
         )
 
+        # --- Dev "quick play" guest login (TESTING CONVENIENCE) ------------
+        # When enabled, POST /players/guest lets someone sign in with just a
+        # username — it finds-or-creates the account and returns its API key,
+        # skipping the manual key-copy step. This trades security for a frictionless
+        # test login (anyone who knows the name can claim the account), so it is
+        # meant for playtests, not production. Disable with GPE_DEV_LOGIN=false.
+        self.dev_login_enabled: bool = (
+            os.environ.get("GPE_DEV_LOGIN", "true").lower() == "true"
+        )
+
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:

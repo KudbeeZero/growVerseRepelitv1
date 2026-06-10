@@ -201,6 +201,11 @@ def _step(
     drift = hcfg.get("drift_rate", 0.12)
     plant.health = max(0.0, min(100.0, plant.health + (target - plant.health) * drift))
 
+    # Integrate health over the plant's life. Yield reads this average at harvest
+    # so lifetime care — not a last-minute correction — sets the final weight.
+    plant.lifetime_health_sum += plant.health
+    plant.lifetime_hours += 1.0
+
     if plant.health <= hcfg.get("death_threshold", 1.0):
         plant.health = 0.0
         plant.is_alive = False

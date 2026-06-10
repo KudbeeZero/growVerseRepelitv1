@@ -11,6 +11,11 @@ export const players = {
   create: (username: string, email?: string) =>
     apiFetch<Player>("/players", { method: "POST", auth: false, body: { username, email } }),
 
+  // Dev quick-play: find-or-create by username and get the API key back in one
+  // step (no manual key copy). Server-gated behind GPE_DEV_LOGIN.
+  guest: (username: string) =>
+    apiFetch<Player>("/players/guest", { method: "POST", auth: false, body: { username } }),
+
   // `apiKey` lets the sign-in flow validate a freshly-typed key before a
   // session exists; when omitted the stored session key is used.
   get: (playerId: string, apiKey?: string) =>

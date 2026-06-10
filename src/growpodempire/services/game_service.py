@@ -114,6 +114,24 @@ class GameService:
         )
         return player
 
+    def guest_login(self, username: str) -> Player:
+        """Find-or-create a player by username for the dev quick-play login.
+
+        Returns the existing account (so re-entering the same name resumes the
+        same grow) or creates a fresh one. The caller is responsible for gating
+        this behind `dev_login_enabled` — it returns an account's API key to
+        anyone who knows the username, which is a deliberate test-only bypass.
+        """
+        username = (username or "").strip()
+        if not username:
+            raise GameError("username is required")
+        existing = (
+            self.session.query(Player).filter(Player.username == username).first()
+        )
+        if existing is not None:
+            return existing
+        return self.create_player(username)
+
     def get_player(self, player_id: str) -> Player:
         player = self.session.get(Player, player_id)
         if player is None:
@@ -772,12 +790,15 @@ class GameService:
         strain = self.get_strain(plant.strain_id)
         fx = self._research(player_id)  # research-tree modifiers
 
-        # Yield scales with health; quality is the plant's health at harvest.
+        # Quality reflects condition AT harvest; yield reflects how the plant was
+        # grown over its WHOLE life (the integrated vigour), so weeks of neglect
+        # can't be undone by one good final day.
         if quality is None:
             quality = max(0.0, min(100.0, plant.health))
         if weight_g is None:
+            vigor = max(0.0, min(100.0, plant.lifetime_vigor))
             midpoint = (strain.yield_min + strain.yield_max) / 2.0
-            weight_g = round(midpoint * (0.4 + 0.6 * plant.health / 100.0), 1)
+            weight_g = round(midpoint * (0.4 + 0.6 * vigor / 100.0), 1)
 
         # Research: yield multiplier + flat quality bonus (capped).
         weight_g = round(weight_g * (1.0 + fx.get("yield_pct", 0.0)), 1)

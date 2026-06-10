@@ -59,6 +59,33 @@ def create_player():
         return _error(str(e))
 
 
+@game_bp.post("/players/guest")
+@limiter.limit("60 per hour")
+def guest_login():
+    """Dev quick-play: sign in with just a username (find-or-create) and get the
+    API key back, so a playtester can jump straight in without managing keys.
+    Gated behind `dev_login_enabled` — returns 403 when disabled."""
+    from ..config import get_settings
+
+    if not get_settings().dev_login_enabled:
+        return _error("Guest login is disabled", 403)
+    data = request.get_json(force=True, silent=True) or {}
+    if not data.get("username"):
+        return _error("username is required")
+    try:
+        with session_scope() as s:
+            svc = GameService(s)
+            player = svc.guest_login(data["username"])
+            wallet = svc.get_wallet(player.id)
+            payload = player_payload(player, wallet)
+            # The whole point of the bypass: hand back the key so the client can
+            # store it and authenticate writes without a manual copy step.
+            payload["api_key"] = player.api_key
+        return jsonify(payload)
+    except GameError as e:
+        return _error(str(e))
+
+
 @game_bp.get("/players/<player_id>")
 @require_player
 def get_player(player_id):

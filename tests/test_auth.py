@@ -55,3 +55,40 @@ def test_write_requires_key(client):
 def test_reads_stay_public(client):
     # Strain catalog needs no key.
     assert client.get("/api/game/strains").status_code == 200
+
+
+def test_guest_login_creates_and_resumes(client, monkeypatch):
+    monkeypatch.setenv("GPE_DEV_LOGIN", "true")
+    from growpodempire.config import get_settings
+
+    get_settings.cache_clear()
+
+    r1 = client.post("/api/game/players/guest", json={"username": "buddy"})
+    assert r1.status_code == 200
+    body1 = r1.get_json()
+    assert body1["api_key"] and body1["username"] == "buddy"
+
+    # Same name resumes the same account (and the key authenticates a write).
+    r2 = client.post("/api/game/players/guest", json={"username": "buddy"})
+    body2 = r2.get_json()
+    assert body2["id"] == body1["id"]
+
+    sid = client.get("/api/game/strains").get_json()[0]["id"]
+    buy = client.post(
+        f"/api/game/players/{body1['id']}/seeds/buy",
+        json={"strain_id": sid},
+        headers={"X-API-Key": body1["api_key"]},
+    )
+    assert buy.status_code == 201
+
+
+def test_guest_login_can_be_disabled(client, monkeypatch):
+    monkeypatch.setenv("GPE_DEV_LOGIN", "false")
+    from growpodempire.config import get_settings
+
+    get_settings.cache_clear()
+    try:
+        r = client.post("/api/game/players/guest", json={"username": "nope"})
+        assert r.status_code == 403
+    finally:
+        get_settings.cache_clear()

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Spinner } from "@/components/ui/Spinner";
-import { PlantVisual } from "./PlantVisual";
+import { PlantCanvas } from "./PlantCanvas";
 import { StatBars } from "./StatBars";
 import { ConditionBadges } from "./ConditionBadges";
 import { CareButtons } from "./CareButtons";
@@ -61,7 +61,16 @@ export function PlantCard({ playerId, plantId }: { playerId: string; plantId: st
       </div>
 
       <div className="flex items-center justify-center rounded-lg bg-ink-900/60 py-2">
-        <PlantVisual stage={plant.growth_stage} flags={plant.condition_flags} size={120} />
+        <PlantCanvas
+          stage={plant.growth_stage}
+          health={plant.health}
+          flags={plant.condition_flags}
+          indicaRatio={strain?.indica_ratio ?? 0.5}
+          plantedAt={plant.planted_at}
+          alive={plant.is_alive}
+          seed={plant.id}
+          size={120}
+        />
       </div>
 
       <ConditionBadges flags={plant.condition_flags} />

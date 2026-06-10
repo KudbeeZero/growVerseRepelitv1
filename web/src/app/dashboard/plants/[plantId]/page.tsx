@@ -7,7 +7,7 @@ import { RequireAuth } from "@/components/layout/RequireAuth";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { LoadingBlock } from "@/components/ui/Spinner";
 import { ErrorState } from "@/components/ui/States";
-import { PlantVisual } from "@/components/plant/PlantVisual";
+import { PlantCanvas } from "@/components/plant/PlantCanvas";
 import { StatBars } from "@/components/plant/StatBars";
 import { ConditionBadges } from "@/components/plant/ConditionBadges";
 import { CareButtons } from "@/components/plant/CareButtons";
@@ -65,8 +65,21 @@ function PlantDetail({ plantId }: { plantId: string }) {
             subtitle={`${titleCase(plant.growth_stage)} · ${num(plant.height, 1)} cm`}
           />
           <div className="flex items-center justify-center rounded-lg bg-ink-900/60 py-4">
-            <PlantVisual stage={plant.growth_stage} flags={plant.condition_flags} size={200} />
+            <PlantCanvas
+              stage={plant.growth_stage}
+              health={plant.health}
+              flags={plant.condition_flags}
+              indicaRatio={strain?.indica_ratio ?? 0.5}
+              plantedAt={plant.planted_at}
+              alive={plant.is_alive}
+              seed={plant.id}
+              size={240}
+              mode="chamber"
+            />
           </div>
+          <p className="mt-1 text-center text-[11px] text-gray-500">
+            Swipe across the plant to brush the branches.
+          </p>
           <div className="mt-3">
             <ConditionBadges flags={plant.condition_flags} />
           </div>

@@ -258,6 +258,14 @@ class Plant(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     height: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
     health: Mapped[float] = mapped_column(Float, default=100.0, nullable=False)
 
+    # Lifetime vigour accumulator — the time-integral of hourly health over the
+    # plant's whole life. Final yield scales on the *average* (`sum / hours`),
+    # not the instantaneous health at harvest, so a plant neglected for weeks
+    # can't be rescued to full weight by a perfect final day. This is how a real
+    # grow behaves: lost growth doesn't come back.
+    lifetime_health_sum: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
+    lifetime_hours: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
+
     # Resource / stress levels (defaults are sensible neutral values; the
     # simulation engine in Phase 2 evolves these over real time).
     water_level: Mapped[float] = mapped_column(Float, default=60.0, nullable=False)
@@ -268,6 +276,14 @@ class Plant(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
     is_alive: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     harvested: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
+    @property
+    def lifetime_vigor(self) -> float:
+        """Average health (0..100) across the plant's life so far. Falls back to
+        the current health until the first simulated hour is accumulated."""
+        if self.lifetime_hours > 0:
+            return self.lifetime_health_sum / self.lifetime_hours
+        return self.health
 
 
 class EnvironmentReading(UUIDPrimaryKeyMixin, Base):

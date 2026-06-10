@@ -103,6 +103,7 @@ def plant_dict(plant, metrics=None) -> dict:
         "planted_at": _ts(plant.planted_at),
         "height": plant.height,
         "health": plant.health,
+        "lifetime_vigor": round(plant.lifetime_vigor, 1),
         "water_level": plant.water_level,
         "nutrient_level": plant.nutrient_level,
         "pest_level": plant.pest_level,

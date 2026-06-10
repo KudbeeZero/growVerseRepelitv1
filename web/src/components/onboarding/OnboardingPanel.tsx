@@ -11,10 +11,10 @@ import { Button } from "@/components/ui/Button";
 import { Field, TextInput } from "@/components/ui/Field";
 import type { Player } from "@/lib/types";
 
-type Tab = "create" | "import";
+type Tab = "quick" | "create" | "import";
 
 export function OnboardingPanel() {
-  const [tab, setTab] = useState<Tab>("create");
+  const [tab, setTab] = useState<Tab>("quick");
   const [createdKey, setCreatedKey] = useState<{ player: Player; key: string } | null>(null);
 
   if (createdKey) {
@@ -25,9 +25,12 @@ export function OnboardingPanel() {
     <Card className="mx-auto max-w-md">
       <CardHeader
         title="Welcome to GrowPod Empire"
-        subtitle="Create a grower account to start cultivating."
+        subtitle="Pick a name and start cultivating — no key required."
       />
       <div className="mb-4 flex gap-2">
+        <TabButton active={tab === "quick"} onClick={() => setTab("quick")}>
+          Quick play
+        </TabButton>
         <TabButton active={tab === "create"} onClick={() => setTab("create")}>
           New account
         </TabButton>
@@ -35,12 +38,66 @@ export function OnboardingPanel() {
           I have a key
         </TabButton>
       </div>
-      {tab === "create" ? (
+      {tab === "quick" ? (
+        <QuickPlayForm />
+      ) : tab === "create" ? (
         <CreateForm onCreated={(player, key) => setCreatedKey({ player, key })} />
       ) : (
         <ImportForm />
       )}
     </Card>
+  );
+}
+
+function QuickPlayForm() {
+  const { login } = useSession();
+  const router = useRouter();
+  const toast = useToast();
+  const [username, setUsername] = useState("");
+
+  const mutation = useMutation<Player, ApiError>({
+    mutationFn: () => api.players.guest(username.trim()),
+    onSuccess: (player) => {
+      if (!player.api_key) {
+        toast.error("Quick play is disabled on this server");
+        return;
+      }
+      login(player.id, player.api_key);
+      toast.success(`Welcome, ${player.username}`);
+      router.replace("/dashboard");
+    },
+    onError: (e) =>
+      toast.error(
+        e.status === 403
+          ? "Quick play is disabled on this server — create an account instead"
+          : `Couldn't sign in: ${e.message}`,
+      ),
+  });
+
+  return (
+    <form
+      className="space-y-3"
+      onSubmit={(e) => {
+        e.preventDefault();
+        mutation.mutate();
+      }}
+    >
+      <Field label="Pick a name">
+        <TextInput
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          placeholder="budtender"
+          autoFocus
+          required
+        />
+      </Field>
+      <Button type="submit" className="w-full" loading={mutation.isPending}>
+        Play
+      </Button>
+      <p className="text-[11px] text-gray-500">
+        One-word login for testing — type the same name next time to pick up where you left off.
+      </p>
+    </form>
   );
 }
 
