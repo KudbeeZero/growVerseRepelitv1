@@ -81,7 +81,12 @@ market:
 # 1-hour steps from its last_tick_at to "now" (compute-on-read catch-up), so
 # correctness never depends on a background process being alive.
 simulation:
-  max_catchup_hours: 8760   # 1-year safety cap on a single catch-up
+  # Bound on compute-on-read: one catch-up simulates at most this many hours.
+  # An absence beyond it puts the plant in dormancy for the remainder (state +
+  # stage clock pause; an auditable `dormancy` event is recorded) so every
+  # read costs at most one cap window. 1 year comfortably exceeds a worst-case
+  # full lifecycle, so no live plant loses real progress to the cap.
+  max_catchup_hours: 8760
 
   resource_decay:
     water_per_hour: 1.5     # how fast the medium dries out

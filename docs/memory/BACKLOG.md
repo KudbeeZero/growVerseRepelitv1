@@ -1,9 +1,17 @@
 # Backlog (Layer 3) — single source of priority
 
 Status: `⬜ todo · 🔨 doing · ✅ done · ❄️ parked`. Standups may *propose* items; they're only real
-once they appear here. Last reconciled: **2026-06-08**.
+once they appear here. Last reconciled: **2026-06-10**.
 
 ## 🔴 Immediate (do now — correctness, truth, or unblocks others)
+- 🔴 ✅ **Make the integrity/CI gates REAL** (2026-06-10) — a chat found that
+  `scripts/check_memory.py`, `scripts/check_single_head.py`, the SessionStart hook, **and
+  `.github/workflows/ci.yml` did not exist on disk**, despite being claimed ✅ below and in
+  `CLAUDE.md`/`MAP.md`. Built all four for real and verified locally: `make check-memory`,
+  `make check-migrations`, `make lint`, and `make test` (**182 passed, 79.1% ≥ 78 gate**) all
+  green; the two checkers carry a teeth-test. The four stale entries below are annotated. Also
+  installed the **Session Relay Protocol** (`docs/SESSION_PROTOCOL.md` + `docs/HANDOFF.md`
+  baton + `docs/audits/`). See standup `2026-06-10-lut-report.md`.
 - ✅ Add `CLAUDE.md` + `docs/memory/` memory-layer system (this change).
 - 🔴 ⬜ **Reconcile `docs/ROADMAP.md` with reality** — Sprints 1–3 are shipped but still show
   ⬜/🔨. Planning is reading a map that lies. *(partially fixed 2026-06-08; verify exit criteria)*
@@ -15,21 +23,31 @@ once they appear here. Last reconciled: **2026-06-08**.
   `pip install -e .` uses PEP 660 (no more legacy `install_layout` crash), and a
   `.claude/hooks/session-start.sh` SessionStart hook so web sessions install deps automatically
   (sets `PYTHONPATH=src`, mirroring CI). Validated: hook exit 0, `make setup && make test` →
-  139 passed.
+  139 passed. *(⚠️ Drift corrected 2026-06-10: the hook file was actually absent on disk; it
+  was built for real this session and now fires — see the Immediate entry above.)*
 
 - 🔴 ✅ **Memory-integrity gate** (2026-06-08) — `scripts/check_memory.py` + `make check-memory` +
   a CI step fail on broken internal links, ✅ claims citing missing paths, or a codex that drifts out
   of the layer map. Plus a master `docs/memory/MAP.md` (layer map + code↔doc index + moat dashboard);
   ARCHITECTURE invariant #9 + two DECISIONS entries (Phase A, provable fairness) reconcile the layers
   with this session's code. *(Partly delivers the "docs-drift check" from the 2026-06-08 standup §4A.)*
+  *(⚠️ Drift corrected 2026-06-10: `scripts/check_memory.py` was absent on disk; built for real
+  + teeth-tested this session.)*
 
 ## 🟠 Medium (next 1–2 weeks — quality & the next real capability)
 - 🟠 ✅ **CI coverage gate** (2026-06-08) — `pytest --cov` with a ratchet floor (`pyproject.toml`
   `fail_under=78`, ops scripts omitted), wired into `make test` + CI. Completes the "make truth
   automatic" trio (lint + memory-integrity + coverage). *Ratchet the floor up as coverage climbs.*
+  *(⚠️ Drift corrected 2026-06-10: the coverage gate works in `make test`, but the claimed CI did
+  not exist — `.github/workflows/ci.yml` was built for real this session.)*
 - 🟠 ⬜ **Sprint 4: real TestNet + IPFS** — fund treasury, run `reset_asa`, wire `ASA_ID`; move NFT
   metadata to IPFS; add a DB↔chain reconciliation job + `onchain_txid` audit.
-- 🟠 ⬜ **Sim cost cap** — bound compute-on-read catch-up; batch/materialize dormant plants.
+- 🟠 ✅ **Sim cost cap** (2026-06-10) — compute-on-read is bounded: one catch-up simulates at most
+  `max_catchup_hours`, then the plant goes **dormant** through the rest of the gap (stage clock
+  pauses; auditable `dormancy` event) and lands at `now` — one cap window once ever per derelict
+  plant (311 ms → 0.1 ms on the next read), near-term reads bit-identical (parity-tested). +3 tests
+  (185 total). ADR in `DECISIONS.md`. *Remaining (⬜): background materialization for bursts of
+  first-reads at scale.*
 - 🟠 ⬜ **Idempotency keys on mutations** — protect ledger/economy from double-submits & retries.
 - 🟠 ⬜ **Load/soak test the `/state` catch-up path** to find the cost knee before players do.
 - 🟠 ⬜ **Web e2e smoke** (Playwright) over the full loop; today web CI is lint/typecheck/build only.
@@ -75,6 +93,8 @@ once they appear here. Last reconciled: **2026-06-08**.
   migration graph via `ScriptDirectory`, fails with an actionable `alembic merge` hint on a fork),
   wired into `make check-migrations` + a CI step before `alembic upgrade head`. Catches the fork class
   of bug (e.g. the old `fbb8fceedacd` fork) automatically instead of by manual testing.
+  *(⚠️ Drift corrected 2026-06-10: `scripts/check_single_head.py` was absent on disk; built for real
+  + verified (single head `e7a9c1b3f2d8`) this session.)*
 - 🟡 ✅ **GrowPod University** (2026-06-08) — `services/university_service.py` + `lecturer_service.py`
   + `data/curriculum.yaml` + `CourseEnrollment`/`DegreeProgress` + migration `e7a9c1b3f2d8`: enroll
   (tuition sink) → time + practical study → degrees (permanent perks via the research effect keys +

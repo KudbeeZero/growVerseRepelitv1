@@ -17,4 +17,4 @@ omit = ["*/scripts/*"]
 show_missing = true
 # Ratchet floor: set just below current (~79%). Raise it as coverage climbs;
 # never lower it. Keeps the safety net from silently eroding.
-fail_under = 78
+fail_under = 79

@@ -152,3 +152,21 @@ caveats to the KB header. **Why:** the peer-reviewed evidence is strong and conv
 enrichment adds a `terpene_cluster` per strain and models assayed THC as an inflation-biased
 distribution; the research also confirms light (PPFD/DLI→yield, ~linear to ~1500–1800) as the
 best-evidenced Phase B sim lever, and validates today's VPD/DLI bands as defensible (vendor-tier).
+
+### 2026-06-10 — Bounded compute-on-read via dormancy-snap (not a lower cap, not grind-forward)
+**Decision:** A single `engine.catch_up` simulates at most `simulation.max_catchup_hours`
+(balance.yaml, 8760 = 1 year); an absence beyond that puts the plant in **dormancy** for the
+remainder — `last_tick_at` and `stage_entered_at` shift past the gap so the plant lands exactly at
+`now` with its stage clock paused, and an auditable `dormancy` PlantEvent records `skipped_hours`.
+**Why:** the pre-existing clamp left `last_tick_at` behind `now`, so a derelict plant repaid the
+full cap window on *every* read (measured 310 ms/read, repeated once per year of absence) — the
+clamp bounded a single loop but not convergence. Lowering the knob instead would change gameplay
+outcomes for legitimate long grows (worst-case stretched lifecycle ≈ 4,500 h); grinding forward
+kept unbounded total cost. One year comfortably exceeds any real lifecycle, so no live plant loses
+true progress, and unattended plants die early in the window anyway (loop breaks on death).
+**Consequences:** worst case is one 311 ms read **once ever** per derelict plant (then 0.1 ms);
+near-term reads (< cap) are bit-identical to before (parity asserted in tests); `dormancy` joins
+the event vocabulary (consumers treat `event_type` as opaque — verified); the residual at-scale
+risk (many first-reads in one burst) stays on ARCHITECTURE's watch list with background
+materialization as the eventual answer. Tests: `tests/test_simulation.py` (bounded step count,
+one-read convergence, stage-clock pause, normal-read parity, death path).
