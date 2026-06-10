@@ -7,6 +7,39 @@
 
 ## 2026-06-10 — Night-shift autonomous run (branch `claude/night-shift-2026-06-10`)
 
+### Prioritized backlog for the next shift (priority stack order)
+> Generated from the KB + repo. `🔴` blocks / `🟠` next / `🟡` later. `[GATE]` =
+> economy/auth/payments/NFT → **stop for owner sign-off before merge**.
+
+**Security (top of stack)**
+- 🔴 `.env` ships `FLASK_DEBUG=true` → a naive `python server.py` exposes the
+  Werkzeug debugger (RCE). Default debug **off**; move the flag to a non-committed
+  local override. (Found tonight; see Entry 6 / `TESTENV.md`.)
+- 🟠 Sweep `.env` / config for other unsafe defaults before any exposed env.
+
+**Economic integrity**
+- 🟠 [GATE] Wire the terpene effect profile → market **value/quality** (effects are
+  read-only today). Making effects move price is an economic-balance change.
+- 🟠 [GATE] Idempotency keys on mutations (protect ledger from double-submits).
+  Needs an Alembic migration → coordinate the single-head with PRs #2/#4/#7.
+
+**Performance / scalability**
+- 🟠 Sim cost cap — bound the O(elapsed-hours) compute-on-read catch-up (BACKLOG).
+- 🟡 `/economy/health` scans all ledger rows; add an index / rollup if it grows.
+
+**Project health (unblocks everyone)**
+- 🔴 Merge the CI-gate branch (`f4a63e6`) — CI is phantom (no `.github/workflows/`).
+- 🟠 Cut the PR backlog (6 open): reconcile the **two chamber impls** (this PR vs #4),
+  land or close #2/#5/#7.
+
+**UX / game feel (coordinate w/ open UI PRs to avoid conflict)**
+- 🟡 Surface effect profiles + flavor families on strain cards / harvest panel.
+- 🟡 Flavor-family market filter (KB §3 "useful as market filters").
+
+**KB enrichment (sequence after strains.yaml settles on #4)**
+- 🟡 Per-strain terpene clusters (myrcene / terpinolene / limonene-caryophyllene)
+  so effect profiles are strain-accurate (KNOWLEDGE-INDEX gap #4, BACKLOG).
+
 ### Entry 6 — Cloudflare test-env tunnel (owner request) + a real security catch
 - **What:** Brought up the local API and exposed it via a cloudflared **quick
   tunnel** for the test env (owner asked mid-run). Public URL recorded in
