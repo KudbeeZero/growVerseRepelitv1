@@ -7,6 +7,7 @@ applies its effect and logs an event. Costed actions go through the economy
 ledger.
 """
 
+import math
 from decimal import Decimal
 from typing import List, Optional
 
@@ -189,6 +190,16 @@ class SimulationService:
         if pod is None or pod.player_id != player_id:
             raise GameError("Pod not found")
 
+        env = self._validated_environment(
+            temperature=temperature, humidity=humidity, co2_level=co2_level,
+            light_intensity=light_intensity, ph_level=ph_level,
+        )
+        temperature = env["temperature"]
+        humidity = env["humidity"]
+        co2_level = env["co2_level"]
+        light_intensity = env["light_intensity"]
+        ph_level = env["ph_level"]
+
         pod.temperature = temperature
         pod.humidity = humidity
         pod.co2_level = co2_level
@@ -214,6 +225,28 @@ class SimulationService:
         return pod
 
     # ----- helpers --------------------------------------------------------
+    def _validated_environment(self, **values) -> dict:
+        """Coerce the five environment inputs to finite floats within the
+        physical bounds in balance.yaml (`simulation.weather.clamps`) — the
+        same authority the weather system clamps to. The engine reads these
+        pod fields raw on the next sync, so a non-numeric value stored here
+        would TypeError every later read of every plant in the pod.
+        """
+        clamps = self._sim.get("weather", {}).get("clamps", {})
+        out = {}
+        for field, value in values.items():
+            try:
+                v = float(value)
+            except (TypeError, ValueError):
+                raise GameError(f"{field} must be a number")
+            if math.isnan(v) or math.isinf(v):
+                raise GameError(f"{field} must be a finite number")
+            lo, hi = clamps.get(field) or (None, None)
+            if lo is not None and not (lo <= v <= hi):
+                raise GameError(f"{field} must be between {lo} and {hi}")
+            out[field] = v
+        return out
+
     def _require_living(self, plant: Plant) -> None:
         if plant.harvested:
             raise GameError("Plant already harvested")

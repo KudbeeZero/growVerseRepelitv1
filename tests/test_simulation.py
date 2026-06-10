@@ -241,3 +241,67 @@ def test_long_idle_unattended_plant_dies_without_dormancy(session):
     assert not any(e.event_type == "dormancy" for e in events)
     engine.catch_up(session, plant, BASE + timedelta(days=401), CFG)
     assert plant.last_tick_at == BASE + timedelta(days=401)
+
+
+# ----- set_environment input validation -------------------------------------
+# The engine reads pod env fields raw on every later sync, so a non-numeric
+# value stored here would TypeError all future reads of every plant in the pod.
+# Bounds come from balance.yaml `simulation.weather.clamps` (same authority the
+# weather system clamps to).
+
+def _env_service(session):
+    return SimulationService(session, clock=FrozenClock(BASE + timedelta(hours=1)))
+
+
+def test_set_environment_stores_coerced_floats(session):
+    pid, pod, _ = _plant(session)
+    svc = _env_service(session)
+    out = svc.set_environment(pid, pod.id, "24", 55, 1000, 500, 6.5)
+    assert out.temperature == 24.0 and isinstance(out.temperature, float)
+    assert out.humidity == 55.0
+    assert out.ph_level == 6.5
+
+
+def test_set_environment_rejects_non_numeric_and_null(session):
+    import pytest
+    from growpodempire.services.game_service import GameError
+
+    pid, pod, _ = _plant(session)
+    svc = _env_service(session)
+    with pytest.raises(GameError, match="temperature must be a number"):
+        svc.set_environment(pid, pod.id, "hot", 55, 1000, 500, 6.5)
+    with pytest.raises(GameError, match="humidity must be a number"):
+        svc.set_environment(pid, pod.id, 24, None, 1000, 500, 6.5)
+    with pytest.raises(GameError, match="co2_level must be a finite number"):
+        svc.set_environment(pid, pod.id, 24, 55, float("nan"), 500, 6.5)
+    with pytest.raises(GameError, match="light_intensity must be a finite number"):
+        svc.set_environment(pid, pod.id, 24, 55, 1000, float("inf"), 6.5)
+
+
+def test_set_environment_enforces_balance_clamp_bounds(session):
+    import pytest
+    from growpodempire.services.game_service import GameError
+
+    pid, pod, _ = _plant(session)
+    svc = _env_service(session)
+    clamps = CFG.raw["simulation"]["weather"]["clamps"]
+    lo, hi = clamps["temperature"]
+    # Boundary values are accepted...
+    svc.set_environment(pid, pod.id, lo, 55, 1000, 500, 6.5)
+    svc.set_environment(pid, pod.id, hi, 55, 1000, 500, 6.5)
+    # ...values past them are a clean GameError, not a stored absurdity.
+    with pytest.raises(GameError, match="temperature must be between"):
+        svc.set_environment(pid, pod.id, hi + 1, 55, 1000, 500, 6.5)
+    with pytest.raises(GameError, match="ph_level must be between"):
+        svc.set_environment(pid, pod.id, 24, 55, 1000, 500, 13.5)
+
+
+def test_set_environment_still_blocks_engine_typeerror_regression(session):
+    # The original failure mode: a string stored on the pod blew up the next
+    # engine sync. Prove a valid write then a sync round-trips cleanly.
+    pid, pod, plant = _plant(session)
+    svc = _env_service(session)
+    svc.set_environment(pid, pod.id, 26, 58, 900, 600, 6.2)
+    events = engine.catch_up(session, plant, BASE + timedelta(hours=2), CFG)
+    assert plant.last_tick_at == BASE + timedelta(hours=2)
+    assert isinstance(events, list)
