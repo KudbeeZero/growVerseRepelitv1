@@ -174,3 +174,51 @@ for convenience — anyone who knows a username can claim that account — so it
 public/production deploy (documented in `.env.example`). It does not weaken the core invariant that
 writes require an API key; it only automates issuing/returning one. Revisit before launch: replace
 with a proper guest/session flow or keep it strictly behind the dev flag.
+
+### 2026-06-10 — Chain-economy policy: the six owner questions, decided by council adjudication
+**Decision:** The owner delegated the six open questions in `design/chain/00-overview.md` with the
+compass "morally, logically, profitably, safely, honestly." Two independent council positions were
+taken — a player advocate and a business/safety officer (`reports/2026-06-10/council/`) — and the
+head adjudicated. Rulings:
+1. **Snapshots:** 25 GROW base / 75 premium; **first-EVER free** (custodial-only), not first-per-plant.
+   Price ≥ 1.5× real chain cost (standing peg check; amber + re-tune on 7-day breach), cost basis and
+   margin **published in-game**, automatic ledger refund on terminal mint failure, 7-day notice on any
+   price change, 1/player/day cap, and snapshots stay **pure vanity forever** (never stats or access).
+2. **Whale drain (ship as ONE "facility costs" patch):** pod upkeep as a per-harvest % by tier
+   (3/5/8%) — never per-day rent — plus a progressive NPC sale tax: 0% on the first 350 GROW of NPC
+   sales per UTC day, 5% on 350–1,000, 8% above 1,000. Stipend and achievement rewards are never
+   taxed. Targets: mean net issuance ≤ +20 GROW/day/active player, p99 ≤ +50, median player unhurt
+   (monthly check). Both disclosed at point of sale; upkeep is a harvest-receipt line item. The
+   recurring economy report ships **before or with** these sinks — no taxing blind.
+3. **Pro-pod auto-feed leak closed:** auto-feed posts a discounted `NUTRIENT_PURCHASE` (50% of
+   manual price, `balance.yaml` knob) from the **service-layer** catch-up path (engine stays pure).
+   Zero balance ⇒ automation pauses with a notification — no silent free feed, no debt. Done
+   pre-launch; shop label says exactly "auto-feeds your plants at half nutrient cost."
+4. **Tokenize-at-seed only at launch.** Tokenize-anytime is a **committed Phase-3 deliverable**
+   (not a "someday"), conditioned on: immutable `tokenized_at_stage`/`tokenized_at_date` metadata,
+   the same mint fee at any stage (no penalty pricing), and a per-stage floor schedule re-derived
+   against the money-pump property test. The standalone harvest-NFT path ships at launch as the
+   regret escape valve.
+5. **Snapshot custody confirmed** (custodial default; opt-in claim-to-wallet, player pays own MBR)
+   with hard conditions: claim path is a dated Phase-2 deliverable; claiming costs **zero GROW**;
+   treasury MBR released on claim; `treasury_mbr_locked` metric with amber at 20% of treasury ALGO;
+   product must be self-funding on a running basis; custodial treasury address published; UI says
+   "Held in game custody — claim to your wallet anytime"; **wind-down pledge** — a published
+   ≥12-month claim window before any custodial assets are abandoned.
+6. **No burn ceremonies pre-multisig — and none as marketing, ever.** The standing trust mechanism
+   is the public books: the economy dashboard (net issuance, faucet:sink, RAG banner), the live
+   settlement invariant (on-chain circulating == net bridged ledger), and the daily Merkle heartbeat.
+   Post-multisig, burns are permitted only as **receipts**: at most quarterly, realized sink surplus
+   only (never principal), riding an already-scheduled multisig session, arithmetic published.
+   Corollary: the 2-of-3 **multisig rehearsal happens on TestNet during Phase 1** (sign, rotate,
+   recover) and must complete before Phase 2 exits.
+**Why:** the two positions converged on 5 of 6 (both said: charge auto-feed, threshold-tax whales,
+protect the stipend, confirm custody, refuse pre-multisig burns) — convergence from opposite biases
+is strong evidence. The one real dispute (tokenize timing) was ruled for safety at launch because
+the floor money-pump invariant is calibrated on at-seed economics and adverse selection (tokenizing
+observed winners) is a real exploit — but the player advocate's "dated commitment, not someday" was
+adopted verbatim, with her no-penalty-fee and honest-stage-disclosure conditions. **Consequences:**
+these are policy, not yet code: new `balance.yaml` keys (snapshots.*, pods.upkeep_pct,
+pods.autofeed_discount_pct, harvest_sale tax bands), a `NUTRIENT_PURCHASE` service-layer post, the
+economy report, and the no-dark-patterns charter lines (vanity-forever, never-tax-the-floor,
+wind-down pledge) all queue behind the existing roadmap gates in `design/chain/00-overview.md`.

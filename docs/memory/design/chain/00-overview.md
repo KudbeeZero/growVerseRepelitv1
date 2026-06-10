@@ -131,20 +131,26 @@ before W2, and keep the strict txn-template fallback regardless.
 | **3 — contracts** | TestNet + LocalNet CI | `GrowEscrow` via AlgoKit/Puya (attest, list/buy/cancel, `floor_redeem`); opt-in LocalNet CI job; ARC-56 typed clients | WARDEN §4 pipeline: adversarial AVM tests first, property/invariant suite green on LocalNet; `DECISIONS.md` entry for the LocalNet-CI interpretation |
 | **4 — MainNet gate** | MainNet | Nothing new ships; everything proves | **Blockers, all of:** NEW-4 deposit redesign (incl. `buy()`/`floor_redeem` credits); durable mint table live in prod; `SELECT … FOR UPDATE` withdrawal-cap counter (F005); checksum + unique address (F007); custody ladder rung — KMS/HSM signer + hot/cold split, then 2-of-3 multisig on GROW ASA manager/reserve (ruling a); third-party contract audit + published deployment hash; kill switch deployed, deploys start paused |
 
-## Open questions for the owner
-1. **Snapshot price point & free tier** — 25 GROW base / 75 premium feel right? First-ever free
-   (tight sink) or first-per-plant (stronger habit, leakier)? (SAGE, ORACLE)
-2. **Whale-tax appetite** — NPC sale tax on everyone, or only above a daily volume threshold?
-   Pod upkeep as per-harvest % (proposed) vs per-day rent? How hard may the drain hit the top decile?
-   (SAGE)
-3. **Burn-ceremony optics** — is a public quarterly on-chain burn worth the extra treasury-key
-   operational exposure? (SAGE, WARDEN)
-4. **TestNet multisig rehearsal** — the 2-of-3 ceremony includes a founder key; when do you want to
-   rehearse signing, rotation, and recovery on TestNet? (WARDEN)
-5. **Tokenize-at-seed vs tokenize-anytime** — may a player mint a GrowAsset for an already-growing
-   plant (friendlier UX) or only at seed (cleaner provenance)? (ATLAS)
-6. **Pro-pod free auto-feed** — keep as a tier perk priced into upkeep, or make automation post the
-   nutrient sink from the service layer? (SAGE)
+## Owner questions — DECIDED (council adjudication, 2026-06-10)
+The owner delegated all six with the compass "morally, logically, profitably, safely, honestly."
+Two independent council positions (player advocate + business/safety officer,
+`reports/2026-06-10/council/`) were adjudicated by the head; the full rulings with conditions are
+the ADR in `../../DECISIONS.md` (2026-06-10, "Chain-economy policy"). In brief:
+1. **Snapshots:** 25/75 GROW, first-EVER free (custodial-only); price ≥1.5× chain cost with a
+   standing peg check; cost basis published; auto-refund on terminal mint failure; pure vanity forever.
+2. **Whale drain:** per-harvest pod upkeep 3/5/8% by tier (never per-day rent) + progressive NPC
+   sale tax (0% ≤350 GROW/day, 5% to 1,000, 8% above); stipend/achievements never taxed; targets
+   mean ≤+20 and p99 ≤+50 GROW/day; economy report ships first; one combined "facility costs" patch.
+3. **Auto-feed leak closed:** discounted `NUTRIENT_PURCHASE` (50%) posted from the service-layer
+   catch-up; zero balance ⇒ pause + notify, never debt; done pre-launch; honestly labeled.
+4. **Multisig rehearsal:** on TestNet during Phase 1 (sign/rotate/recover); must complete before
+   Phase 2 exits.
+5. **Tokenize-at-seed only at launch;** tokenize-anytime is a committed Phase-3 deliverable with
+   immutable stage metadata, same fee at any stage, and per-stage floor property tests; the
+   harvest-NFT path ships at launch as the regret escape valve.
+6. **No burns pre-multisig; none as marketing ever.** Trust ships as the public books (economy
+   dashboard + live settlement invariant + daily Merkle heartbeat); post-multisig burns only as
+   quarterly receipts of realized sink surplus riding a scheduled multisig session.
 
 ## Cross-links
 `../00-game-vision.md` (moat #3/#4) · `../04-honesty-and-trust.md` (pledge #5, fulfilled by
