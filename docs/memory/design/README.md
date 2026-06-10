@@ -44,6 +44,12 @@ shipped feature (especially anything on-chain — the chain layer is mocked; see
 | 4 | `04-honesty-and-trust.md` | The trust layer: provable fairness, a transparent economy, an honest AI advisor, co-evolution with the model line. |
 | 5 | `05-events-and-competition.md` | The seasonal Cannabis Cup: deterministic judging + lifetime champion rewards (trophy strain, permanent title, Hall of Fame). |
 | 6 | `06-university.md` | GrowPod University: classes, time + practical study, degrees (permanent perks + title), and the AI Professor's lectures. |
+| — | `chain/00-overview.md` | **Chain track synthesis** — locked decisions, debate rulings, the merged phased roadmap. Start here for chain. |
+| c1 | `chain/01-asset-lifecycle-contracts.md` | Seed→GrowAsset ASA lifecycle (ARC-19), the `GrowEscrow` contract, and the never-zero value floor. |
+| c2 | `chain/02-wallet-login.md` | Sign in with Algorand: challenge–response, sessions, account linking; the API key goes internal. |
+| c3 | `chain/03-tokenomics-grow.md` | GROW faucet/sink audit, the rank-ordered drain, the fixed-supply ASA model, snapshot pricing. |
+| c4 | `chain/04-onchain-recording-snapshots.md` | On-chain recording tiers, daily Merkle-root anchoring, the snapshot-as-product flow, verifiability. |
+| c5 | `chain/05-custody-security.md` | Treasury custody ladder, NEW-4 deposit redesign, withdrawal hardening, contract security gates. |
 | — | `assets/` | Visual-influence references (e.g. the genetic-constellation aesthetic). |
 
 ## Maintenance

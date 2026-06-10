@@ -51,8 +51,9 @@ def _is_external(target: str) -> bool:
 def _looks_like_repo_path(token: str) -> bool:
     if " " in token or "://" in token:
         return False
-    # strip a trailing :line / :col or anchor and surrounding punctuation
-    cleaned = token.strip().strip(".,;:)")
+    # strip a trailing :line / :col or anchor and trailing punctuation
+    # (rstrip, not strip: a leading ".." in a doc-relative path must survive)
+    cleaned = token.strip().rstrip(".,;:)")
     cleaned = re.split(r"[:#]", cleaned, 1)[0]
     if "/" not in cleaned:
         return False
@@ -66,8 +67,10 @@ def _looks_like_repo_path(token: str) -> bool:
 # relative to the web app, or relative to the citing doc's own directory. A token
 # is valid if it resolves under any of these bases.
 def _path_exists_any(token: str, doc_dir: Path) -> bool:
-    cleaned = token.strip().strip(".,;:)")
-    cleaned = re.split(r"[:#]", cleaned, 1)[0].lstrip("/")
+    cleaned = token.strip().rstrip(".,;:)")
+    cleaned = re.split(r"[:#]", cleaned, 1)[0]
+    if cleaned.startswith("/"):
+        cleaned = cleaned.lstrip("/")
     bases = [
         ROOT,
         ROOT / "src" / "growpodempire",

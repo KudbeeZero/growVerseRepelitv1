@@ -57,6 +57,12 @@ repo-relative (under `src/growpodempire/` unless noted); every ✅ here is check
 | `design/04-honesty-and-trust.md` | `simulation/engine.py` (`_rng_for`) · `services/game_service.py` (`verify_strain`) · `api/game_api.py` (`/provenance`) · `economy/ledger.py` · `services/advisor_service.py` | 🔨 fairness shipped for breeding |
 | `design/05-events-and-competition.md` | `services/cup_service.py` · `economy/pricing.py` (`cup_score`) · `data/balance.yaml` (`cannabis_cup`) · `db/models.py` (`CannabisCup`/`CupEntry`) · `api/game_api.py` (`/cup/*`) | ✅ seasonal Cup + lifetime rewards |
 | `design/06-university.md` | `services/university_service.py` · `services/lecturer_service.py` · `data/curriculum.yaml` · `ai/lecturer_mock.py`/`lecturer_claude.py` · `db/models.py` (`CourseEnrollment`/`DegreeProgress`) · `api/game_api.py` (`/university/*`) | ✅ degrees + AI Professor |
+| `design/chain/00-overview.md` | cross-cutting (chain track) — locked decisions, debate rulings, the merged phased roadmap. Start here for chain. | synthesis (2026-06-10) |
+| `design/chain/01-asset-lifecycle-contracts.md` | `chain/provider.py` · `chain/metadata.py` · `services/minting_service.py` · `db/models.py` (`nft_asset_id`/`nft_status`) | 🔨 ARC-3 mints vs mock; GrowAsset/ARC-19/escrow ⬜ |
+| `design/chain/02-wallet-login.md` | `api/auth.py` · `api/game_api.py` (`/players/<id>/wallet/link`) · `web/src/lib/session.tsx` · `config.py` | ⬜ design only (API key is the credential today) |
+| `design/chain/03-tokenomics-grow.md` | `economy/ledger.py` · `chain/token.py` · `services/settlement_service.py` · `data/balance.yaml` | 🔨 ledger/ASA built; the drain + snapshot sink ⬜ |
+| `design/chain/04-onchain-recording-snapshots.md` | `scripts/snapshot.py` · `chain/metadata.py` · `services/minting_service.py` (idempotency pattern) | ⬜ anchoring/snapshot product planned |
+| `design/chain/05-custody-security.md` | `chain/algorand.py` · `chain/factory.py` · `services/settlement_service.py` · `config.py` | 🔨 TestNet custody rung; NEW-4/F005/F006/F007 ⬜ |
 
 **What the sim engine actually reads today** (`simulation/engine.py`): water, nutrient (single
 scalar), temperature, humidity, pH, **light (PPFD)**, **derived leaf VPD**, pest & disease levels;
@@ -83,7 +89,8 @@ permanent perks + a title, taught by an AI Professor (`services/lecturer_service
 
 The five player-facing pillars: **The Grow** 🔨 · **The Genetics** 🔨 · **The Mastery** 🔨 ·
 **The Economy** ✅ (`economy/ledger.py`, `economy/pricing.py`) · **The Chain** 🔨 (provider ABC + mock
-real; TestNet/IPFS deferred — Sprint 4).
+real; TestNet/IPFS deferred — Sprint 4; deep design now in `design/chain/` — start at
+`design/chain/00-overview.md`).
 
 ## Surface area (anchors, not exhaustive)
 - **API:** ~52 routes under `/api/game` in `api/game_api.py` (writes auth'd + rate-limited; reads
