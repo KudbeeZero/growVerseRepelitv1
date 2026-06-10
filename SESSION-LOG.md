@@ -7,6 +7,22 @@
 
 ## 2026-06-10 — Night-shift autonomous run (branch `claude/night-shift-2026-06-10`)
 
+### Entry 3 — Terpene → effect (buff) engine + public route
+- **What:** Built the KB's signature unused asset — the terpene→effect mechanical
+  bridge. New `data/terpene_effects.yaml` (8-terpene palette + buff weights, the
+  tuning surface), pure `services/effects_service.py`, `GameService.strain_effects`,
+  and public read-only `GET /strains/<id>/effects`. +13 tests.
+- **Why:** strains were mechanically near-identical (only quantitative traits +
+  THC/CBD numbers). The engine turns a strain's aroma/chemotype into predictable
+  effects (mind↔body lean, flavor families, entourage synergy) — moat value
+  (genetics meaning) grounded in `strain-classification-and-quality.md` §3.
+- **Priority-stack call:** chosen as economically **neutral** (read-only, no money
+  change → no verification gate), server-authoritative, and orthogonal to the open
+  UI PRs (#2/#4/#7). Refined so only terpenes above the significance threshold
+  drive effects (no baseline noise).
+- **Verify:** full backend suite **196 passed** (was 183); CI lint gate clean.
+- **Result:** committed (`20e2af5`, `57accd2`). Safe to merge — no gate.
+
 ### Entry 2 — Land in-flight Grow Chamber WIP (preserve, don't lose)
 - **What:** Committed the uncommitted working-tree work that was sitting on `session/local-bringup`
   (PR #5, owner-held): the hand-rolled Canvas2D **Grow Chamber** renderer + pure morphology core,
