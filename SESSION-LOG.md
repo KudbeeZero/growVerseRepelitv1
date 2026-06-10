@@ -7,6 +7,30 @@
 
 ## 2026-06-10 — Night-shift autonomous run (branch `claude/night-shift-2026-06-10`)
 
+### Entry 6 — Cloudflare test-env tunnel (owner request) + a real security catch
+- **What:** Brought up the local API and exposed it via a cloudflared **quick
+  tunnel** for the test env (owner asked mid-run). Public URL recorded in
+  `TESTENV.md`. Verified end-to-end: `/health`, `/api/game/strains`, and both new
+  endpoints (`/economy/health`, `/strains/<id>/effects`) return 200 over the tunnel.
+- **🔒 Security catch (priority stack #1):** the first server boot came up with the
+  **Werkzeug debugger active** because `.env` sets `FLASK_DEBUG=true` — exposing
+  that over a public URL is a remote-code-execution risk. **Stopped before
+  tunneling**, restarted with `FLASK_DEBUG=false` (shell env overrides `.env`;
+  reloader+debugger confirmed OFF), *then* opened the tunnel. Documented the
+  hazard in `TESTENV.md`. (Aside: `pkill -f server.py` kept killing my own shell
+  because the command line contained the pattern — switched to PID/port checks.)
+- **Result:** tunnel live; this is a transient dev artifact, not committed as infra.
+
+### Entry 5 — Economy transparency view (faucet/sink health)
+- **What:** `services/economy_service.py` + public `GET /economy/health` — a
+  read-only audit over the ledger: money supply, net issuance, inflation
+  indicator, and per-type faucet/sink/transfer breakdown, with a reconciliation
+  cross-check (ledger net == wallet supply). +4 tests.
+- **Why:** economic integrity (#2 on the stack) + the trust layer's documented
+  "public faucet-vs-sink economy view." Read-only → no money moved → **no
+  verification gate.** Orthogonal to the open UI PRs.
+- **Result:** committed `edca8f5`, on PR #12.
+
 ### Entry 4 — Effect signature on harvests (core-loop binding)
 - **What:** `harvest_dict` now derives an `effect_profile` from the batch's
   *expressed* terpenes, so the effect engine appears on the real grown product
