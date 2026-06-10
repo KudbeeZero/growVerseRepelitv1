@@ -246,6 +246,17 @@ def strain_effects(strain_id):
         return _error(str(e), 404)
 
 
+@game_bp.get("/economy/health")
+def economy_health():
+    """Public faucet-vs-sink transparency view over the ledger: money supply,
+    net issuance, an inflation indicator, and a per-type breakdown. Read-only —
+    anyone can audit whether the economy is inflating (the trust-layer wedge)."""
+    from ..services import economy_service
+
+    with session_scope() as s:
+        return jsonify(economy_service.economy_health(s))
+
+
 # ----- Seeds & planting --------------------------------------------------
 @game_bp.get("/players/<player_id>/seeds")
 @require_player
