@@ -7,6 +7,15 @@
 
 ## 2026-06-10 — Night-shift autonomous run (branch `claude/night-shift-2026-06-10`)
 
+### Finding — CI is phantom (no `.github/workflows/`)
+- The repo has **no GitHub Actions** at all; the lint/coverage/memory/single-head
+  "CI gates" the docs claim run on every push do **not** run anywhere automated,
+  and `scripts/check_memory.py` / `check_single_head.py` (referenced by the
+  Makefile + MAP.md) are **absent on this branch**. Another branch's commit
+  `f4a63e6` ("Make integrity/CI gates real (they were phantom)") is already
+  fixing this — **not duplicating it.** Real gate for this run = tests + lint run
+  locally before each push. **Flagged for owner:** merge the CI-gate-fixing branch.
+
 ### Entry 3 — Terpene → effect (buff) engine + public route
 - **What:** Built the KB's signature unused asset — the terpene→effect mechanical
   bridge. New `data/terpene_effects.yaml` (8-terpene palette + buff weights, the
