@@ -1,7 +1,8 @@
 # 🛰️ SHIFT HANDOFF — GrowVerse / GrowPod Empire
 
 **Outgoing shift:** local bring-up + strain-encyclopedia build.
-**Date:** 2026-06-10 · **Branch:** `session/local-bringup` (NOT pushed/merged — see "Decisions needed").
+**Date:** 2026-06-10 · **Branch:** `session/local-bringup` — **pushed**; **PR #5 open** → main.
+**Owner decision:** HOLD for review/CI — do NOT merge/deploy yet.
 
 ---
 
@@ -43,7 +44,8 @@
 
 ---
 
-## 3. ⚠️ Decisions needed from the owner (BLOCKERS for "push/merge to main")
+## 3. ⚠️ Merge/deploy status — HOLD (owner decision 2026-06-10)
+Owner chose **Hold for review/CI**. Branch is pushed; **PR #5** is open. **Do NOT merge to main** until reviewed — merging auto-deploys to prod. Context:
 1. **Pushing `main` auto-deploys to PRODUCTION.** `render.yaml` has
    `autoDeploy: true`, `branch: main`, and a `preDeployCommand` that runs
    `alembic upgrade head && db.seed` against the **prod Postgres**. A push to
@@ -70,6 +72,7 @@
   flow lists (renderer uses `yaml.safe_dump`); never emit `lineage_type: bred`.
 
 ## 5. Archive readiness
-- Archivable **after** the owner resolves §3 (push/merge/deploy choice). Until then,
-  the deliverables live un-pushed on `session/local-bringup`; archiving now would
-  strand the work locally.
+- **Archivable now.** Work is durable on `origin/session/local-bringup` + PR #5.
+  Final step (merge → prod deploy) is intentionally deferred to review/CI per owner.
+- Auditor review: advisor consulted; finalize approach approved (decompose push/PR/merge).
+- Evidence: `make test` → 182 passed; encyclopedia 12/12 validated.
