@@ -119,6 +119,11 @@ def plant_dict(plant, metrics=None) -> dict:
 
 
 def harvest_dict(harvest) -> dict:
+    # Lazy import keeps this serializer module pure/light at load time. The
+    # effect profile is derived from the *expressed* terpenes of THIS batch, so a
+    # well-grown harvest carries a real, grow-dependent effect signature.
+    from ..services.effects_service import effect_profile
+
     return {
         "id": harvest.id,
         "player_id": harvest.player_id,
@@ -130,6 +135,7 @@ def harvest_dict(harvest) -> dict:
         "cbd_actual": harvest.cbd_actual,
         "rarity": harvest.rarity_snapshot,
         "terpenes": harvest.terpenes or {},
+        "effect_profile": effect_profile(harvest.terpenes or {}),
         "sale_value": _money(harvest.sale_value),
         "sold": harvest.sold,
         "cure_status": harvest.cure_status,

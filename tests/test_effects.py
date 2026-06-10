@@ -135,3 +135,39 @@ def test_effects_route_is_public_no_auth_required(client):
 def test_effects_route_404_for_unknown_strain(client):
     resp = client.get("/api/game/strains/does-not-exist/effects")
     assert resp.status_code == 404
+
+
+# ---- harvest serialization carries a grow-dependent effect signature ---------
+
+def test_harvest_dict_includes_effect_profile_from_expressed_terpenes():
+    from types import SimpleNamespace
+    from growpodempire.api.serialize import harvest_dict
+
+    # A batch that expressed myrcene strongly -> a sedation-led effect profile.
+    harvest = SimpleNamespace(
+        id="h1", player_id="p1", plant_id="pl1", strain_id="s1",
+        weight_g=42.0, quality=80.0, thc_actual=22.0, cbd_actual=1.0,
+        rarity_snapshot="rare", terpenes={"myrcene": 0.8, "limonene": 0.1},
+        sale_value=None, sold=False, cure_status="curing",
+        cure_started_at=None, cure_target_hours=72, cure_quality_bonus=0.0,
+        harvested_at=None, nft_asset_id=None, nft_status=None,
+    )
+    out = harvest_dict(harvest)
+    assert "effect_profile" in out
+    assert out["effect_profile"]["dominant_effect"] == "sedation"
+
+
+def test_harvest_dict_handles_missing_terpenes():
+    from types import SimpleNamespace
+    from growpodempire.api.serialize import harvest_dict
+
+    harvest = SimpleNamespace(
+        id="h2", player_id="p1", plant_id="pl1", strain_id="s1",
+        weight_g=10.0, quality=50.0, thc_actual=15.0, cbd_actual=2.0,
+        rarity_snapshot="common", terpenes=None,
+        sale_value=None, sold=False, cure_status=None,
+        cure_started_at=None, cure_target_hours=0, cure_quality_bonus=0.0,
+        harvested_at=None, nft_asset_id=None, nft_status=None,
+    )
+    out = harvest_dict(harvest)
+    assert out["effect_profile"]["effects"] == []
