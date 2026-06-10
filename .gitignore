@@ -62,3 +62,11 @@ htmlcov/
 # Local dev database (SQLite)
 *.db
 growpod.db
+
+# Night/Audit/Quantum cycle — L1 raw agent outputs are CI artifacts only,
+# never committed (memory L1 rule). Consolidated tables + memory get committed
+# at the Quantum step, into the cycle PR. Keep RUN-HEADER tracked.
+reports/night-*.ndjson
+reports/night-*.md
+reports/proposed-tests/
+consolidated/
