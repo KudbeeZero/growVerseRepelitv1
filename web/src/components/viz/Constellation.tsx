@@ -588,6 +588,12 @@ export function Constellation({
     canvas.addEventListener("pointermove", onMove);
     canvas.addEventListener("pointerup", onUp);
     canvas.addEventListener("pointerleave", onUp);
+    // pointercancel: the browser hijacked the pointer mid-drag (touch scroll
+    // takeover, system gesture, pen out of range). Spec-compliant engines fire
+    // pointerleave afterwards, but engines have skipped it under active
+    // capture — and a stranded `dragging` pans + injects velocity on every
+    // subsequent buttonless hover.
+    canvas.addEventListener("pointercancel", onUp);
     canvas.addEventListener("click", onClick);
     canvas.addEventListener("wheel", onWheel, { passive: false });
 
@@ -598,6 +604,7 @@ export function Constellation({
       canvas.removeEventListener("pointermove", onMove);
       canvas.removeEventListener("pointerup", onUp);
       canvas.removeEventListener("pointerleave", onUp);
+      canvas.removeEventListener("pointercancel", onUp);
       canvas.removeEventListener("click", onClick);
       canvas.removeEventListener("wheel", onWheel);
     };

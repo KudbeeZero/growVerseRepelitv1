@@ -61,6 +61,13 @@ describe("Constellation lifecycle contracts", () => {
     expect(removed).toEqual(added);
   });
 
+  it("handles pointercancel so an interrupted drag cannot strand `dragging`", () => {
+    // Without this, a browser-hijacked pointer (touch scroll takeover, pen out
+    // of range) on an engine that skips the post-cancel pointerleave leaves
+    // dragging=true: every later buttonless hover pans and injects velocity.
+    expect(listenerNames("addEventListener")).toContain("pointercancel");
+  });
+
   it("every requestAnimationFrame assigns the cancellable `raf` handle", () => {
     const schedules = [...SRC.matchAll(/(\S+\s*=\s*)?requestAnimationFrame\(/g)];
     expect(schedules.length).toBeGreaterThanOrEqual(1);
