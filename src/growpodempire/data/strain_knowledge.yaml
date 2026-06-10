@@ -932,3 +932,283 @@ dam-diddy-purp:
     height: "medium (1.0-1.5 m)"
     resilience: "moderate; inherits GDP's mold awareness and Permanent Marker's vigorous growth; manageable with standard indoor protocol"
   notes: "The first strain ever to emerge from the GROWv2 simulation. 38.9% THCA — a number that doesn't exist in the commercial market — born from the marriage of Granddaddy Purple's purple genetics and Permanent Marker's Gelato-stacked THC ceiling. A piece of GROWv2 history."
+
+purple-punch:
+  aka: ["PP", "Purple Punch OG"]
+  lineage: "Larry OG × Granddaddy Purple. Bred by Supernova Gardens. Larry OG = OG Kush derivative (California OG Kush select); Granddaddy Purple = Purple Urkle × Big Bud. Stacks Larry OG's potency on GDP's iconic purple expression and grape-candy nose. Parent of both Mimosa and Slurricane — a critical node in the modern purple-indica family tree."
+  origin: "USA (California)"
+  type: photoperiod
+  genotype: "90% Indica / 10% Sativa"
+  aroma: [grape candy, blueberry muffin, tart berry, plum, herbal sweetness]
+  flavor: [grape, blueberry, sweet berry, herbal exhale]
+  effects: [deeply sedating, body-heavy, relaxed, sleepy, appetite-stimulating]
+  medical: [insomnia, stress, minor pain, appetite-loss]
+  terpenes:
+    caryophyllene: "pepper, spice — dominant; OG backbone beneath all the fruit"
+    limonene: "citrus — brightens the grape; Larry OG's uplift contribution"
+    pinene: "pine — alertness softener; prevents the body-lock from going fully catatonic"
+  cannabinoids: {thc: "18-20%", cbd: "~1%", cbg: "low", thcv: "trace"}
+  morphology: "Short to medium, bushy indica; vivid purple-and-green coloration under cool temps; dense, resinous buds with heavy fruit nose"
+  grow:
+    difficulty: easy
+    environment: [indoor, greenhouse, outdoor]
+    flowering_weeks: "8-9"
+    photoperiod: "flip to 12/12; cool flower nights intensify purple expression"
+    optimal: {temp_c: "21-27", rh_veg_pct: "55-65", rh_flower_pct: "40-50", vpd_kpa: "0.8-1.3", dli: "30-40"}
+    yield_indoor_g_m2: "450-600"
+    yield_outdoor_g_plant: "550-700"
+    height: "short-medium (0.9-1.5 m)"
+    resilience: "moderate mold susceptibility in dense buds; otherwise robust and beginner-friendly"
+  notes: "GDP's purple genetics with an OG potency upgrade. The parent of Mimosa and Slurricane; both are in this catalog. A visually striking, deeply sedating indica that punches above its 19% THC with exceptional terpene-driven effect."
+
+ice-cream-cake:
+  aka: ["ICC"]
+  lineage: "Wedding Cake × Gelato #33. Bred by Seed Junky Genetics (JBeezy). Both parents in the GROWv2 catalog: Wedding Cake = Triangle Kush × Animal Mints; Gelato #33 = Sunset Sherbet × Thin Mint GSC. A double-dessert stack — cake frosting layered on cream gelato."
+  origin: "USA (California)"
+  type: photoperiod
+  genotype: "75% Indica / 25% Sativa"
+  aroma: [creamy vanilla, sugary dough, sweet pepper, baked goods]
+  flavor: [vanilla cake batter, citrus undercurrent, creamy exhale, light pepper finish]
+  effects: [heavy sedation, full-body relaxation, sleepy, hungry, tranquilizing]
+  medical: [insomnia, pain, appetite-loss, anxiety, stress]
+  terpenes:
+    caryophyllene: "peppery — dominant; the Wedding Cake inheritance; anti-inflammatory depth"
+    limonene: "citrus-cream — brightens the batter; Gelato #33's uplifting note"
+    myrcene: "earthy-sweet — rounds into sedation; the bridge between the two parents"
+  cannabinoids: {thc: "20-25%", cbd: "~1%", cbg: "~1%", thcv: "trace"}
+  morphology: "Compact, bushy; dense frosted nugs with cream-to-purple hues; short, stout indica architecture"
+  grow:
+    difficulty: moderate
+    environment: [indoor, greenhouse]
+    flowering_weeks: "8-10"
+    photoperiod: "flip to 12/12; humidity management critical for dense bud structure"
+    optimal: {temp_c: "20-27", rh_veg_pct: "55-65", rh_flower_pct: "40-50", vpd_kpa: "0.9-1.4", dli: "35-45"}
+    yield_indoor_g_m2: "400-500"
+    yield_outdoor_g_plant: "450-600"
+    height: "short-medium (0.9-1.2 m)"
+    resilience: "moderate; dense buds are mold-sensitive; manageable with airflow and RH control"
+  notes: "The natural next step from Seed Junky's dessert-genetics line — both parents in the catalog, the child surpassing both in sedative weight. Wedding Cake's heat plus Gelato's creaminess equals the most baked you'll get on a single phenotype."
+
+do-si-dos:
+  aka: ["Dosi", "Do-Si-Do", "DOSI"]
+  lineage: "Girl Scout Cookies × Face Off OG. Bred by Archive Seed Bank. GSC = OG Kush × Durban Poison; Face Off OG = OG Kush backcross. Double-doses OG genetics beneath the Cookies sweetness, then pushes the OG further with a Face Off backcross. Parent of Slurricane (Do-Si-Dos × Purple Punch) — also in this catalog."
+  origin: "USA (Oregon, Archive Seed Bank)"
+  type: photoperiod
+  genotype: "70% Indica / 30% Sativa"
+  aroma: [pungent, sweet earth, floral funk, light pepper, cookie sweetness]
+  flavor: [dough, earthy OG funk, diesel-floral, peppery cookie finish]
+  effects: [deep body relaxation, sedating, tingly body stone, pain-melting, couch-lock]
+  medical: [pain, insomnia, stress, muscle tension]
+  terpenes:
+    limonene: "citrus — dominant; the OG brightness; more GSC than Face Off in the top note"
+    caryophyllene: "pepper, diesel-funk — the Face Off OG signature; anti-inflammatory"
+    myrcene: "earthy-musk — base sedation layer; OG depth"
+  cannabinoids: {thc: "20-30%", cbd: "1-2%", cbg: "low", thcv: "trace"}
+  morphology: "Compact, dense; short internodal spacing; 75–90 cm indoors; chunky OG-style bud formation"
+  grow:
+    difficulty: moderate
+    environment: [indoor, greenhouse]
+    flowering_weeks: "8-9"
+    photoperiod: "flip to 12/12; cooler temps (19-24°C) recommended; dense buds require strong airflow"
+    optimal: {temp_c: "19-24", rh_veg_pct: "50-60", rh_flower_pct: "35-45", vpd_kpa: "0.9-1.4", dli: "35-45"}
+    yield_indoor_g_m2: "400-450"
+    yield_outdoor_g_plant: "450-600"
+    height: "short (0.75-0.9 m)"
+    resilience: "moderate; humidity control mandatory; compact structure benefits from topping"
+  notes: "Archive Seed Bank's most celebrated creation — the GSC × OG Kush crossroads strain that anchors the modern cookie-indica family. Parent of Slurricane; breeder's favorite for stacking OG depth under dessert profiles."
+
+lemon-cherry-gelato:
+  aka: ["LCG", "Lemon Cherry"]
+  lineage: "Sunset Sherbet × Girl Scout Cookies (Backpackboyz community consensus; official lineage undisclosed by the brand). Both parents in the GROWv2 catalog. Some seed bank versions use Gelonade × Tropicana Cherry as a different interpretive cross — lineage partially unverified."
+  origin: "USA (California, Backpackboyz)"
+  type: photoperiod
+  genotype: "60% Indica / 40% Sativa"
+  aroma: [lemon zest, ripe cherry, creamy gelato sweetness, berry tartness]
+  flavor: [citrus-bright lemon, cherry, smooth dessert cream, tart berry finish]
+  effects: [euphoric onset, mood-lifted, tingly, balanced body warmth, socially energetic]
+  medical: [anxiety, depression, stress, mild pain]
+  terpenes:
+    caryophyllene: "peppery warmth — dominant; Sunset Sherbet backbone; anti-inflammatory"
+    limonene: "lemon-citrus — the LCG identity note; bright mood elevation"
+    myrcene: "earthy-sweet — GSC depth; light body anchor"
+  cannabinoids: {thc: "22-28%", cbd: "<1%", cbg: "low", thcv: "trace"}
+  morphology: "Compact-to-medium; dense frosted buds with vivid coloration; 90–110 cm indoors; significant trichome coverage; some phenos stretch to 165 cm"
+  grow:
+    difficulty: hard
+    environment: [indoor, greenhouse]
+    flowering_weeks: "8-10"
+    photoperiod: "flip to 12/12; dense resinous buds require strict humidity control; mold risk above 45% RH in late flower"
+    optimal: {temp_c: "21-27", rh_veg_pct: "45-55", rh_flower_pct: "40-45", vpd_kpa: "0.9-1.4", dli: "38-48"}
+    yield_indoor_g_m2: "400-500"
+    yield_outdoor_g_plant: "450-600"
+    height: "medium (0.9-1.1 m)"
+    resilience: "low-moderate; humidity-sensitive dense buds; rewards experienced growers with exceptional terpene expression"
+  notes: "One of the fastest-rising strains of the 2020s — Backpackboyz's most iconic cut. The lemon-cherry combination is immediately recognizable and unlike anything else in the catalog. A cultural phenomenon before most dispensaries had it on the shelf."
+
+biscotti:
+  aka: ["Biscotti Mintz", "Biscotti OG"]
+  lineage: "Gelato #25 × Sour Florida OG (South Florida OG). Bred by Cookie Fam Genetics. Gelato #25 = Sunset Sherbet × Thin Mint GSC (sibling of Gelato #33, already in catalog); Sour Florida OG = Florida OG select. Disputed second lineage claims Gelato #41 × Motorbreath #15; Cookie Fam's own attribution is used here. Parent of Permanent Marker (already in catalog)."
+  origin: "USA (California, Cookie Fam)"
+  type: photoperiod
+  genotype: "80% Indica / 20% Sativa"
+  aroma: [sugary cookie dough, spicy diesel, butter, honey, vanilla, OG earth]
+  flavor: [cookie batter, peppery diesel exhale, vanilla, earthy richness]
+  effects: [cerebral rush onset, euphoric, creative, then calming body stone, sedating]
+  medical: [stress, anxiety, depression, insomnia, evening use]
+  terpenes:
+    caryophyllene: "peppery diesel — dominant; the OG gas under the cookie; anti-inflammatory"
+    limonene: "citrus brightness — Gelato #25's uplifting note"
+    myrcene: "earthy-sweet — the indica body depth"
+  cannabinoids: {thc: "21-25%", cbd: "<1%", cbg: "low", thcv: "trace"}
+  morphology: "Short, dense, compact indica; 60–90 cm indoors; thick resinous calyx clusters; OG-style dense bud structure"
+  grow:
+    difficulty: hard
+    environment: [indoor, greenhouse]
+    flowering_weeks: "8-9"
+    photoperiod: "flip to 12/12; demanding feeder; dense buds require airflow; bud rot risk if RH exceeds 50%"
+    optimal: {temp_c: "20-26", rh_veg_pct: "50-60", rh_flower_pct: "40-50", vpd_kpa: "0.9-1.4", dli: "38-48"}
+    yield_indoor_g_m2: "400-500"
+    yield_outdoor_g_plant: "450-600"
+    height: "short (0.6-0.9 m)"
+    resilience: "low; picky feeder; humidity control critical; beginner-unfriendly but rewarding for skilled cultivators"
+  notes: "The missing link in the Cookie Fam tree — both a parent of Permanent Marker (in this catalog) and a standalone powerhouse. The OG-gas-under-cookie profile is its calling card; the lineage dispute only adds to its mystique."
+
+tropicana-cookies:
+  aka: ["TC", "Tropicanna Cookies"]
+  lineage: "Girl Scout Cookies × Tangie. Bred by Harry Palms / Bloom Seed Co. Tangie = California Orange × Skunk hybrid; GSC = OG Kush × Durban Poison. Oni Seed Co's F2 generation ('Tropicanna Cookies') expanded the strain's acclaim. 2019 Michigan Cannabis Cup Best Sativa Flower."
+  origin: "USA (California)"
+  type: photoperiod
+  genotype: "70% Sativa / 30% Indica"
+  aroma: [fresh orange peel, tropical citrus, sweet cookie, sour orange candy, herbal]
+  flavor: [orange candy, citrus, GSC cookie base, sour tropical fruit]
+  effects: [energetic, focused, uplifted, euphoric, clean sativa head high with light body]
+  medical: [fatigue, depression, stress, focus, social anxiety]
+  terpenes:
+    limonene: "orange-citrus, dominant — Tangie's influence; the most citrus-forward terpene after Mimosa"
+    caryophyllene: "pepper, spice — GSC backbone; grounds the sativa uplift"
+    myrcene: "earthy — depth; Tangie's light body contribution"
+  cannabinoids: {thc: "18-27%", cbd: "<1%", cbg: "low-moderate", thcv: "notable"}
+  morphology: "Medium-to-tall sativa structure; 100–200 cm indoors; significant stretch; airy yet dense buds with orange hairs and citrus resin"
+  grow:
+    difficulty: moderate
+    environment: [indoor, greenhouse, outdoor]
+    flowering_weeks: "9-10"
+    photoperiod: "flip to 12/12; significant sativa stretch — top early; humidity management for dense foliage"
+    optimal: {temp_c: "21-27", rh_veg_pct: "50-60", rh_flower_pct: "40-50", vpd_kpa: "0.9-1.4", dli: "38-48"}
+    yield_indoor_g_m2: "400-450"
+    yield_outdoor_g_plant: "500-700"
+    height: "medium-tall (1.0-2.0 m; up to 2.5 m outdoors)"
+    resilience: "moderate; vigorous sativa growth; responds well to topping and training"
+  notes: "The Tangie × GSC combination that brought orange-candy clarity to the Cookies family. A Cannabis Cup winner that earns every award — the cleanest daytime sativa in the modern cookies era alongside Mimosa and Tropicana."
+
+sunset-sherbet:
+  aka: ["Sherbet", "Sunset Sherbert", "Mr. Sherbinski's Sherbet"]
+  lineage: "Girl Scout Cookies × Pink Panties. Bred by Mr. Sherbinski (Sherbinskis). GSC = OG Kush × Durban Poison; Pink Panties = Burmese Kush × Florida Kush hybrid (Sherbinski select). 'Sherbet' and 'Sunset Sherbet' are the same strain. Parent of Gelato (Sherbet × Thin Mint GSC) and the entire Gelato/Runtz/Wedding Cake dessert-genetics lineage — all in this catalog."
+  origin: "USA (San Francisco, Sherbinskis)"
+  type: photoperiod
+  genotype: "85% Indica / 15% Sativa"
+  aroma: [sweet candy, skunky citrus, berry, light dessert sweetness]
+  flavor: [fruit candy, citrus tang, sweet cookie, smooth herbal finish]
+  effects: [full-body relaxation, cerebral jolt then warming calm, happy, tingly, mood-elevated]
+  medical: [stress, anxiety, depression, mild pain]
+  terpenes:
+    caryophyllene: "pepper, warm spice — GSC's signature carried forward into all its offspring"
+    limonene: "citrus-candy — the Sherbet identity note; lighter than its Gelato offspring"
+    myrcene: "earthy-sweet — indica base; Pink Panties depth"
+  cannabinoids: {thc: "15-19%", cbd: "<0.25%", cbg: "low", thcv: "trace"}
+  morphology: "Medium, compact, bushy indica; 100–120 cm indoors; original Sherbinski cut prioritized flavor over volume — lower yield than commercial seed-bank versions"
+  grow:
+    difficulty: easy
+    environment: [indoor, greenhouse, outdoor]
+    flowering_weeks: "8-9"
+    photoperiod: "flip to 12/12; forgiving feeder; mold-resistant by Sherbet standards"
+    optimal: {temp_c: "21-26", rh_veg_pct: "50-60", rh_flower_pct: "40-50", vpd_kpa: "0.8-1.3", dli: "30-40"}
+    yield_indoor_g_m2: "200-250"
+    yield_outdoor_g_plant: "300-450"
+    height: "medium (1.0-1.2 m)"
+    resilience: "moderately mold-resistant; easy to grow; lower yield reflects authentic genetics over commercial optimization"
+  notes: "The grandfather of modern dessert genetics — every Gelato, Runtz, Wedding Cake, Biscotti, and Ice Cream Cake in this catalog traces back to this Sherbinski original. Lower yield than its famous offspring, but the terpene foundation that launched a thousand strains."
+
+slurricane:
+  aka: ["Slurri", "Slurricane #7", "Slurricane #16"]
+  lineage: "Do-Si-Dos × Purple Punch. Bred by In House Genetics. Both parents in the GROWv2 catalog: Do-Si-Dos = GSC × Face Off OG; Purple Punch = Larry OG × Granddaddy Purple. The cross stacks Do-Si-Dos's OG-cookie punch on Purple Punch's grape-indica sedation."
+  origin: "USA"
+  type: photoperiod
+  genotype: "60% Indica / 40% Sativa"
+  aroma: [sweet berries, grape candy, earthy cookie funk, subtle spice]
+  flavor: [grape, berry, cookie dough, peppery exhale, purple fruit finish]
+  effects: [slow creeper euphoria, deep body relaxation, drowsy, sedating, appetite-stimulating]
+  medical: [insomnia, pain, stress, appetite-loss]
+  terpenes:
+    caryophyllene: "pepper, warmth — dominant; Do-Si-Dos OG backbone"
+    limonene: "citrus — Purple Punch's brightness; lightens the grape-and-cookie combo"
+    myrcene: "berry-earthy musk — GDP's fingerprint through Purple Punch; the final sedation layer"
+  cannabinoids: {thc: "20-28%", cbd: "<1%", cbg: "low", thcv: "trace"}
+  morphology: "Compact to medium; dense resinous buds with purple and green hues; 90–150 cm indoors; strong lateral branching"
+  grow:
+    difficulty: easy
+    environment: [indoor, greenhouse, outdoor]
+    flowering_weeks: "9"
+    photoperiod: "flip to 12/12; dense buds need airflow below 50% RH in late flower; creeper effect — wait before re-dose"
+    optimal: {temp_c: "21-27", rh_veg_pct: "60-70", rh_flower_pct: "40-50", vpd_kpa: "0.9-1.4", dli: "35-45"}
+    yield_indoor_g_m2: "400-450"
+    yield_outdoor_g_plant: "500-650"
+    height: "medium (0.9-1.5 m)"
+    resilience: "easy and robust; beginner-friendly despite its exotic status; dense bud packing requires airflow discipline"
+  notes: "Do-Si-Dos × Purple Punch — a slow-building wave of relaxation that earns the name. In House Genetics' flagship; the 'creeper effect' is its signature and a caution to beginners: wait before you re-dose. Both parents are in this catalog."
+
+purple-haze:
+  aka: ["PH", "Purple Haze #1"]
+  lineage: "Purple Thai × Haze. Introduced by the Haze Brothers (Santa Cruz, CA) and Sam the Skunkman to Amsterdam in the late 1970s. Origins partially disputed — some sources cite Colombian or pure Haze phenotype. Purple Thai × Haze is the consensus database entry. Named after the Jimi Hendrix song (1967)."
+  origin: "USA (Santa Cruz → Netherlands)"
+  type: photoperiod
+  genotype: "85% Sativa / 15% Indica"
+  aroma: [sweet berry, earthy spice, lavender, grape, classic Haze sharpness]
+  flavor: [berry-sweet, spicy-earthy, floral grape, smooth herbal exhale]
+  effects: [energizing, cerebral, creative, psychedelic-leaning, euphoric, giggly]
+  medical: [depression, fatigue, stress, creative blocks, morning use]
+  terpenes:
+    myrcene: "fruity-earthy — dominant; the Purple Thai berry foundation; unusual for a sativa-dominant"
+    caryophyllene: "peppery-spice — Haze earthiness"
+    limonene: "citrus-sweet — uplifting sativa brightness"
+  cannabinoids: {thc: "17-20%", cbd: "<0.1%", cbg: "low", thcv: "notable"}
+  morphology: "Tall, stretchy sativa structure; 120–180 cm indoors; airy buds with purple and green hues; longer internodes; classic old-school sativa silhouette"
+  grow:
+    difficulty: easy
+    environment: [indoor, greenhouse, outdoor]
+    flowering_weeks: "9 (Haze-heavy phenos 10-12)"
+    photoperiod: "flip to 12/12; significant stretch — top or LST early; very disease-resistant"
+    optimal: {temp_c: "22-28", rh_veg_pct: "55-65", rh_flower_pct: "45-55", vpd_kpa: "0.9-1.4", dli: "38-48"}
+    yield_indoor_g_m2: "450-550"
+    yield_outdoor_g_plant: "500-700"
+    height: "tall (1.2-1.8 m)"
+    resilience: "high; disease-resistant and forgiving; one of the most beginner-friendly old-school sativas"
+  notes: "The strain Hendrix immortalized in song — and a genuine cornerstone of sativa culture. Less about raw potency, more about the soaring creative clarity of an 85% sativa with purple-Thai fruit genetics underneath. A piece of cannabis history."
+
+black-truffle:
+  aka: ["Black Truffle Gelato", "BT"]
+  lineage: "Gelato #33 × Unknown Indica. Bred by Big Chief. The second parent has never been disclosed; Big Chief has not released seeds or clones commercially. Every verified source identifies Gelato #33 (not #41) as the confirmed parent. The mystery second parent contributes the earthy-savory terpene deviation from standard Gelato."
+  origin: "USA"
+  type: photoperiod
+  genotype: "65% Indica / 35% Sativa"
+  aroma: [dark chocolate, espresso, burnt caramel, damp forest earth, peppery warmth]
+  flavor: [cocoa, roasted coffee, earthy spice, caramel, peppery exhale]
+  effects: [initially energetic and talkative, then body-relaxing, mood-elevated, mild creeping sedation]
+  medical: [stress, anxiety, depression, mild pain]
+  terpenes:
+    caryophyllene: "peppery, earthy — dominant; anti-inflammatory; the savory-gas anchor"
+    terpinolene: "tea, nutmeg, damp earth — the rarest terpene in the modern catalog; the truffle's signature"
+    limonene: "citrus — the only brightness in an otherwise dark, earthy profile"
+  cannabinoids: {thc: "22-28%", cbd: "<1%", cbg: "low", thcv: "trace"}
+  morphology: "Compact, dense, pine-tree-shaped flowers; 75–100 cm indoors; very heavy trichome layer; dark green with hints of deep purple"
+  grow:
+    difficulty: hard
+    environment: [indoor, greenhouse]
+    flowering_weeks: "8-9"
+    photoperiod: "flip to 12/12; tighter temp range (20-24°C) for terpene preservation; RH strictly below 45% in flower"
+    optimal: {temp_c: "20-24", rh_veg_pct: "50-60", rh_flower_pct: "40-45", vpd_kpa: "0.9-1.4", dli: "38-48"}
+    yield_indoor_g_m2: "400-500"
+    yield_outdoor_g_plant: "450-600"
+    height: "short-medium (0.75-1.0 m)"
+    resilience: "low; strict temperature and humidity requirements; clone-only in the wild; for experienced cultivators only"
+  notes: "The most unusual terpene profile in the catalog — terpinolene gives Black Truffle a tea-and-earth signature that stands completely apart from the Gelato/Cookies family. A rare creeper: social and uplifting at first, sedating later. The mystery parent adds permanent intrigue."

@@ -271,3 +271,83 @@ strains:
     terpenes: [myrcene, caryophyllene, limonene]
     traits: {indica_ratio: 0.80, thc: 35, cbd: 1.0, flowering_time: 63, yield: 420, difficulty: 3, disease_resistance: 0.65, pest_resistance: 0.60, vigor: 0.75}
     dominant: [thc, indica_ratio]
+
+  - name: Purple Punch
+    lineage_type: hybrid
+    rarity: uncommon
+    stability: 0.85
+    terpenes: [caryophyllene, limonene, pinene]
+    traits: {indica_ratio: 0.90, thc: 19, cbd: 1.0, flowering_time: 60, yield: 525, difficulty: 1, disease_resistance: 0.60, pest_resistance: 0.60, vigor: 0.75}
+    dominant: [indica_ratio, caryophyllene]
+
+  - name: Ice Cream Cake
+    lineage_type: hybrid
+    rarity: rare
+    stability: 0.78
+    terpenes: [caryophyllene, limonene, myrcene]
+    traits: {indica_ratio: 0.75, thc: 23, cbd: 1.0, flowering_time: 63, yield: 450, difficulty: 3, disease_resistance: 0.50, pest_resistance: 0.50, vigor: 0.70}
+    dominant: [thc, indica_ratio]
+
+  - name: Do-Si-Dos
+    lineage_type: hybrid
+    rarity: rare
+    stability: 0.80
+    terpenes: [limonene, caryophyllene, myrcene]
+    traits: {indica_ratio: 0.70, thc: 25, cbd: 1.5, flowering_time: 63, yield: 425, difficulty: 3, disease_resistance: 0.55, pest_resistance: 0.55, vigor: 0.70}
+    dominant: [thc, limonene]
+
+  - name: Lemon Cherry Gelato
+    lineage_type: hybrid
+    rarity: epic
+    stability: 0.76
+    terpenes: [caryophyllene, limonene, myrcene]
+    traits: {indica_ratio: 0.60, thc: 25, cbd: 0.3, flowering_time: 63, yield: 450, difficulty: 4, disease_resistance: 0.50, pest_resistance: 0.45, vigor: 0.70}
+    dominant: [thc, limonene]
+
+  - name: Biscotti
+    lineage_type: hybrid
+    rarity: rare
+    stability: 0.78
+    terpenes: [caryophyllene, limonene, myrcene]
+    traits: {indica_ratio: 0.80, thc: 23, cbd: 0.3, flowering_time: 60, yield: 450, difficulty: 4, disease_resistance: 0.50, pest_resistance: 0.50, vigor: 0.65}
+    dominant: [indica_ratio, thc]
+
+  - name: Tropicana Cookies
+    lineage_type: hybrid
+    rarity: uncommon
+    stability: 0.80
+    terpenes: [limonene, caryophyllene, myrcene]
+    traits: {indica_ratio: 0.30, thc: 23, cbd: 0.3, flowering_time: 67, yield: 425, difficulty: 3, disease_resistance: 0.55, pest_resistance: 0.60, vigor: 0.80}
+    dominant: [limonene, vigor]
+
+  - name: Sunset Sherbet
+    lineage_type: hybrid
+    rarity: uncommon
+    stability: 0.82
+    terpenes: [caryophyllene, limonene, myrcene]
+    traits: {indica_ratio: 0.85, thc: 17, cbd: 0.2, flowering_time: 60, yield: 225, difficulty: 1, disease_resistance: 0.60, pest_resistance: 0.60, vigor: 0.70}
+    dominant: [indica_ratio, caryophyllene]
+
+  - name: Slurricane
+    lineage_type: hybrid
+    rarity: uncommon
+    stability: 0.82
+    terpenes: [caryophyllene, limonene, myrcene]
+    traits: {indica_ratio: 0.65, thc: 24, cbd: 0.3, flowering_time: 63, yield: 425, difficulty: 1, disease_resistance: 0.60, pest_resistance: 0.60, vigor: 0.75}
+    dominant: [thc, caryophyllene]
+
+  - name: Purple Haze
+    lineage_type: hybrid
+    rarity: rare
+    stability: 0.82
+    terpenes: [myrcene, caryophyllene, limonene]
+    traits: {indica_ratio: 0.15, thc: 18, cbd: 0.1, flowering_time: 63, yield: 500, difficulty: 1, disease_resistance: 0.70, pest_resistance: 0.65, vigor: 0.85}
+    dominant: [vigor, myrcene]
+
+  - name: Black Truffle
+    lineage_type: hybrid
+    rarity: epic
+    stability: 0.75
+    terpenes: [caryophyllene, terpinolene, limonene]
+    traits: {indica_ratio: 0.65, thc: 25, cbd: 0.3, flowering_time: 60, yield: 450, difficulty: 4, disease_resistance: 0.50, pest_resistance: 0.50, vigor: 0.65}
+    dominant: [thc, caryophyllene]
