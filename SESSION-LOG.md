@@ -7,6 +7,18 @@
 
 ## 2026-06-10 — Night-shift autonomous run (branch `claude/night-shift-2026-06-10`)
 
+### Entry 9 — Split clean features into PR #13 (mergeability fix)
+- **What:** Cherry-picked the four read-only feature commits (terpene engine,
+  `/effects` route, harvest signature, `/economy/health`) onto a fresh branch
+  `claude/terpene-effects-economy` off `f890277` (pre-chamber base) → **PR #13**.
+  Verified 19 tests + lint green there.
+- **Why (advisor catch):** PR #12 bundled the clean, immediately-mergeable work
+  with the Grow Chamber WIP that overlaps PR #4 — so the owner couldn't merge the
+  terpene engine without first resolving the chamber question. The split unblocks
+  it. No force-push (the existing branch is untouched; this is a new branch).
+- **Result:** **PR #13 = merge now (no gate).** PR #12 retitled to "Grow Chamber
+  WIP — features moved to #13," retained only for the chamber/#4 reconciliation.
+
 ### Entry 8 — Plant render (owner request) + public-surface auth verification
 - **What:** Rendered two plants side-by-side at **30%** (vegetative, day 28) and
   **80%** (flowering, day 60) growth and sent the image to the owner. Method: a
