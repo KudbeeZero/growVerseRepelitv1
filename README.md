@@ -27,7 +27,7 @@ an Algorand on-chain asset layer where your rarest strains become NFTs.
 
 ![Status](https://img.shields.io/badge/STATUS-IN__ORBIT-22C55E?style=for-the-badge&labelColor=0B0E2C)
 ![Phase](https://img.shields.io/badge/BUILD-Phases_1--3_+_expansion-7C3AED?style=for-the-badge&labelColor=0B0E2C)
-![Tests](https://img.shields.io/badge/TESTS-139_green-22C55E?style=for-the-badge&labelColor=0B0E2C)
+![Tests](https://img.shields.io/badge/TESTS-190_green-22C55E?style=for-the-badge&labelColor=0B0E2C)
 ![Chain](https://img.shields.io/badge/ALGORAND-TestNet-000000?style=for-the-badge&labelColor=0B0E2C)
 ![License](https://img.shields.io/badge/LICENSE-MIT-FACC15?style=for-the-badge&labelColor=0B0E2C)
 
@@ -75,7 +75,7 @@ fastest routes to a stabilized, mintable, money-printing line.
 
 ### 🧬 [Strain Codex](docs/manual/strain-codex.md)
 **The orbital seed vault.**
-A Pokédex-style catalog of all 16 founding strains — full genome stats,
+A Pokédex-style catalog of the original 16 founding strains (6 newer additions await cataloguing) — full genome stats,
 terpene profiles, difficulty, and a breeding tier list.
 
 </td>
@@ -147,7 +147,7 @@ But cultivation is only the engine. The **game** is the loop around it:
                             ╰───────────╯   ╰──────────────╯
 ```
 
-- 🌱 **Real genetics** — 9 inheritable traits, dominance, segregation variance,
+- 🌱 **Real genetics** — 13 inheritable traits, dominance, segregation variance,
   and deterministic, replayable crossbreeding.
 - ⏱️ **Real-time simulation** — compute-on-read catch-up advances every plant in
   fixed 1-hour steps; the world keeps growing while you're away.
@@ -168,10 +168,11 @@ But cultivation is only the engine. The **game** is the loop around it:
 ## 🚀 Quick Launch (run it yourself)
 
 ```bash
-# 1. Install
-pip install -r requirements.txt
+# 1. Install (venv + deps + editable install; the bare-pip path collides
+#    with a distro-managed PyYAML on some boxes — see CLAUDE.md)
+make setup && source .venv/bin/activate
 
-# 2. Create the schema + seed the 16 founding strains (idempotent)
+# 2. Create the schema + seed the 22 founding strains (idempotent)
 alembic upgrade head
 python -m growpodempire.db.seed
 

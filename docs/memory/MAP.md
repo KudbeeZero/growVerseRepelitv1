@@ -52,7 +52,7 @@ repo-relative (under `src/growpodempire/` unless noted); every ✅ here is check
 |-----------|-------------------------|-------------|
 | `design/00-game-vision.md` | cross-cutting — see the moat/pillar dashboard below | mixed |
 | `design/01-simulation-horticulture.md` | `simulation/engine.py` · `simulation/horticulture.py` · `simulation/curing.py` · `simulation/reactions.py` · `data/balance.yaml` (`simulation:`) | 🔨 Phase A done |
-| `design/02-genetics.md` | `genetics/traits.py` · `genetics/breeding.py` · `data/strains.yaml` · `data/strain_knowledge.yaml` · `services/game_service.py` (breed/stabilize/verify/knowledge) | 🔨 14-trait core; 22-strain KB |
+| `design/02-genetics.md` | `genetics/traits.py` · `genetics/breeding.py` · `data/strains.yaml` · `data/strain_knowledge.yaml` · `services/game_service.py` (breed/stabilize/verify/knowledge) | 🔨 13-trait core; 22-strain KB |
 | `design/03-grower-skills.md` | `services/leveling_service.py` · `services/research_service.py` · `services/progression_service.py` · `data/balance.yaml` (`research`/`leveling`) | 🔨 no skill trees yet |
 | `design/04-honesty-and-trust.md` | `simulation/engine.py` (`_rng_for`) · `services/game_service.py` (`verify_strain`) · `api/game_api.py` (`/provenance`) · `economy/ledger.py` · `services/advisor_service.py` | 🔨 fairness shipped for breeding |
 | `design/05-events-and-competition.md` | `services/cup_service.py` · `economy/pricing.py` (`cup_score`) · `data/balance.yaml` (`cannabis_cup`) · `db/models.py` (`CannabisCup`/`CupEntry`) · `api/game_api.py` (`/cup/*`) | ✅ seasonal Cup + lifetime rewards |
@@ -70,7 +70,7 @@ The seven differentiators from `design/00-game-vision.md`, mapped to where they'
 | # | Moat differentiator | Today | Anchor in code |
 |---|---------------------|-------|----------------|
 | 1 | Real plant-physiology engine, not a timer | 🔨 Phase A | `simulation/engine.py`, `simulation/horticulture.py` |
-| 2 | Generative, provably-unique genetics | 🔨 14-trait | `genetics/breeding.py` |
+| 2 | Generative, provably-unique genetics | 🔨 13-trait | `genetics/breeding.py` |
 | 3 | Proof-of-Cultivation (seed ✅ + verify ✅; on-chain ⬜) | 🔨 | `services/game_service.py`, `db/models.py` |
 | 4 | The GenBank (verifiable shared pedigree) | 🔨 | `services/game_service.py` (`verify_lineage`) + `GET /strains/<id>/lineage`; on-chain settlement ⬜ |
 | 5 | Discovery economy (first-finder credit) | 🔨 | seasonal Cannabis Cup — `services/cup_service.py` (lifetime trophy strain + Hall of Fame) |
@@ -86,7 +86,7 @@ The five player-facing pillars: **The Grow** 🔨 · **The Genetics** 🔨 · **
 real; TestNet/IPFS deferred — Sprint 4).
 
 ## Surface area (anchors, not exhaustive)
-- **API:** ~52 routes under `/api/game` in `api/game_api.py` (writes auth'd + rate-limited; reads
+- **API:** ~71 routes under `/api/game` in `api/game_api.py` (writes auth'd + rate-limited; reads
   public). Trust surface: public `GET /strains/<id>/provenance` replays a cross to prove its genome,
   and `GET /strains/<id>/lineage` replays the whole ancestry back to base-catalog roots. Competition
   surface: `GET /cup/current`, `/cup/<id>/standings`, `/cup/hall-of-fame`, `POST .../cup/enter`.

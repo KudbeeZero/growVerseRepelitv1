@@ -1,6 +1,6 @@
 # 🧬 Genetics — endless, generative, ownable
 
-> The deep design for genetics: from today's solid 14-trait inheritance model toward an effectively
+> The deep design for genetics: from today's solid 13-trait inheritance model toward an effectively
 > **unbounded** genome where players *create and discover* cultivars that become provable, ownable
 > on-chain assets. Tags: ✅ built · 🔨 partial · ⬜ planned. This is moat #2/#3/#4/#5 in
 > `00-game-vision.md`. "The possibilities are endless" is the design requirement, not a slogan.
@@ -9,7 +9,7 @@
 A genuine quantitative-genetics core already exists (`src/growpodempire/genetics/`):
 
 - **Genome = a dict of traits**, each `{value, dominance}` where dominance ∈
-  `dominant | recessive | codominant` (`genetics/traits.py`). **14 traits:** `indica_ratio, thc,
+  `dominant | recessive | codominant` (`genetics/traits.py`). **13 traits:** `indica_ratio, thc,
   cbd, flowering_time, yield, difficulty, disease_resistance, pest_resistance, vigor` + 4 terpenes
   (`myrcene, limonene, caryophyllene, pinene`).
 - **Crossbreeding** (`cross()`, `genetics/breeding.py`): per trait, a **dominance-weighted blend**
@@ -35,7 +35,7 @@ A genuine quantitative-genetics core already exists (`src/growpodempire/genetics
   (Sawler 2015; Schwabe 2019) — so the *genome + verifiable lineage* must be the authoritative
   identity, and `indica_ratio` is morphology/lore, not a chemotype predictor.
 
-This is a strong base. It is also **bounded**: a fixed 14-trait vector, blend-and-jitter
+This is a strong base. It is also **bounded**: a fixed 13-trait vector, blend-and-jitter
 inheritance, no novelty. The vision is to make the space *open*.
 
 ---

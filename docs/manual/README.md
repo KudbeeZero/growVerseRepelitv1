@@ -18,7 +18,7 @@ everything from your first plant to an on-chain empire. Start anywhere:
 | 🚀 **[Getting Started](getting-started.md)** | First-hour onboarding: account → seed → grow → harvest → sell. |
 | 📖 **[Game Manual](game-manual.md)** | The full reference — every system, stat, threshold, and API endpoint. |
 | 🧠 **[Strategy Guide](strategy-guide.md)** | Intensive min-maxing: formulas, build orders, the breeding meta. |
-| 🧬 **[Strain Codex](strain-codex.md)** | All 16 founding strains with full genomes and tier lists. |
+| 🧬 **[Strain Codex](strain-codex.md)** | The original 16 founding strains with full genomes and tier lists (6 newer additions not yet catalogued). |
 | 🪙 **[Tokenomics](tokenomics.md)** | The GROW economy, the burn, the ASA, and the live price ticker. |
 | 🛸 **[Lore](lore.md)** | The story of the Empire and what makes it different. |
 | 📡 **[Glossary](glossary.md)** | Every term, stat, and acronym defined. |

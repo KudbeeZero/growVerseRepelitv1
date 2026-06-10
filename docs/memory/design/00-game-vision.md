@@ -80,7 +80,7 @@ The moat above is *why we win*; these are *what the player touches*.
 
 1. **The Grow** — a deep, real-time, server-authoritative simulation. 🔨 Lean engine today; the
    scientist-grade target is `01-simulation-horticulture.md`.
-2. **The Genetics** — breed, stabilize, and *discover* cultivars in an endless space. 🔨 14-trait
+2. **The Genetics** — breed, stabilize, and *discover* cultivars in an endless space. 🔨 13-trait
    model today; the generative target is `02-genetics.md`.
 3. **The Mastery** — grower skills + research that take real time and reward serious players. 🔨
    XP/level + research tree today; skill trees are `03-grower-skills.md`.

@@ -42,7 +42,7 @@ All three talk to the same backend and the same `GROW` economy.
 # From the repo root
 pip install -r requirements.txt
 
-# Build the database and plant the 16 founding strains in the catalog.
+# Build the database and plant the 22 founding strains in the catalog.
 # Safe to re-run — seeding is idempotent.
 alembic upgrade head
 python -m growpodempire.db.seed
