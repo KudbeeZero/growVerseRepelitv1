@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GROWv2 — NIGHT BOARD</title>
+<style>
+  :root{
+    --green:#39ff6a; --green-dim:#0c5d26;
+    --amber:#ffc23d; --amber-dim:#6e4e0a;
+    --red:#ff4242;   --red-dim:#6e0f0f;
+    --blue:#5ad7ff;
+    --phosphor:#b8ffc9;
+    --etch:#1d2126;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{background:#0a0c0e;}
+  body{
+    min-height:100vh;
+    font-family:"Courier New", ui-monospace, monospace;
+    background:
+      radial-gradient(1200px 600px at 50% -10%, #1c2127 0%, transparent 60%),
+      repeating-linear-gradient(0deg, #0a0c0e 0px, #0a0c0e 3px, #0c0e11 3px, #0c0e11 6px),
+      #0a0c0e;
+    color:var(--phosphor);
+    padding:28px 22px 60px;
+    display:flex; justify-content:center;
+  }
+
+  /* ============ the metal board ============ */
+  .board{
+    width:100%; max-width:1280px;
+    border-radius:14px;
+    padding:26px 30px 34px;
+    position:relative;
+    background:
+      repeating-linear-gradient(92deg, rgba(255,255,255,.025) 0 1px, transparent 1px 3px),
+      linear-gradient(170deg, #4d545c 0%, #3b4148 18%, #2e333a 55%, #383e45 86%, #272b31 100%);
+    box-shadow:
+      inset 0 2px 1px rgba(255,255,255,.22),
+      inset 0 -3px 6px rgba(0,0,0,.55),
+      0 18px 50px rgba(0,0,0,.75);
+    border:1px solid #14171a;
+  }
+  .rivet{
+    position:absolute; width:16px; height:16px; border-radius:50%;
+    background:radial-gradient(circle at 34% 30%, #9aa3ab 0%, #5a6168 38%, #23272b 78%, #15181b 100%);
+    box-shadow:0 1px 2px rgba(0,0,0,.8), inset 0 -1px 2px rgba(0,0,0,.6), inset 0 1px 1px rgba(255,255,255,.35);
+  }
+  .rivet.tl{top:10px;left:10px}.rivet.tr{top:10px;right:10px}
+  .rivet.bl{bottom:10px;left:10px}.rivet.br{bottom:10px;right:10px}
+
+  /* ============ header ============ */
+  header{
+    display:flex; flex-wrap:wrap; align-items:center; gap:18px;
+    padding-bottom:18px; margin-bottom:22px;
+    border-bottom:2px groove #4a5158;
+  }
+  .nameplate{
+    background:linear-gradient(180deg,#23272c,#181b1f);
+    border:1px solid #0e1013;
+    border-radius:6px;
+    padding:10px 22px;
+    box-shadow:inset 0 2px 6px rgba(0,0,0,.8), 0 1px 0 rgba(255,255,255,.12);
+  }
+  .nameplate h1{
+    font-size:30px; letter-spacing:6px; font-weight:700;
+    color:#e8eef2;
+    text-shadow:0 0 8px rgba(120,200,255,.35), 0 1px 0 #000;
+  }
+  .nameplate small{
+    display:block; letter-spacing:4px; font-size:11px; color:#7f8b94; margin-top:2px;
+  }
+  .head-right{margin-left:auto; display:flex; align-items:center; gap:26px;}
+  .clockbox{text-align:right;}
+  #clock{font-size:26px; color:var(--blue); text-shadow:0 0 10px rgba(90,215,255,.6); letter-spacing:2px;}
+  #datestr{font-size:11px; color:#8a949c; letter-spacing:2px;}
+  .shift{
+    display:flex; align-items:center; gap:10px;
+    background:#15181b; border:1px solid #0c0e10; border-radius:6px; padding:8px 14px;
+    box-shadow:inset 0 2px 5px rgba(0,0,0,.7);
+    font-size:12px; letter-spacing:3px; color:#cfd6db;
+  }
+
+  /* ============ lamps ============ */
+  .lamp{
+    display:inline-block; width:18px; height:18px; border-radius:50%;
+    position:relative; flex:none;
+    border:2px solid #16191c;
+    box-shadow:0 1px 1px rgba(255,255,255,.18), inset 0 -2px 4px rgba(0,0,0,.5);
+  }
+  .lamp::after{ /* glass highlight */
+    content:""; position:absolute; top:2px; left:3px; width:6px; height:4px;
+    border-radius:50%; background:rgba(255,255,255,.65); filter:blur(.5px);
+  }
+  .lamp.green{background:radial-gradient(circle at 35% 30%, #d6ffd9 0%, var(--green) 40%, var(--green-dim) 95%); box-shadow:0 0 12px 2px rgba(57,255,106,.55), inset 0 -2px 4px rgba(0,0,0,.45);}
+  .lamp.amber{background:radial-gradient(circle at 35% 30%, #fff3cf 0%, var(--amber) 40%, var(--amber-dim) 95%); box-shadow:0 0 12px 2px rgba(255,194,61,.55), inset 0 -2px 4px rgba(0,0,0,.45);}
+  .lamp.red{background:radial-gradient(circle at 35% 30%, #ffd2d2 0%, var(--red) 40%, var(--red-dim) 95%); box-shadow:0 0 13px 3px rgba(255,66,66,.6), inset 0 -2px 4px rgba(0,0,0,.45); animation:pulse 1.6s ease-in-out infinite;}
+  .lamp.blue{background:radial-gradient(circle at 35% 30%, #e2f8ff 0%, var(--blue) 40%, #0d4a63 95%); box-shadow:0 0 12px 2px rgba(90,215,255,.6), inset 0 -2px 4px rgba(0,0,0,.45); animation:blink 2.4s steps(1) infinite;}
+  @keyframes pulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.6)}}
+  @keyframes blink{0%,60%{filter:brightness(1)}61%,70%{filter:brightness(.25)}71%,100%{filter:brightness(1)}}
+
+  /* ============ recessed display panels ============ */
+  .grid{display:grid; grid-template-columns:repeat(12,1fr); gap:18px;}
+  .panel{
+    background:linear-gradient(180deg,#101316 0%, #0b0d10 100%);
+    border:1px solid #07090b;
+    border-radius:8px;
+    padding:16px 18px 18px;
+    box-shadow:
+      inset 0 3px 10px rgba(0,0,0,.85),
+      inset 0 -1px 0 rgba(255,255,255,.04),
+      0 1px 0 rgba(255,255,255,.14);
+    position:relative;
+    overflow:hidden;
+  }
+  .panel::before{ /* faint CRT scanlines inside each window */
+    content:""; position:absolute; inset:0; pointer-events:none;
+    background:repeating-linear-gradient(0deg, rgba(255,255,255,.022) 0 1px, transparent 1px 3px);
+  }
+  .panel h2{
+    font-size:12px; letter-spacing:4px; font-weight:700;
+    color:#9aa6ae; margin-bottom:14px;
+    padding-bottom:8px; border-bottom:1px dashed #2a3138;
+    display:flex; align-items:center; gap:10px;
+  }
+  .panel h2 .tag{
+    margin-left:auto; font-size:10px; letter-spacing:2px; color:#5e6a72; font-weight:400;
+  }
+  .span6{grid-column:span 6}.span4{grid-column:span 4}.span8{grid-column:span 8}.span12{grid-column:span 12}
+  @media (max-width:900px){.span6,.span4,.span8{grid-column:span 12}}
+
+  /* systems rows */
+  .sysrow{
+    display:flex; align-items:center; gap:12px;
+    padding:7px 4px; border-bottom:1px solid rgba(255,255,255,.045);
+    font-size:13px;
+  }
+  .sysrow:last-child{border-bottom:none}
+  .sysrow .name{color:#dfe7ec; letter-spacing:1px; flex:none; width:46%;}
+  .sysrow .note{color:#74838d; font-size:11px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .sysrow:hover .note{white-space:normal;}
+
+  /* next-feature marquee */
+  .next-feature .big{
+    font-size:19px; color:var(--amber); letter-spacing:1px; line-height:1.35;
+    text-shadow:0 0 10px rgba(255,194,61,.4); margin-bottom:10px;
+  }
+  .next-feature ul{list-style:none; font-size:12.5px; color:#aeb9c1;}
+  .next-feature li{padding:4px 0 4px 16px; position:relative;}
+  .next-feature li::before{content:"▸"; position:absolute; left:0; color:var(--amber);}
+  .risk-tag{
+    display:inline-block; font-size:10px; letter-spacing:2px; padding:3px 8px; border-radius:3px;
+    border:1px solid var(--amber-dim); color:var(--amber); margin-bottom:10px;
+  }
+
+  /* gauges (tests / coverage) */
+  .gauges{display:flex; gap:16px; flex-wrap:wrap;}
+  .gauge{flex:1; min-width:130px; text-align:center; padding:10px 6px;
+    border:1px solid #20262c; border-radius:6px; background:rgba(0,0,0,.35);}
+  .gauge .val{font-size:24px; color:var(--green); text-shadow:0 0 10px rgba(57,255,106,.5);}
+  .gauge .lbl{font-size:10px; letter-spacing:2px; color:#76828b; margin-top:4px;}
+  .meter{height:7px; margin-top:8px; border-radius:4px; background:#1a1f24; overflow:hidden;
+    box-shadow:inset 0 1px 3px rgba(0,0,0,.8);}
+  .meter > i{display:block; height:100%; background:linear-gradient(90deg,#1d8f43,var(--green));
+    box-shadow:0 0 8px rgba(57,255,106,.7);}
+
+  /* backlog columns */
+  .cols{display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px;}
+  @media (max-width:900px){.cols{grid-template-columns:1fr}}
+  .col h3{
+    font-size:11px; letter-spacing:3px; margin-bottom:10px; padding:6px 10px;
+    border-radius:4px; display:flex; align-items:center; gap:8px;
+  }
+  .col.now h3{background:rgba(255,66,66,.1); color:#ff8a8a; border:1px solid rgba(255,66,66,.3);}
+  .col.next h3{background:rgba(255,194,61,.08); color:#ffd98a; border:1px solid rgba(255,194,61,.3);}
+  .col.later h3{background:rgba(90,215,255,.07); color:#9adfff; border:1px solid rgba(90,215,255,.25);}
+  .col ul{list-style:none; font-size:12px; color:#aab5bd;}
+  .col li{padding:5px 2px 5px 14px; position:relative; border-bottom:1px solid rgba(255,255,255,.04); line-height:1.35;}
+  .col li::before{content:"·"; position:absolute; left:2px; color:#5e6a72;}
+  .col li:last-child{border-bottom:none}
+
+  /* PR traffic */
+  .prrow{display:flex; align-items:center; gap:10px; font-size:12.5px; padding:6px 2px;
+    border-bottom:1px solid rgba(255,255,255,.045);}
+  .prrow:last-child{border-bottom:none}
+  .prnum{color:#e3eaef; width:44px; flex:none;}
+  .prrow .note{color:#74838d; font-size:11px;}
+  .badge{font-size:9px; letter-spacing:2px; padding:2px 7px; border-radius:3px; flex:none;}
+  .badge.open{border:1px solid #1d8f43; color:var(--green);}
+  .badge.held{border:1px solid var(--amber-dim); color:var(--amber);}
+  .badge.danger{border:1px solid #8f1d1d; color:var(--red);}
+
+  footer{
+    margin-top:22px; padding-top:14px; border-top:2px groove #4a5158;
+    display:flex; flex-wrap:wrap; gap:18px; align-items:center;
+    font-size:10.5px; letter-spacing:2px; color:#6c7880;
+  }
+  footer span{color:#76828b}
+  .legend{display:flex; gap:16px; align-items:center; margin-left:auto;}
+  .legend div{display:flex; gap:7px; align-items:center; font-size:10px; color:#8a949c; letter-spacing:1px;}
+  .legend .lamp{width:12px;height:12px;border-width:1px}
+  .legend .lamp::after{width:4px;height:3px;top:1px;left:2px}
+</style>
+</head>
+<body>
+<div class="board">
+  <div class="rivet tl"></div><div class="rivet tr"></div>
+  <div class="rivet bl"></div><div class="rivet br"></div>
+
+  <header>
+    <div class="nameplate">
+      <h1>GROWv2 · NIGHT BOARD</h1>
+      <small>GROWPOD EMPIRE — SYSTEMS &amp; SHIPPING MONITOR</small>
+    </div>
+    <div class="head-right">
+      <div class="shift"><span class="lamp blue"></span><span id="shiftlbl">SHIFT: NIGHT</span></div>
+      <div class="clockbox"><div id="clock">--:--:--</div><div id="datestr"></div></div>
+    </div>
+  </header>
+
+  <div class="grid">
+    <section class="panel span6">
+      <h2><span class="lamp green" style="width:12px;height:12px"></span> SYSTEMS <span class="tag">LIVE STATUS</span></h2>
+      <div id="systems"></div>
+    </section>
+
+    <section class="panel span6 next-feature">
+      <h2><span class="lamp amber" style="width:12px;height:12px"></span> NEXT FEATURE — ON DECK <span class="tag">NEXT ACTION</span></h2>
+      <div id="next"></div>
+      <h2 style="margin-top:18px"><span class="lamp green" style="width:12px;height:12px"></span> GATES <span class="tag" id="gates-date"></span></h2>
+      <div class="gauges" id="gauges"></div>
+    </section>
+
+    <section class="panel span12">
+      <h2>BACKLOG <span class="tag">NOW → NEXT → LATER</span></h2>
+      <div class="cols">
+        <div class="col now"><h3><span class="lamp red" style="width:11px;height:11px;animation:none"></span> NOW</h3><ul id="bl-now"></ul></div>
+        <div class="col next"><h3><span class="lamp amber" style="width:11px;height:11px"></span> NEXT (1–2 WK)</h3><ul id="bl-next"></ul></div>
+        <div class="col later"><h3><span class="lamp blue" style="width:11px;height:11px;animation:none"></span> LATER</h3><ul id="bl-later"></ul></div>
+      </div>
+    </section>
+
+    <section class="panel span12">
+      <h2>PR TRAFFIC <span class="tag">MERGE QUEUE</span></h2>
+      <div id="prs"></div>
+    </section>
+  </div>
+
+  <footer>
+    <span id="footer-note"></span>
+    <div class="legend">
+      <div><span class="lamp green"></span>NOMINAL</div>
+      <div><span class="lamp amber"></span>WATCH</div>
+      <div><span class="lamp red"></span>FAULT / MISSING</div>
+      <div><span class="lamp blue"></span>LIVE</div>
+    </div>
+  </footer>
+</div>
+
+<script>
+/* =====================================================================
+   NIGHT BOARD DATA — this is the only block you edit on shift change.
+   Source of truth: docs/HANDOFF.md (risk ledger) + docs/memory/BACKLOG.md.
+   light: "green" | "amber" | "red"
+   ===================================================================== */
+const BOARD = {
+  updated: "2026-06-11",
+  updatedBy: "night shift (branch claude/night-shift-pexjg3)",
+
+  systems: [
+    { name: "CORE API / AUTH",        light: "green", note: "key auth server-authoritative · no IDOR · validation 400s (PR #11)" },
+    { name: "ECONOMY LEDGER",         light: "green", note: "Decimal double-entry · optimistic lock + CHECK>=0 · race-tested (PR #9)" },
+    { name: "IDEMPOTENCY / REPLAY",   light: "green", note: "Idempotency-Key on 23 money routes + one-shot grants (PR #16) — RISK #6 closed" },
+    { name: "DB MIGRATIONS",          light: "green", note: "single head b2c3d4e5f6a7 · no model drift · CI-gated" },
+    { name: "BACKEND TEST GATES",     light: "green", note: "207 passed · coverage 80.31% ≥ 79 · lint + memory + migrations green" },
+    { name: "AI MASTER GROWER",       light: "green", note: "SpendGuard unescapable · mock provider in CI, no live key" },
+    { name: "SIM ENGINE",             light: "amber", note: "cost-capped (dormancy snap) — RISK #9: dormancy semantics need a design call" },
+    { name: "WEB AUTH UX",            light: "amber", note: "RISK #10: no global 401/403 handler — stale key looks logged-in" },
+    { name: "RATE LIMITER",           light: "amber", note: "RISK #11: memory:// per-worker — needs Redis storage in prod" },
+    { name: "409 ERROR TELEMETRY",    light: "amber", note: "RISK #12: generic IntegrityError→409 — watch for 409 spikes masking bugs" },
+    { name: "WEB TEST SAFETY NET",    light: "red",   note: "RISK #8: vitest/Playwright stubbed to echo, absent from CI — NEXT ACTION" },
+    { name: "CHAIN SETTLEMENT",       light: "red",   note: "RISK #7: deposit trusts no on-chain proof — blocks any real value (Sprint 4 gate)" },
+  ],
+
+  nextFeature: {
+    risk: "RISK #8 — HIGH",
+    title: "Make the test safety net REAL",
+    items: [
+      "Install vitest for real + wire existing unit specs into CI (sacred-hash tripwires included)",
+      "Playwright job in CI using the mocked-API config in web/e2e/ — no live backend",
+      "Money-boundary tests: treasury daily-cap (F2) + chain-failure ledger rollback (F3)",
+      "Mint-endpoint HTTP auth/IDOR tests (restored blind spot)",
+      "Tests only — settlement LOGIC stays off-limits (that's RISK #7)",
+    ],
+  },
+
+  gates: {
+    date: "2026-06-11",
+    tests: 207, coveragePct: 80.31, coverageFloor: 79,
+    lint: true, memory: true, migrations: true,
+  },
+
+  backlog: {
+    now: [
+      "Chain settlement verification (RISK #7): verify txid on deposit, replay protection, reconciliation job",
+      "Web safety net (RISK #8) — ON DECK, see NEXT FEATURE",
+      "Reconcile docs/ROADMAP.md with reality (Sprints 1–3 shipped, map still says todo)",
+      "Retire stale docs/NEXT_SESSION_SPRINT3.md handoff",
+    ],
+    next: [
+      "Sprint 4: real Algorand TestNet + IPFS metadata + DB↔chain reconciliation",
+      "Load/soak test the /state catch-up path — find the cost knee before players do",
+      "Sim Phase B: photosynthesis + transpiration + EC/pH→uptake",
+      "Background materialization for bursts of first-reads at scale",
+      "Redis rate-limit storage + gate the get_level oracle (RISK #11 remainder)",
+    ],
+    later: [
+      "Sprint 5 multiplayer: P2P trading, friends, co-op rooms, anti-cheat",
+      "Sprint 6 LiveOps: seasonal strains, timed events, breeding competitions, admin console",
+      "Generative genetics: polygenic genome → endless discovered strains + on-chain GenBank",
+      "Grower-skill mastery trees (use-based, distinct from spend-based research)",
+      "Education-gated Master Grower knowledge (University unlocks advisor depth + pollen)",
+      "Non-custodial Pera/WalletConnect · observability · secrets hardening · age-gating",
+      "Sponsored cultivars (brand revenue via the on-chain layer, no-dark-patterns guardrail)",
+    ],
+  },
+
+  prs: [
+    { num: "#16", state: "open",   note: "PR #11 audit + Idempotency-Key replay + one-shot grants — awaiting next chat's /handoff-audit" },
+    { num: "#12/#14", state: "held", note: "terpene engine (#14 supersedes #13) — owner-held; carries migrations, re-check single head on rebase" },
+    { num: "#15", state: "held",   note: "GROVERS hero — owner-held" },
+    { num: "#7",  state: "held",   note: "maintenance — baton conflicts, needs rebase" },
+    { num: "#5",  state: "held",   note: "docs + prod-deploy — needs rebase" },
+    { num: "#2",  state: "held",   note: "stale-base forecast — needs rebase" },
+    { num: "#4",  state: "danger", note: "MIGRATION FORK — would break prod + GPE_DEV_LOGIN default-on. Do NOT button-merge." },
+  ],
+};
+
+/* ============ render ============ */
+const $ = (id) => document.getElementById(id);
+const lamp = (c) => `<span class="lamp ${c}"></span>`;
+
+$("systems").innerHTML = BOARD.systems.map(s =>
+  `<div class="sysrow">${lamp(s.light)}<span class="name">${s.name}</span><span class="note">${s.note}</span></div>`
+).join("");
+
+$("next").innerHTML =
+  `<div class="risk-tag">${BOARD.nextFeature.risk}</div>
+   <div class="big">${BOARD.nextFeature.title}</div>
+   <ul>${BOARD.nextFeature.items.map(i => `<li>${i}</li>`).join("")}</ul>`;
+
+const g = BOARD.gates;
+$("gates-date").textContent = "LAST RUN " + g.date;
+$("gauges").innerHTML = `
+  <div class="gauge"><div class="val">${g.tests}</div><div class="lbl">TESTS PASSED</div></div>
+  <div class="gauge"><div class="val">${g.coveragePct}%</div><div class="lbl">COVERAGE (FLOOR ${g.coverageFloor}%)</div>
+    <div class="meter"><i style="width:${g.coveragePct}%"></i></div></div>
+  <div class="gauge"><div class="val">${[g.lint,g.memory,g.migrations].every(Boolean) ? "PASS" : "FAIL"}</div>
+    <div class="lbl">LINT · MEMORY · MIGRATIONS</div></div>`;
+
+$("bl-now").innerHTML   = BOARD.backlog.now.map(i => `<li>${i}</li>`).join("");
+$("bl-next").innerHTML  = BOARD.backlog.next.map(i => `<li>${i}</li>`).join("");
+$("bl-later").innerHTML = BOARD.backlog.later.map(i => `<li>${i}</li>`).join("");
+
+$("prs").innerHTML = BOARD.prs.map(p => {
+  const badge = p.state === "open" ? `<span class="badge open">OPEN</span>`
+              : p.state === "danger" ? `<span class="badge danger">HAZARD</span>`
+              : `<span class="badge held">HELD</span>`;
+  const light = p.state === "open" ? "green" : p.state === "danger" ? "red" : "amber";
+  return `<div class="prrow">${lamp(light)}<span class="prnum">${p.num}</span>${badge}<span class="note">${p.note}</span></div>`;
+}).join("");
+
+$("footer-note").textContent =
+  `BOARD UPDATED ${BOARD.updated} BY ${BOARD.updatedBy.toUpperCase()} · SOURCE: docs/HANDOFF.md + docs/memory/BACKLOG.md`;
+
+/* clock + shift indicator */
+function tick(){
+  const now = new Date();
+  $("clock").textContent = now.toTimeString().slice(0,8);
+  $("datestr").textContent = now.toDateString().toUpperCase();
+  const h = now.getHours();
+  $("shiftlbl").textContent = (h >= 20 || h < 6) ? "SHIFT: NIGHT" : "SHIFT: DAY";
+}
+tick(); setInterval(tick, 1000);
+</script>
+</body>
+</html>
