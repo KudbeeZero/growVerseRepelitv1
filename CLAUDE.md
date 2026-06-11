@@ -51,8 +51,9 @@ revert; that's what review and git are for.
   contradicts an invariant above; or a genuine fork where rework would be large and the owner's
   taste decides (visual identity, scope cuts).
 - Scope is **this project only** — never the wider machine. The allowlist in
-  `.claude/settings.json` reflects this (project gates, npm/node in `web/`, non-destructive git;
-  force-push/reset-hard/clean are denied).
+  `.claude/settings.json` reflects this: exact project gates (no `make *`/`npm run *`/`node *`
+  wildcards — those are arbitrary-exec hatches), pushes only to `claude/*` branches, and
+  destructive git denied (force/refspec-force/branch-delete/amend/reset-hard/clean/checkout-discard).
 
 ## End-of-chat report (every chat, no exceptions)
 End your **final message** of every chat with this, and keep it SHORT:
@@ -60,7 +61,8 @@ End your **final message** of every chat with this, and keep it SHORT:
 > **Done:** 1–2 sentences — what actually shipped (or didn't, and why).
 > **Needs you:** only decisions that genuinely alter the project's direction, else "nothing".
 No walls of text. If a detail doesn't change what the owner does next, it belongs in the PR
-body or the baton, not the report.
+body or the baton, not the report. This is the chat-facing summary; the repo-facing closeout
+(baton rewrite, audit receipt, Summary→Next) is defined in `docs/SESSION_PROTOCOL.md`.
 
 ## Memory layer map (read deeper as needed)
 | Layer | File | Purpose | Volatility |
