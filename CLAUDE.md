@@ -40,6 +40,28 @@ Claude Code on the web installs deps automatically via `.claude/hooks/session-st
 (it sets `PYTHONPATH=src`, mirroring CI). The bare `pip install` path collides with a
 distro-managed PyYAML on some boxes — use `make setup` (a venv) locally to avoid it.
 
+## Owner delegation charter (how much permission you have)
+The owner pre-approves project-scoped autonomy. When asked to do something, do it **beginning
+to end** — build, verify, commit, push — without asking permission mid-task. We can always
+revert; that's what review and git are for.
+- **Decide small tradeoffs yourself** (e.g., a cosmetic nicety vs. an 800 ms win → take the win)
+  and note the call in one line. Don't present option menus for things under ~an hour of rework.
+- **Stop and ask ONLY for:** real money / chain settlement / treasury actions; deleting data or
+  rewriting git history; player-facing economy changes (faucets/sinks/prices); anything that
+  contradicts an invariant above; or a genuine fork where rework would be large and the owner's
+  taste decides (visual identity, scope cuts).
+- Scope is **this project only** — never the wider machine. The allowlist in
+  `.claude/settings.json` reflects this (project gates, npm/node in `web/`, non-destructive git;
+  force-push/reset-hard/clean are denied).
+
+## End-of-chat report (every chat, no exceptions)
+End your **final message** of every chat with this, and keep it SHORT:
+> **Asked:** one sentence — what the owner originally requested.
+> **Done:** 1–2 sentences — what actually shipped (or didn't, and why).
+> **Needs you:** only decisions that genuinely alter the project's direction, else "nothing".
+No walls of text. If a detail doesn't change what the owner does next, it belongs in the PR
+body or the baton, not the report.
+
 ## Memory layer map (read deeper as needed)
 | Layer | File | Purpose | Volatility |
 |------|------|---------|-----------|

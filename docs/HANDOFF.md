@@ -24,6 +24,17 @@
 > `night-reports/BOMB-SQUAD-2026-06-10.md`. Note: web CI still doesn't execute vitest —
 > recommended follow-up in the report. The NEXT ACTION below is unchanged.
 
+> **GROVERS-leaf addendum (2026-06-11, branch `claude/grovers-particle-leaf-i1s759`, PR #15):**
+> audited a prior chat's claims (≈half were phantom) and made them real — leaf-mode neighbor
+> mesh + hover/touch proximity repulsion in `Constellation.tsx` (sacred hashes untouched, verified
+> 3×), `GroversWordmark.tsx` (GR + leaf-as-the-O + VERS v2) as the onboarding hero,
+> `AnnouncementsBanner.tsx` above it, anti-bot framework spec in `BACKLOG.md`. Helper review
+> (SHIP-WITH-FIXES → all landed: small-phone overflow, WCAG banner, touch-pan-y, passive wheel)
+> + independent audit (PASS). Deferred perf items (edge batching etc., need a sacred re-pin) are
+> in `BACKLOG.md`. Also: owner delegation charter + end-of-chat report convention added to
+> `CLAUDE.md`; project-scoped permission allowlist widened in `.claude/settings.json` (destructive
+> git denied); egg-info untracked. The NEXT ACTION below is unchanged.
+
 ---
 
 ## NEXT ACTION (the one scoped item the next chat does)
