@@ -28,6 +28,7 @@ from sqlalchemy import (
     JSON,
     Numeric,
     String,
+    Text,
     Index,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -109,6 +110,60 @@ class LedgerEntry(UUIDPrimaryKeyMixin, Base):
 
     __table_args__ = (
         Index("ix_ledger_player_created", "player_id", "created_at"),
+    )
+
+
+class IdempotencyKey(UUIDPrimaryKeyMixin, Base):
+    """Stored response for a mutation submitted with an `Idempotency-Key` header.
+
+    The row is inserted in the SAME transaction as the mutation's effect, so the
+    key and the effect commit atomically; a duplicate submission replays the
+    stored response instead of re-running the effect. This table holds
+    *responses*, never money truth — the ledger stays authoritative.
+    """
+
+    __tablename__ = "idempotency_keys"
+
+    player_id: Mapped[str] = mapped_column(ForeignKey("players.id"), nullable=False)
+    key: Mapped[str] = mapped_column(String(128), nullable=False)
+    # "METHOD /path" the key was first used with; reuse on a different request
+    # is a client bug and gets a 400, never a silent wrong-body replay.
+    request_fingerprint: Mapped[str] = mapped_column(String(255), nullable=False)
+    response_json: Mapped[str] = mapped_column(Text, nullable=False)
+    status_code: Mapped[int] = mapped_column(Integer, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, nullable=False
+    )
+
+    __table_args__ = (
+        Index("uq_idempotency_keys_player_key", "player_id", "key", unique=True),
+    )
+
+
+class GrantClaim(UUIDPrimaryKeyMixin, Base):
+    """One-shot faucet claims, unique at the DB level.
+
+    Daily stipend: one row per (player, UTC day). Achievements: one row per
+    (player, achievement key). A raced double-claim collides on the unique
+    index and rolls back, so the faucet can never double-pay — independent of
+    the wallet's optimistic lock.
+    """
+
+    __tablename__ = "grant_claims"
+
+    player_id: Mapped[str] = mapped_column(ForeignKey("players.id"), nullable=False)
+    grant_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    grant_key: Mapped[str] = mapped_column(String(64), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, nullable=False
+    )
+
+    __table_args__ = (
+        Index(
+            "uq_grant_claims_player_type_key",
+            "player_id", "grant_type", "grant_key",
+            unique=True,
+        ),
     )
 
 

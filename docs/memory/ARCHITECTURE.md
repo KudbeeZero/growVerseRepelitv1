@@ -52,6 +52,11 @@ genetics targets, the trust layer) see the **Design Codex** at `docs/memory/desi
    wallet uses optimistic locking (`version_id_col`) + a `CHECK(cached_balance >= 0)` backstop, and a
    plant is harvested once (`uq_harvests_plant`) — so concurrent debits/harvests can't double-spend
    or double-mint; a lost race rolls back as a 409. Don't reintroduce check-then-act on money rows.
+   **Idempotent (2026-06-11):** money mutations honor an opt-in `Idempotency-Key` header — the
+   response is stored in the *same transaction* as the effect (`api/idempotency.py`) and a duplicate
+   replays it; stipend/achievement faucets are one-shot via unique `grant_claims`. The key store
+   holds responses only — the ledger stays the money truth. Keep `record()` inside the route's
+   `session_scope`, or key and effect can split.
 4. **Server is authoritative.** No client-trusted state. Spending paths go through guards
    (e.g. `SpendGuard` caps the AI auto-care budget per invocation).
 5. **Writes are authenticated + rate-limited; reads are public.**

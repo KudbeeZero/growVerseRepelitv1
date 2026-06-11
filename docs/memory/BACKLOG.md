@@ -4,13 +4,16 @@ Status: `⬜ todo · 🔨 doing · ✅ done · ❄️ parked`. Standups may *pro
 once they appear here. Last reconciled: **2026-06-10**.
 
 ## 🔴 Immediate (do now — correctness, truth, or unblocks others)
-- 🔴 🔨 **Concurrency + idempotency hardening** (RISK #6) — *core landed 2026-06-10*: wallet
+- 🔴 ✅ **Concurrency + idempotency hardening** (RISK #6) — *core landed 2026-06-10*: wallet
   optimistic locking (`version_id_col`) + `CHECK(cached_balance >= 0)` + harvest-once unique index
   (migration `f1a2b3c4d5e6`) + 409-on-conflict + the F5 flaky-limiter-test fix. +4 concurrency
   tests (189 total). Closes double-spend / double-harvest / negative-balance at the DB level.
-  *Remaining (⬜): general `Idempotency-Key` header (duplicate → original response, not a 409) and
-  one-shot-grant uniqueness (daily stipend, achievements).* See `DECISIONS.md` 2026-06-10 +
-  `docs/audits/2026-06-10-fleet-sweep.md`.
+  *Remainder landed 2026-06-11:* opt-in `Idempotency-Key` header on the money mutations (duplicate
+  → replay of the original response, stored atomically with the effect; `api/idempotency.py` +
+  `idempotency_keys`) and one-shot grant claims (`grant_claims`: stipend per UTC day, achievement
+  per key) so a raced double-claim can't double-pay; raced constraint hits → clean 409. Migration
+  `b2c3d4e5f6a7`; +10 tests (`tests/test_idempotency.py`, 207 total). See `DECISIONS.md`
+  2026-06-11 + `docs/audits/2026-06-10-fleet-sweep.md`.
 - 🔴 ⬜ **Chain settlement verification** (RISK #7) — deposit must verify an on-chain txid
   (confirmed, asset-id, receiver=treasury, sender=linked addr, amount); txid replay protection
   (unique `onchain_txid`); reconciliation job; address validation/opt-in on link/withdraw. Blocks
@@ -62,7 +65,8 @@ once they appear here. Last reconciled: **2026-06-10**.
   plant (311 ms → 0.1 ms on the next read), near-term reads bit-identical (parity-tested). +3 tests
   (185 total). ADR in `DECISIONS.md`. *Remaining (⬜): background materialization for bursts of
   first-reads at scale.*
-- 🟠 ⬜ **Idempotency keys on mutations** — protect ledger/economy from double-submits & retries.
+- 🟠 ✅ **Idempotency keys on mutations** (2026-06-11) — folded into the RISK #6 item above:
+  opt-in `Idempotency-Key` header with atomic response replay on the money mutations.
 - 🟠 ⬜ **Load/soak test the `/state` catch-up path** to find the cost knee before players do.
 - 🟠 ⬜ **Web e2e smoke** (Playwright) over the full loop; today web CI is lint/typecheck/build only.
 - 🟠 ✅ **Sim depth — Phase A (derive VPD + DLI; wire the stored light scalar into the tick).** Done

@@ -23,6 +23,7 @@ from ..services.research_service import ResearchService
 from ..services import leveling_service
 from ..economy.ledger import InsufficientFundsError
 from .auth import require_player
+from .idempotency import idempotent, record
 from .ratelimit import limiter
 from .validation import positive_int, bounded_int, positive_money, number
 from . import serialize as S
@@ -268,6 +269,7 @@ def list_plants(player_id):
 
 @game_bp.post("/players/<player_id>/seeds/buy")
 @require_player
+@idempotent
 def buy_seed(player_id):
     data = request.get_json(force=True, silent=True) or {}
     if not data.get("strain_id"):
@@ -277,6 +279,7 @@ def buy_seed(player_id):
         with session_scope() as s:
             stack = GameService(s).buy_seed(player_id, data["strain_id"], quantity)
             payload = S.seed_dict(stack)
+            record(s, payload, 201)
         return jsonify(payload), 201
     except (GameError, InsufficientFundsError) as e:
         return _error(str(e))
@@ -284,6 +287,7 @@ def buy_seed(player_id):
 
 @game_bp.post("/players/<player_id>/pods")
 @require_player
+@idempotent
 def create_pod(player_id):
     data = request.get_json(force=True, silent=True) or {}
     if not data.get("name"):
@@ -299,6 +303,7 @@ def create_pod(player_id):
                 charge=bool(data.get("charge", True)),
             )
             payload = S.pod_dict(pod)
+            record(s, payload, 201)
         return jsonify(payload), 201
     except (GameError, InsufficientFundsError) as e:
         return _error(str(e))
@@ -306,6 +311,7 @@ def create_pod(player_id):
 
 @game_bp.post("/players/<player_id>/pods/<pod_id>/upgrade")
 @require_player
+@idempotent
 def upgrade_pod(player_id, pod_id):
     data = request.get_json(force=True, silent=True) or {}
     if not data.get("tier"):
@@ -314,6 +320,7 @@ def upgrade_pod(player_id, pod_id):
         with session_scope() as s:
             pod = GameService(s).upgrade_pod(player_id, pod_id, data["tier"])
             payload = S.pod_dict(pod)
+            record(s, payload)
         return jsonify(payload)
     except (GameError, InsufficientFundsError) as e:
         return _error(str(e))
@@ -339,6 +346,7 @@ def plant_seed(player_id):
 # ----- Breeding ----------------------------------------------------------
 @game_bp.post("/players/<player_id>/breed")
 @require_player
+@idempotent
 def breed(player_id):
     data = request.get_json(force=True, silent=True) or {}
     if not data.get("parent_a_id") or not data.get("parent_b_id"):
@@ -354,6 +362,7 @@ def breed(player_id):
                 offspring_name=data.get("name"),
             )
             payload = S.strain_dict(offspring)
+            record(s, payload, 201)
         return jsonify(payload), 201
     except (GameError, InsufficientFundsError) as e:
         return _error(str(e))
@@ -362,12 +371,14 @@ def breed(player_id):
 # ----- Harvest -----------------------------------------------------------
 @game_bp.post("/players/<player_id>/strains/<strain_id>/stabilize")
 @require_player
+@idempotent
 def stabilize_strain(player_id, strain_id):
     # RNG seed is server-generated (anti seed-shopping); not read from the body.
     try:
         with session_scope() as s:
             strain = GameService(s).stabilize_strain(player_id, strain_id)
             payload = S.strain_dict(strain)
+            record(s, payload, 201)
         return jsonify(payload), 201
     except (GameError, InsufficientFundsError) as e:
         return _error(str(e))
@@ -375,6 +386,7 @@ def stabilize_strain(player_id, strain_id):
 
 @game_bp.post("/players/<player_id>/plants/<plant_id>/harvest")
 @require_player
+@idempotent
 def harvest(player_id, plant_id):
     data = request.get_json(force=True, silent=True) or {}
     # Yield weight and quality are computed SERVER-SIDE from the plant's
@@ -388,6 +400,7 @@ def harvest(player_id, plant_id):
                 sell=bool(data.get("sell", True)),
             )
             payload = S.harvest_dict(h)
+            record(s, payload, 201)
         return jsonify(payload), 201
     except GameError as e:
         return _error(str(e))
@@ -420,6 +433,7 @@ def start_cure(player_id, harvest_id):
 
 @game_bp.post("/players/<player_id>/harvests/<harvest_id>/cure/finish")
 @require_player
+@idempotent
 def finish_cure(player_id, harvest_id):
     data = request.get_json(force=True, silent=True) or {}
     try:
@@ -428,6 +442,7 @@ def finish_cure(player_id, harvest_id):
                 player_id, harvest_id, sell=bool(data.get("sell", False))
             )
             payload = S.harvest_dict(h)
+            record(s, payload)
         return jsonify(payload)
     except (GameError, InsufficientFundsError) as e:
         return _error(str(e))
@@ -435,11 +450,13 @@ def finish_cure(player_id, harvest_id):
 
 @game_bp.post("/players/<player_id>/harvests/<harvest_id>/sell")
 @require_player
+@idempotent
 def sell_harvest(player_id, harvest_id):
     try:
         with session_scope() as s:
             h = GameService(s).sell_harvest(player_id, harvest_id)
             payload = S.harvest_dict(h)
+            record(s, payload)
         return jsonify(payload)
     except GameError as e:
         return _error(str(e))
@@ -456,12 +473,14 @@ def research_tree(player_id):
 
 @game_bp.post("/players/<player_id>/research/<node_key>/unlock")
 @require_player
+@idempotent
 def research_unlock(player_id, node_key):
     try:
         with session_scope() as s:
             svc = ResearchService(s)
             svc.unlock(player_id, node_key)
             tree = svc.list_tree(player_id)
+            record(s, tree, 201)
         return jsonify(tree), 201
     except (GameError, InsufficientFundsError) as e:
         return _error(str(e))
@@ -477,6 +496,7 @@ def shop_list(player_id):
 
 @game_bp.post("/players/<player_id>/shop/buy")
 @require_player
+@idempotent
 def shop_buy(player_id):
     data = request.get_json(force=True, silent=True) or {}
     item_key = data.get("item_key")
@@ -488,6 +508,7 @@ def shop_buy(player_id):
             svc = GameService(s)
             svc.buy_consumable(player_id, item_key, qty)
             items = svc.list_consumables(player_id)
+            record(s, items, 201)
         return jsonify(items), 201
     except (GameError, InsufficientFundsError) as e:
         return _error(str(e))
@@ -607,6 +628,7 @@ def _care_action(player_id, plant_id, method_name, **kwargs):
             sim = SimulationService(s)
             plant = getattr(sim, method_name)(player_id, plant_id, **kwargs)
             payload = S.plant_dict(plant)
+            record(s, payload)
         return jsonify(payload)
     except (GameError, InsufficientFundsError) as e:
         return _error(str(e))
@@ -614,6 +636,7 @@ def _care_action(player_id, plant_id, method_name, **kwargs):
 
 @game_bp.post("/players/<player_id>/plants/<plant_id>/water")
 @require_player
+@idempotent
 def water_plant(player_id, plant_id):
     data = request.get_json(force=True, silent=True) or {}
     return _care_action(player_id, plant_id, "water", amount=data.get("amount"))
@@ -621,6 +644,7 @@ def water_plant(player_id, plant_id):
 
 @game_bp.post("/players/<player_id>/plants/<plant_id>/feed")
 @require_player
+@idempotent
 def feed_plant(player_id, plant_id):
     data = request.get_json(force=True, silent=True) or {}
     return _care_action(player_id, plant_id, "feed", amount=data.get("amount"))
@@ -628,12 +652,14 @@ def feed_plant(player_id, plant_id):
 
 @game_bp.post("/players/<player_id>/plants/<plant_id>/treat-pests")
 @require_player
+@idempotent
 def treat_pests(player_id, plant_id):
     return _care_action(player_id, plant_id, "treat_pests")
 
 
 @game_bp.post("/players/<player_id>/plants/<plant_id>/treat-disease")
 @require_player
+@idempotent
 def treat_disease(player_id, plant_id):
     return _care_action(player_id, plant_id, "treat_disease")
 
@@ -737,6 +763,7 @@ def create_auction(player_id):
 
 @game_bp.post("/players/<player_id>/market/<listing_id>/bid")
 @require_player
+@idempotent
 def place_bid(player_id, listing_id):
     data = request.get_json(force=True, silent=True) or {}
     if data.get("amount") is None:
@@ -746,6 +773,7 @@ def place_bid(player_id, listing_id):
         with session_scope() as s:
             listing = GameService(s).place_bid(player_id, listing_id, amount)
             payload = S.listing_dict(listing)
+            record(s, payload)
         return jsonify(payload)
     except (GameError, InsufficientFundsError) as e:
         return _error(str(e))
@@ -753,11 +781,13 @@ def place_bid(player_id, listing_id):
 
 @game_bp.post("/players/<player_id>/market/<listing_id>/settle")
 @require_player
+@idempotent
 def settle_auction(player_id, listing_id):
     try:
         with session_scope() as s:
             listing = GameService(s).settle_auction(player_id, listing_id)
             payload = S.listing_dict(listing)
+            record(s, payload)
         return jsonify(payload)
     except GameError as e:
         return _error(str(e))
@@ -765,11 +795,13 @@ def settle_auction(player_id, listing_id):
 
 @game_bp.post("/players/<player_id>/market/<listing_id>/buy")
 @require_player
+@idempotent
 def buy_listing(player_id, listing_id):
     try:
         with session_scope() as s:
             listing = GameService(s).buy_listing(player_id, listing_id)
             payload = S.listing_dict(listing)
+            record(s, payload)
         return jsonify(payload)
     except (GameError, InsufficientFundsError) as e:
         return _error(str(e))
@@ -779,10 +811,12 @@ def buy_listing(player_id, listing_id):
 @game_bp.post("/players/<player_id>/daily")
 @require_player
 @limiter.limit("30 per hour")
+@idempotent
 def claim_daily(player_id):
     try:
         with session_scope() as s:
             payload = ProgressionService(s).claim_daily(player_id)
+            record(s, payload, 201)
         return jsonify(payload), 201
     except GameError as e:
         return _error(str(e))
@@ -798,10 +832,12 @@ def list_achievements(player_id):
 
 @game_bp.post("/players/<player_id>/achievements/<key>/claim")
 @require_player
+@idempotent
 def claim_achievement(player_id, key):
     try:
         with session_scope() as s:
             payload = ProgressionService(s).claim_achievement(player_id, key)
+            record(s, payload, 201)
         return jsonify(payload), 201
     except GameError as e:
         return _error(str(e))
@@ -834,10 +870,12 @@ def offer_contract(player_id):
 
 @game_bp.post("/players/<player_id>/contracts/<contract_id>/fulfill")
 @require_player
+@idempotent
 def fulfill_contract(player_id, contract_id):
     try:
         with session_scope() as s:
             payload = ContractService(s).fulfill(player_id, contract_id)
+            record(s, payload, 201)
         return jsonify(payload), 201
     except GameError as e:
         return _error(str(e))
@@ -878,6 +916,7 @@ def cup_hall_of_fame():
 @game_bp.post("/players/<player_id>/cup/enter")
 @require_player
 @limiter.limit("30 per hour")
+@idempotent
 def cup_enter(player_id):
     data = request.get_json(force=True, silent=True) or {}
     if not data.get("harvest_id"):
@@ -885,6 +924,7 @@ def cup_enter(player_id):
     try:
         with session_scope() as s:
             payload = CupService(s).enter(player_id, data["harvest_id"])
+            record(s, payload, 201)
         return jsonify(payload), 201
     except (GameError, InsufficientFundsError) as e:
         return _error(str(e))
@@ -914,11 +954,13 @@ def university_transcript(player_id):
 @game_bp.post("/players/<player_id>/courses/<course_key>/enroll")
 @require_player
 @limiter.limit("60 per hour")
+@idempotent
 def university_enroll(player_id, course_key):
     try:
         with session_scope() as s:
             enrollment = UniversityService(s).enroll(player_id, course_key)
             payload = S.enrollment_dict(enrollment)
+            record(s, payload, 201)
         return jsonify(payload), 201
     except (GameError, InsufficientFundsError) as e:
         return _error(str(e))
@@ -986,6 +1028,7 @@ def link_wallet(player_id):
 
 @game_bp.post("/players/<player_id>/wallet/withdraw")
 @require_player
+@idempotent
 def asa_withdraw(player_id):
     data = request.get_json(force=True, silent=True) or {}
     if data.get("amount") is None:
@@ -994,6 +1037,7 @@ def asa_withdraw(player_id):
         amount = positive_money(data.get("amount"), "amount")
         with session_scope() as s:
             payload = SettlementService(s).withdraw(player_id, amount)
+            record(s, payload, 201)
         return jsonify(payload), 201
     except (GameError, InsufficientFundsError) as e:
         return _error(str(e))
@@ -1001,6 +1045,7 @@ def asa_withdraw(player_id):
 
 @game_bp.post("/players/<player_id>/wallet/deposit")
 @require_player
+@idempotent
 def asa_deposit(player_id):
     data = request.get_json(force=True, silent=True) or {}
     if data.get("amount") is None:
@@ -1009,6 +1054,7 @@ def asa_deposit(player_id):
         amount = positive_money(data.get("amount"), "amount")
         with session_scope() as s:
             payload = SettlementService(s).deposit(player_id, amount)
+            record(s, payload, 201)
         return jsonify(payload), 201
     except (GameError, InsufficientFundsError) as e:
         return _error(str(e))

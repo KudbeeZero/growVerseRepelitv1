@@ -189,3 +189,27 @@ double-spend, harvest-once, and the CHECK floor; the F5 flaky rate-limit test is
 storage reset per `client` fixture). **Still open (next baton):** a general `Idempotency-Key`
 header so a duplicate returns the *original* response instead of a 409 (nicer UX), plus
 one-shot-grant uniqueness (daily stipend, achievements). 189 tests, 79.26%.
+
+### 2026-06-11 — Idempotency-Key replay + one-shot grant claims (RISK #6 finished)
+**Decision:** Finish RISK #6's remainder on top of the concurrency core: (1) an opt-in
+`Idempotency-Key` request header on the money-mutation routes — the first request stores its JSON
+response in `idempotency_keys` (`(player_id, key)` unique) **inside the same transaction as the
+effect** (`api/idempotency.py:record` is called within the route's `session_scope`), and a
+duplicate replays the stored body + status with `Idempotency-Replayed: true` instead of 409-ing or
+re-running; a key reused on a *different* request is a 400, never a wrong-body replay. (2) One-shot
+faucet grants: `grant_claims` rows unique per `(player_id, 'daily_stipend', UTC-day)` and
+`(player_id, 'achievement', key)`, written by `ProgressionService` with each grant. Raced
+duplicates of either kind collide on the unique index at commit, roll back **whole** (key+effect /
+claim+payout are atomic), and surface via a new `IntegrityError → 409` handler. Migration
+`b2c3d4e5f6a7` (single head; `compare_metadata` clean). **Why:** the concurrency core made double
+effects impossible but left double-submits with an opaque 409 and the faucets guarded only by
+check-then-act ledger reads; the store holds *responses*, never money truth — the ledger stays
+authoritative. Chose NOT to flush grant claims eagerly so a raced loser fails at commit (no SQLite
+lock-wait), while sequential re-claims keep their friendly 400s from the existing cooldown/claimed
+checks. **Consequences:** clients can safely retry any money mutation by attaching a key; stipend
+is now also hard-capped at one per UTC calendar day (a ≤2h-later claim that the bare 22h cooldown
+would have allowed gets deferred to midnight — deliberate tightening); the generic
+`IntegrityError` handler turns *any* constraint race into a 409 (logged, since a non-race hit
+implies an app bug). +10 tests (`tests/test_idempotency.py`): replay, opt-in, cross-request reuse
+rejection, malformed key, no-store-on-error, raced key/stipend/achievement each pay exactly once.
+207 tests, 80.31%.

@@ -1,7 +1,11 @@
 """
 ProgressionService — retention features: a daily login stipend and one-time
-achievement rewards. Both are faucets routed through the economy ledger, and
-both are idempotent / cooldown-guarded using the ledger itself (no extra schema).
+achievement rewards. Both are faucets routed through the economy ledger.
+
+Duplicate-claim protection is layered: the ledger-derived checks below give
+friendly 400s for sequential re-claims, and a unique `GrantClaim` row written
+with each grant makes a *raced* double-claim collide at the DB level (the
+loser's transaction rolls back -> 409), so the faucet can never double-pay.
 """
 
 from datetime import timedelta
@@ -13,7 +17,7 @@ from sqlalchemy.orm import Session
 from ..economy.config import get_economy_config, EconomyConfig
 from ..economy.ledger import post, balance
 from ..enums import LedgerEntryType
-from ..db.models import LedgerEntry, Harvest, BreedingEvent
+from ..db.models import LedgerEntry, Harvest, BreedingEvent, GrantClaim
 from ..simulation.clock import Clock, SystemClock
 from .game_service import GameService, GameError
 
@@ -52,6 +56,15 @@ class ProgressionService:
                 f"{int(ready_in.total_seconds() // 3600)}h"
             )
 
+        # One-shot backstop: at most one stipend per (player, UTC day). The row
+        # is deliberately NOT flushed here — a raced duplicate collides on the
+        # unique index at commit and rolls the whole grant back (-> 409), while
+        # sequential duplicates never get past the cooldown check above.
+        self.session.add(GrantClaim(
+            player_id=player_id,
+            grant_type="daily_stipend",
+            grant_key=now.strftime("%Y-%m-%d"),
+        ))
         amount = self.cfg.daily_stipend
         entry = post(self.session, player_id, amount, LedgerEntryType.DAILY_STIPEND)
         entry.created_at = now  # honor the injected clock for cooldown math
@@ -83,6 +96,11 @@ class ProgressionService:
         if not self._is_unlocked(player_id, key, defs[key]):
             raise GameError("Achievement not yet unlocked")
 
+        # One-shot backstop: unique per (player, achievement) — a raced
+        # double-claim collides at commit and rolls back (-> 409).
+        self.session.add(GrantClaim(
+            player_id=player_id, grant_type="achievement", grant_key=key,
+        ))
         reward = defs[key].get("reward", 0)
         post(
             self.session, player_id, reward, LedgerEntryType.REWARD,
