@@ -17,7 +17,8 @@ export function AnnouncementsBanner({ className = "" }: { className?: string }) 
   }, []);
 
   if (announcements.length === 0) return null;
-  const item = announcements[index];
+  // Modulo guard: survives the list shrinking under HMR / future dynamic data.
+  const item = announcements[index % announcements.length];
 
   return (
     <div

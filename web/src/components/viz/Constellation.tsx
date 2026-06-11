@@ -557,7 +557,9 @@ export function Constellation({
       dragging = true;
       lastX = e.clientX;
       lastY = e.clientY;
-      canvas!.setPointerCapture(e.pointerId);
+      // lockView never pans, so don't capture — a touch that slides off a
+      // locked logo belongs to the page, not to us.
+      if (!lockView) canvas!.setPointerCapture(e.pointerId);
     }
     function onMove(e: PointerEvent) {
       const rect = canvas!.getBoundingClientRect();
@@ -668,7 +670,9 @@ export function Constellation({
       } ${className}`}
       style={{ height }}
     >
-      <canvas ref={canvasRef} className="block touch-none" />
+      {/* lockView: let vertical swipes scroll the page (the logo must not be a
+          scroll trap); horizontal/hold gestures still reach the particles. */}
+      <canvas ref={canvasRef} className={`block ${lockView ? "touch-pan-y" : "touch-none"}`} />
       {showCount && (
         <div className="instrument-label pointer-events-none absolute right-3 top-3 text-grow-300/70">
           NODES: {count}

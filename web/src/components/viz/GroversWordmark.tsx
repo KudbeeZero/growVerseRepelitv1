@@ -25,7 +25,10 @@ export function GroversWordmark({ className = "", accent = "#76c024" }: Props) {
     if (!el) return;
     const update = () => {
       const w = el.clientWidth || 480;
-      const next = Math.round(Math.max(96, Math.min(208, w * 0.3)) / 8) * 8;
+      // Row budget: GR+VERS (6 caps ≈ 0.75em each) + v2 + the O must fit the
+      // container, so the whole mark ≈ 3.9×oSize — keep oSize ≤ 0.24×width.
+      // (The observed width never depends on oSize, so this cannot oscillate.)
+      const next = Math.round(Math.max(64, Math.min(208, w * 0.24)) / 8) * 8;
       setOSize((prev) => (prev === next ? prev : next));
     };
     update();
@@ -37,7 +40,7 @@ export function GroversWordmark({ className = "", accent = "#76c024" }: Props) {
   const fontSize = Math.round(oSize * 0.58);
 
   return (
-    <div ref={ref} role="img" aria-label="GROVERS v2" className={className}>
+    <div ref={ref} role="img" aria-label="GROVERS version 2" className={className}>
       <div className="flex items-center justify-center" aria-hidden="true">
         <span
           className="select-none font-black leading-none tracking-tight text-gray-50"
