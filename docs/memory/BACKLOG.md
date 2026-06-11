@@ -74,6 +74,22 @@ once they appear here. Last reconciled: **2026-06-10**.
 - 🟡 ⬜ **Narrow the `IntegrityError → 409` handler** (RISK #12) — parse the constraint name and
   allowlist only the known one-shot/race constraints (`idempotency_keys`, `grant_claims`,
   harvest-once) → 409; anything else stays a loud 500 so FK/app bugs can't hide behind retries.
+- 🟠 ⬜ **Anti-bot / fair-play framework (spec)** (owner request, 2026-06-11) — defense-in-depth
+  against automation farming the faucets, layered so honest players never feel it:
+  (1) **humanity gates** — lightweight proof-of-humanity challenges only at high-value moments
+  (claim/mint/withdraw), never on the core grow loop; (2) **behavioral telemetry** — server-side
+  cadence/entropy scoring per player (inter-action timing distributions, diurnal rhythm, input
+  variety) — signals only, never auto-ban; (3) **diminishing-returns penalty** — per-day soft caps
+  that taper faucet yield under inhuman cadence instead of hard-blocking; (4) **Sybil costs** —
+  new-account faucet throttle + earned-trust curve before faucets open fully, scaled by
+  IP/ASN/device-cluster reputation; (5) **shadow-penalties** — flagged accounts keep playing but
+  faucet earnings land in a quarantined ledger pending review, so botters get no oracle;
+  (6) **human-in-the-loop gate** — no permanent penalty without manual review + an appeals path;
+  (7) **Adversarial Twin** — a sanctioned in-repo bot harness that plays the live rules to find
+  profitable automation before players do (red-team CI for the economy). Composes with the
+  time+skill anti-bot moat per `docs/memory/design/03-grower-skills.md` and the no-dark-patterns
+  charter per `docs/memory/design/04-honesty-and-trust.md`. **Spec logged; build on owner
+  green-light.**
 - 🟠 ⬜ **Load/soak test the `/state` catch-up path** to find the cost knee before players do.
 - 🟠 ⬜ **Web e2e smoke** (Playwright) over the full loop; today web CI is lint/typecheck/build only.
 - 🟠 ✅ **Sim depth — Phase A (derive VPD + DLI; wire the stored light scalar into the tick).** Done
@@ -82,7 +98,16 @@ once they appear here. Last reconciled: **2026-06-10**.
   Phase B (photosynthesis + transpiration + EC/pH→uptake) — land the sim-cost-cap first.
 
 ## 🟡 Low / later (valuable, not urgent)
-- 🟡 ⬜ Sprint 5 multiplayer: P2P trading, friends, co-op rooms, anti-cheat hardening.
+- 🟡 ⬜ **Constellation leaf-mesh follow-ups (sacred-hash re-pin batch)** (helper review,
+  2026-06-11) — three deferred items that each require intentionally changing a pinned render
+  function in `web/src/components/viz/Constellation.tsx` (update the sha256 pins in
+  `constellationLifecycle.test.ts` in the same commit, per its header): (a) batch the leaf mesh
+  edges into one path — in leaf mode `hovered` is never set so all ~900 edges share a style, but
+  `draw()` strokes per-edge today (~913 extra canvas calls/frame at `leafCount=260`); (b) derive
+  the mesh edge color from the `accent` prop (hard-coded green today — constrains non-default
+  accents); (c) consider debouncing the wordmark resize re-seed (O(n²) mesh rebuild per 8px step;
+  ~19ms desktop at 260). Net page cost already went *down* vs the old 620-particle hero — do this
+  before any low-end-mobile push, not before launch.
 - 🟡 ⬜ Sprint 6 LiveOps: seasonal strains rotation, timed events, breeding competitions, admin
   console with hot-reload `balance.yaml`, analytics/telemetry.
 - 🟡 ⬜ Non-custodial Pera/WalletConnect path for player-owned NFTs.

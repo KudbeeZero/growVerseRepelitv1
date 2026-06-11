@@ -9,7 +9,8 @@
 **Active branch:** `claude/night-shift-pexjg3`
 **Merged to main:** PR #3 (protocol+gates+sim cap), #8 (fleet sweep + SQLite parity),
 #9 (concurrency core), #10 (web viz fixes, lands #6), #11 (validation 500s→400 + money-endpoint
-HTTP tests) — all CI-green.
+HTTP tests), #15 (GROVERS hero, merged 2026-06-11 — this branch has merged it back in) — all
+CI-green.
 **Open PR awaiting audit:** **#16** (PR #11 audit + baton repair + `Idempotency-Key` replay +
 one-shot grant claims — RISK #6 finished). Next chat runs `/handoff-audit` on it.
 **Prev audit:** PR #11 audited 2026-06-11 → **CONCERNS** (code verified good; protocol findings:
@@ -17,8 +18,8 @@ half-rewritten baton — fixed in #16 — and RISK #8's mint blind spot dropped 
 restored). Report: `docs/audits/PR-11-api-validation-hardening.md`. Owner approved proceeding.
 **Held cross-session PRs (need rebase, not button-merge):** #7 (maintenance, baton conflicts),
 #2 (stale-base forecast), #5 (docs + prod-deploy), #4 (**migration fork — would break prod** +
-`GPE_DEV_LOGIN` default-on). Owner-held since: #12/#14 (terpene engine; #14 supersedes #13),
-#15 (GROVERS hero). **Note:** #4/#12/#14 carry migrations/models — any rebase must re-check
+`GPE_DEV_LOGIN` default-on). Owner-held since: #12/#14 (terpene engine; #14 supersedes #13).
+**Note:** #4/#12/#14 carry migrations/models — any rebase must re-check
 single-head against the new `b2c3d4e5f6a7` head.
 
 ---
