@@ -87,7 +87,16 @@ once they appear here. Last reconciled: **2026-06-10**.
   Phase B (photosynthesis + transpiration + EC/pH→uptake) — land the sim-cost-cap first.
 
 ## 🟡 Low / later (valuable, not urgent)
-- 🟡 ⬜ Sprint 5 multiplayer: P2P trading, friends, co-op rooms, anti-cheat hardening.
+- 🟡 ⬜ **Constellation leaf-mesh follow-ups (sacred-hash re-pin batch)** (helper review,
+  2026-06-11) — three deferred items that each require intentionally changing a pinned render
+  function in `web/src/components/viz/Constellation.tsx` (update the sha256 pins in
+  `constellationLifecycle.test.ts` in the same commit, per its header): (a) batch the leaf mesh
+  edges into one path — in leaf mode `hovered` is never set so all ~900 edges share a style, but
+  `draw()` strokes per-edge today (~913 extra canvas calls/frame at `leafCount=260`); (b) derive
+  the mesh edge color from the `accent` prop (hard-coded green today — constrains non-default
+  accents); (c) consider debouncing the wordmark resize re-seed (O(n²) mesh rebuild per 8px step;
+  ~19ms desktop at 260). Net page cost already went *down* vs the old 620-particle hero — do this
+  before any low-end-mobile push, not before launch.
 - 🟡 ⬜ Sprint 6 LiveOps: seasonal strains rotation, timed events, breeding competitions, admin
   console with hot-reload `balance.yaml`, analytics/telemetry.
 - 🟡 ⬜ Non-custodial Pera/WalletConnect path for player-owned NFTs.

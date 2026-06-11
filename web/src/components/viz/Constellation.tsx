@@ -646,7 +646,8 @@ export function Constellation({
     // subsequent buttonless hover.
     canvas.addEventListener("pointercancel", onUp);
     canvas.addEventListener("click", onClick);
-    canvas.addEventListener("wheel", onWheel, { passive: false });
+    // lockView never preventDefaults, so register passive (no sync hit-testing).
+    canvas.addEventListener("wheel", onWheel, { passive: lockView });
 
     return () => {
       cancelAnimationFrame(raf);

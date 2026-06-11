@@ -22,7 +22,8 @@ export default function OnboardingPage() {
       <div className="grid items-center gap-8 lg:grid-cols-2">
         <div>
           <GroversWordmark className="mb-2" />
-          <div className="instrument-label mb-5 text-center text-gray-600">
+          {/* reduced-motion renders one static frame — don't promise interaction */}
+          <div className="instrument-label mb-5 text-center text-gray-600 motion-reduce:hidden">
             TOUCH THE LEAF · LIVE PARTICLES
           </div>
           <div className="mt-5">
