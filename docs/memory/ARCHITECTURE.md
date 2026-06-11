@@ -56,7 +56,8 @@ genetics targets, the trust layer) see the **Design Codex** at `docs/memory/desi
    response is stored in the *same transaction* as the effect (`api/idempotency.py`) and a duplicate
    replays it; stipend/achievement faucets are one-shot via unique `grant_claims`. The key store
    holds responses only — the ledger stays the money truth. Keep `record()` inside the route's
-   `session_scope`, or key and effect can split.
+   `session_scope`, or key and effect can split. The fingerprint is method+path+**body hash** —
+   a key reused with a different body must 400, never replay (don't weaken it back to path-only).
 4. **Server is authoritative.** No client-trusted state. Spending paths go through guards
    (e.g. `SpendGuard` caps the AI auto-care budget per invocation).
 5. **Writes are authenticated + rate-limited; reads are public.**

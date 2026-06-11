@@ -130,6 +130,98 @@ def test_malformed_key_is_a_clean_400(client):
     assert "Idempotency-Key" in r.get_json()["error"]
 
 
+def test_same_endpoint_key_reuse_with_different_body_is_rejected(client):
+    """The fingerprint binds the key to the BODY too: same URL + same key with
+    a different payload is a client bug -> 400, never a wrong-body replay."""
+    pid, key = _new_player(client)
+    sid = _first_strain_id(client)
+    h = {"X-API-Key": key, "Idempotency-Key": "body-bound"}
+    r = client.post(
+        f"/api/game/players/{pid}/seeds/buy", json={"strain_id": sid}, headers=h
+    )
+    assert r.status_code == 201
+    r2 = client.post(
+        f"/api/game/players/{pid}/seeds/buy",
+        json={"strain_id": sid, "note": "different body"},
+        headers=h,
+    )
+    assert r2.status_code == 400
+    assert "different request" in r2.get_json()["error"]
+
+
+def test_create_listing_duplicate_key_charges_fee_once(client):
+    """Listing is a money mutation (fee + seed escrow): a duplicate key replays
+    instead of double-charging — a fresh second run would 400 (seeds escrowed)."""
+    pid, key = _new_player(client)
+    sid = _first_strain_id(client)
+    h = {"X-API-Key": key}
+    seed_id = client.post(
+        f"/api/game/players/{pid}/seeds/buy", json={"strain_id": sid}, headers=h
+    ).get_json()["id"]
+    hk = {**h, "Idempotency-Key": "list-1"}
+    body = {"seed_id": seed_id, "quantity": 1, "unit_price": "5.00"}
+    first = client.post(f"/api/game/players/{pid}/market/list", json=body, headers=hk)
+    assert first.status_code == 201, first.get_data(as_text=True)
+    bal = _balance(client, pid, key)
+    second = client.post(f"/api/game/players/{pid}/market/list", json=body, headers=hk)
+    assert second.status_code == 201
+    assert second.headers.get("Idempotency-Replayed") == "true"
+    assert second.get_json() == first.get_json()
+    assert _balance(client, pid, key) == bal  # fee charged exactly once
+
+
+def test_create_auction_duplicate_key_escrows_once(client):
+    """Auction creation escrows seeds: a duplicate key replays the original
+    listing instead of escrowing again."""
+    pid, key = _new_player(client)
+    sid = _first_strain_id(client)
+    h = {"X-API-Key": key}
+    seed_id = client.post(
+        f"/api/game/players/{pid}/seeds/buy", json={"strain_id": sid}, headers=h
+    ).get_json()["id"]
+    hk = {**h, "Idempotency-Key": "auction-1"}
+    body = {"seed_id": seed_id, "quantity": 1, "min_bid": "1.00"}
+    first = client.post(f"/api/game/players/{pid}/market/auction", json=body, headers=hk)
+    assert first.status_code == 201, first.get_data(as_text=True)
+    second = client.post(f"/api/game/players/{pid}/market/auction", json=body, headers=hk)
+    assert second.status_code == 201
+    assert second.headers.get("Idempotency-Replayed") == "true"
+    assert second.get_json() == first.get_json()
+    seeds = client.get(
+        f"/api/game/players/{pid}/seeds", headers=h
+    ).get_json()
+    assert sum(s["quantity"] for s in seeds) == 0  # escrowed once, not twice
+
+
+def test_start_cure_duplicate_key_replays_without_resetting(client):
+    """Curing is a one-way state transition: a duplicate key replays the
+    original response — a fresh second run would 400 ('already curing') and a
+    raced one would reset the cure clock."""
+    pid, key = _new_player(client)
+    with session_scope() as s:
+        from growpodempire.db.models import Strain
+
+        svc = GameService(s)
+        strain = s.query(Strain).first()
+        stack = svc.buy_seed(pid, strain.id)
+        pod = svc.create_pod(pid, "Tent", charge=False)
+        plant = svc.plant_seed(pid, stack.id, pod.id)
+        harvest_id = svc.harvest_plant(
+            pid, plant.id, weight_g=50, quality=80, sell=False
+        ).id
+    hk = {"X-API-Key": key, "Idempotency-Key": "cure-1"}
+    first = client.post(
+        f"/api/game/players/{pid}/harvests/{harvest_id}/cure", json={}, headers=hk
+    )
+    assert first.status_code == 200, first.get_data(as_text=True)
+    second = client.post(
+        f"/api/game/players/{pid}/harvests/{harvest_id}/cure", json={}, headers=hk
+    )
+    assert second.status_code == 200
+    assert second.headers.get("Idempotency-Replayed") == "true"
+    assert second.get_json() == first.get_json()  # cure clock not reset
+
+
 def test_failed_request_stores_nothing_so_retry_runs_fresh(client):
     """An error response is never recorded: the same key retried after a 400
     executes for real (only committed effects pin a response)."""

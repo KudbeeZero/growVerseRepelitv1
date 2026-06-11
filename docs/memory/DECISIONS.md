@@ -213,3 +213,21 @@ would have allowed gets deferred to midnight — deliberate tightening); the gen
 implies an app bug). +10 tests (`tests/test_idempotency.py`): replay, opt-in, cross-request reuse
 rejection, malformed key, no-store-on-error, raced key/stipend/achievement each pay exactly once.
 207 tests, 80.31%.
+
+### 2026-06-11 (night shift) — Body-aware idempotency fingerprint + three missed routes
+**Decision:** A 7-angle code review of PR #16 falsified its "never a wrong-body replay" claim: the
+request fingerprint was `METHOD path` only, so the *same* endpoint retried with the same key but a
+**different JSON body** (different `strain_id`, bid `amount`, …) silently replayed the first
+response. Fixed by folding a SHA-256 of the raw request body into the fingerprint
+(`api/idempotency.py:_fingerprint`) — key reuse with a different body is now a 400 like any other
+fingerprint mismatch (`request.get_data()` caches, so the view's `get_json()` is unaffected). The
+review also found three mutation routes the plumbing missed, now decorated + `record()`-ed:
+`create_listing` (posts MARKET_FEE + escrows seeds), `create_auction` (escrows seeds), and
+`start_cure` (one-way state transition whose sequential guard didn't survive a race). **Why:** the
+fingerprint exists precisely to prevent wrong-body replays; binding it to the body makes the
+documented guarantee true instead of path-deep. **Consequences:** a client retry must resend
+byte-identical body content to replay (industry-standard strictness); +4 tests (body-bound reuse →
+400, listing fee charged once, auction escrowed once, cure replay doesn't reset the cure clock).
+211 tests, 81.07%. Deferred to backlog (owner call): pruning job for the unbounded
+`idempotency_keys`/`grant_claims` tables, and a constraint-name allowlist to narrow the blanket
+`IntegrityError → 409` (RISK #12).

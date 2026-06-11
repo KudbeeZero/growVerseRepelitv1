@@ -27,6 +27,7 @@ route calls `record(s, payload, status)` inside its `session_scope` block:
         return jsonify(payload), 201
 """
 
+import hashlib
 import re
 from functools import wraps
 
@@ -39,6 +40,18 @@ HEADER = "Idempotency-Key"
 REPLAY_HEADER = "Idempotency-Replayed"
 # Printable token, no whitespace — typically a client-generated UUID.
 _KEY_RE = re.compile(r"^[A-Za-z0-9_.:-]{1,128}$")
+
+
+def _fingerprint() -> str:
+    """Method + path + body hash: a key bound to one *request*, not one URL.
+
+    The body must participate — many routes carry their effect-determining
+    parameters (strain_id, quantity, bid amount, …) in the JSON body, and a key
+    reused with a different body must be rejected, never replayed.
+    `request.get_data()` caches, so the view's own `get_json()` still works.
+    """
+    body_hash = hashlib.sha256(request.get_data() or b"").hexdigest()
+    return f"{request.method} {request.path} {body_hash}"
 
 
 def idempotent(view):
@@ -58,7 +71,7 @@ def idempotent(view):
             )
 
         player_id = kwargs.get("player_id")
-        fingerprint = f"{request.method} {request.path}"
+        fingerprint = _fingerprint()
         with session_scope() as s:
             row = (
                 s.query(IdempotencyKey)
@@ -72,9 +85,10 @@ def idempotent(view):
         if stored is not None:
             stored_fingerprint, body, status = stored
             if stored_fingerprint != fingerprint:
+                where = stored_fingerprint.rsplit(" ", 1)[0]  # drop the body hash
                 return (
                     jsonify({"error": f"{HEADER} was already used for a "
-                                      f"different request ({stored_fingerprint})"}),
+                                      f"different request ({where})"}),
                     400,
                 )
             resp = current_app.response_class(body, mimetype="application/json")

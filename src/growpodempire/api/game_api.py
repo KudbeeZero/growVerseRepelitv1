@@ -418,6 +418,7 @@ def list_harvests(player_id):
 
 @game_bp.post("/players/<player_id>/harvests/<harvest_id>/cure")
 @require_player
+@idempotent
 def start_cure(player_id, harvest_id):
     data = request.get_json(force=True, silent=True) or {}
     try:
@@ -426,6 +427,7 @@ def start_cure(player_id, harvest_id):
                 player_id, harvest_id, target_hours=data.get("target_hours")
             )
             payload = S.harvest_dict(h)
+            record(s, payload, 200)
         return jsonify(payload)
     except GameError as e:
         return _error(str(e))
@@ -716,6 +718,7 @@ def market():
 
 @game_bp.post("/players/<player_id>/market/list")
 @require_player
+@idempotent
 def create_listing(player_id):
     data = request.get_json(force=True, silent=True) or {}
     required = ("seed_id", "quantity", "unit_price")
@@ -732,6 +735,7 @@ def create_listing(player_id):
                 unit_price,
             )
             payload = S.listing_dict(listing)
+            record(s, payload, 201)
         return jsonify(payload), 201
     except (GameError, InsufficientFundsError) as e:
         return _error(str(e))
@@ -739,6 +743,7 @@ def create_listing(player_id):
 
 @game_bp.post("/players/<player_id>/market/auction")
 @require_player
+@idempotent
 def create_auction(player_id):
     data = request.get_json(force=True, silent=True) or {}
     required = ("seed_id", "quantity", "min_bid")
@@ -756,6 +761,7 @@ def create_auction(player_id):
                 duration_hours=duration_hours,
             )
             payload = S.listing_dict(listing)
+            record(s, payload, 201)
         return jsonify(payload), 201
     except (GameError, InsufficientFundsError) as e:
         return _error(str(e))

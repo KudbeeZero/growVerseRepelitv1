@@ -271,9 +271,9 @@ const BOARD = {
   systems: [
     { name: "CORE API / AUTH",        light: "green", note: "key auth server-authoritative · no IDOR · validation 400s (PR #11)" },
     { name: "ECONOMY LEDGER",         light: "green", note: "Decimal double-entry · optimistic lock + CHECK>=0 · race-tested (PR #9)" },
-    { name: "IDEMPOTENCY / REPLAY",   light: "green", note: "Idempotency-Key on 23 money routes + one-shot grants (PR #16) — RISK #6 closed" },
+    { name: "IDEMPOTENCY / REPLAY",   light: "green", note: "Idempotency-Key on 26 money routes (body-bound fingerprint) + one-shot grants (PR #16) — RISK #6 closed" },
     { name: "DB MIGRATIONS",          light: "green", note: "single head b2c3d4e5f6a7 · no model drift · CI-gated" },
-    { name: "BACKEND TEST GATES",     light: "green", note: "207 passed · coverage 80.31% ≥ 79 · lint + memory + migrations green" },
+    { name: "BACKEND TEST GATES",     light: "green", note: "211 passed · coverage 81.07% ≥ 79 · lint + memory + migrations green" },
     { name: "AI MASTER GROWER",       light: "green", note: "SpendGuard unescapable · mock provider in CI, no live key" },
     { name: "SIM ENGINE",             light: "amber", note: "cost-capped (dormancy snap) — RISK #9: dormancy semantics need a design call" },
     { name: "WEB AUTH UX",            light: "amber", note: "RISK #10: no global 401/403 handler — stale key looks logged-in" },
@@ -297,7 +297,7 @@ const BOARD = {
 
   gates: {
     date: "2026-06-11",
-    tests: 207, coveragePct: 80.31, coverageFloor: 79,
+    tests: 211, coveragePct: 81.07, coverageFloor: 79,
     lint: true, memory: true, migrations: true,
   },
 

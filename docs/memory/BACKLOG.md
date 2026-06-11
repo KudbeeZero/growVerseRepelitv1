@@ -67,6 +67,13 @@ once they appear here. Last reconciled: **2026-06-10**.
   first-reads at scale.*
 - 🟠 ✅ **Idempotency keys on mutations** (2026-06-11) — folded into the RISK #6 item above:
   opt-in `Idempotency-Key` header with atomic response replay on the money mutations.
+- 🟠 ⬜ **Prune `idempotency_keys` / `grant_claims`** — both tables grow unboundedly (one row per
+  keyed money mutation / per stipend+achievement claim, `created_at` exists but nothing reads it).
+  Add a retention job (e.g. delete idempotency rows older than ~30 days; grant claims need care —
+  achievement one-shots must stay forever, only day-keyed stipend rows can age out).
+- 🟡 ⬜ **Narrow the `IntegrityError → 409` handler** (RISK #12) — parse the constraint name and
+  allowlist only the known one-shot/race constraints (`idempotency_keys`, `grant_claims`,
+  harvest-once) → 409; anything else stays a loud 500 so FK/app bugs can't hide behind retries.
 - 🟠 ⬜ **Load/soak test the `/state` catch-up path** to find the cost knee before players do.
 - 🟠 ⬜ **Web e2e smoke** (Playwright) over the full loop; today web CI is lint/typecheck/build only.
 - 🟠 ✅ **Sim depth — Phase A (derive VPD + DLI; wire the stored light scalar into the tick).** Done
