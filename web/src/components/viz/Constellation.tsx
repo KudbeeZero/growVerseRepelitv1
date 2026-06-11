@@ -65,6 +65,10 @@ interface Props {
   accent?: string;
   /** Particle count for leaf mode. */
   leafCount?: number;
+  /** Drop the framed-card chrome (border/rounding/backdrop) — for inline logo use. */
+  frameless?: boolean;
+  /** Disable pan + zoom (view stays centered). Particles still react to the pointer. */
+  lockView?: boolean;
   onSelect?: (id: string) => void;
 }
 
@@ -198,6 +202,8 @@ export function Constellation({
   caption,
   accent = "#76c024",
   leafCount = 520,
+  frameless = false,
+  lockView = false,
   onSelect,
 }: Props) {
   const wrapRef = useRef<HTMLDivElement | null>(null);
@@ -245,6 +251,44 @@ export function Constellation({
     const eList = edges
       .map((e) => ({ a: byId.get(e.a), b: byId.get(e.b), s: e.strength ?? 1 }))
       .filter((e) => e.a && e.b) as Array<{ a: Particle; b: Particle; s: number }>;
+
+    // Leaf mode generates its own mesh: each body particle (not the floating
+    // sparks) links to its two nearest neighbors within a small radius, so the
+    // cloud reads as one connected leaf — rubber-bands, not loose beads. Built
+    // once per init from home positions; the lines ride the particles live.
+    if (mode === "leaf") {
+      const body = particles.filter((p) => p.id[0] === "p");
+      const LINK_R2 = 0.0045; // ≈0.067 world units — only true neighbors qualify
+      const seen = new Set<number>();
+      for (let i = 0; i < body.length; i++) {
+        let n1 = -1;
+        let n2 = -1;
+        let d1 = LINK_R2;
+        let d2 = LINK_R2;
+        for (let j = 0; j < body.length; j++) {
+          if (j === i) continue;
+          const dx = body[i].hx - body[j].hx;
+          const dy = body[i].hy - body[j].hy;
+          const dd = dx * dx + dy * dy;
+          if (dd < d1) {
+            d2 = d1;
+            n2 = n1;
+            d1 = dd;
+            n1 = j;
+          } else if (dd < d2) {
+            d2 = dd;
+            n2 = j;
+          }
+        }
+        for (const j of [n1, n2]) {
+          if (j < 0) continue;
+          const key = i < j ? i * 100000 + j : j * 100000 + i;
+          if (seen.has(key)) continue;
+          seen.add(key);
+          eList.push({ a: body[i], b: body[j], s: 0.5 });
+        }
+      }
+    }
 
     // view transform (world [-1,1] → screen). scale auto-fits; user can zoom/pan.
     let userScale = 1;
@@ -519,24 +563,27 @@ export function Constellation({
       const rect = canvas!.getBoundingClientRect();
       const mx = e.clientX - rect.left;
       const my = e.clientY - rect.top;
-      if (dragging) {
+      if (dragging && !lockView) {
         panX += e.clientX - lastX;
         panY += e.clientY - lastY;
         lastX = e.clientX;
         lastY = e.clientY;
-        if (mode === "leaf") {
-          const wp = fromScreen(mx, my);
-          for (const p of particles) {
-            const dx = p.x - wp.x;
-            const dy = p.y - wp.y;
-            const d2 = dx * dx + dy * dy;
-            if (d2 < 0.05) {
-              p.vx += dx * 0.4;
-              p.vy += dy * 0.4;
-            }
+      }
+      if (mode === "leaf") {
+        // proximity repulsion — a cursor (or finger) near the leaf scatters
+        // nearby particles; the home springs pull them back. Fires on hover,
+        // not just drag, so the leaf feels alive before you grab it.
+        const wp = fromScreen(mx, my);
+        for (const p of particles) {
+          const dx = p.x - wp.x;
+          const dy = p.y - wp.y;
+          const d2 = dx * dx + dy * dy;
+          if (d2 < 0.05) {
+            p.vx += dx * 0.4;
+            p.vy += dy * 0.4;
           }
         }
-      } else if (mode === "graph") {
+      } else if (!dragging) {
         // hover detection
         let best: Particle | null = null;
         let bestD = 16 * 16;
@@ -578,12 +625,14 @@ export function Constellation({
       if (best) onSelectRef.current?.(best.id);
     }
     function onWheel(e: WheelEvent) {
+      // lockView: leave the wheel to the page (no preventDefault → scroll works).
+      if (lockView) return;
       e.preventDefault();
       const factor = e.deltaY < 0 ? 1.1 : 0.9;
       userScale = Math.max(0.4, Math.min(4, userScale * factor));
     }
 
-    canvas.style.cursor = "grab";
+    canvas.style.cursor = lockView ? "default" : "grab";
     canvas.addEventListener("pointerdown", onDown);
     canvas.addEventListener("pointermove", onMove);
     canvas.addEventListener("pointerup", onUp);
@@ -609,12 +658,14 @@ export function Constellation({
       canvas.removeEventListener("wheel", onWheel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [graphKey, mode, height, accent, leafCount]);
+  }, [graphKey, mode, height, accent, leafCount, lockView]);
 
   return (
     <div
       ref={wrapRef}
-      className={`canvas-dark relative overflow-hidden rounded-xl border border-ink-700 ${className}`}
+      className={`relative overflow-hidden ${
+        frameless ? "" : "canvas-dark rounded-xl border border-ink-700"
+      } ${className}`}
       style={{ height }}
     >
       <canvas ref={canvasRef} className="block touch-none" />
