@@ -7,12 +7,16 @@
 **Last rewritten:** 2026-06-10 · **By:** API-validation-hardening chat
 **Active branch:** `claude/api-validation-hardening`
 **Merged to main:** PR #3 (protocol+gates+sim cap), #8 (fleet sweep + SQLite parity),
-#9 (concurrency core), #10 (web viz fixes, lands #6) — all CI-green. **This chat:** validation
-500s→400 + money-endpoint HTTP tests (coverage 79.3%→**80.0%**, 197 tests).
+#9 (concurrency core), #10 (web viz fixes, lands #6), #11 (validation 500s→400 +
+money-endpoint HTTP tests; coverage 79.3%→**80.0%**, 197 tests) — all CI-green.
 **Held cross-session PRs (need rebase, not button-merge):** #7 (maintenance, baton conflicts),
 #2 (stale-base forecast), #5 (docs + prod-deploy), #4 (**migration fork — would break prod** +
-`GPE_DEV_LOGIN` default-on).
-**Open PR awaiting audit:** _this branch's PR; next chat runs `/handoff-audit`._
+`GPE_DEV_LOGIN` default-on). New since: #12/#14 (terpene engine, #14 supersedes #13),
+#15 (GROVERS hero) — owner-held, not this session's scope.
+**PR #11 audited 2026-06-11:** CONCERNS — all code claims verified with evidence, gates green;
+findings were protocol-level (this baton was half-rewritten — corrected below — and RISK #8's
+mint blind spot had dropped out of the ledger text — restored). Report:
+`docs/audits/PR-11-api-validation-hardening.md`. Owner approved proceeding to the NEXT ACTION.
 
 > **Bomb Squad addendum (2026-06-10, same day, separate branch):** fixed two lifecycle
 > defects in `web/src/components/viz/Constellation.tsx` — (1) reduced-motion users got a
@@ -29,7 +33,7 @@
 ## NEXT ACTION (the one scoped item the next chat does)
 
 **Finish idempotency: general `Idempotency-Key` header + one-shot-grant uniqueness (RISK #6
-remainder).** The concurrency *core* landed this chat (optimistic lock + CHECK + harvest-once +
+remainder).** The concurrency *core* landed in PR #9 (optimistic lock + CHECK + harvest-once +
 409-on-conflict), so double-spend / double-harvest / negative-balance are now DB-impossible. What
 remains is the nicer-UX + faucet side:
 - An `Idempotency-Key` request header on money mutations → a small table storing
@@ -48,25 +52,32 @@ remains is the nicer-UX + faucet side:
 
 ---
 
-## What THIS chat did
+## What the LAST chat did (PR #11)
 
-Landed the **concurrency core** of RISK #6 (the root cause from the fleet sweep):
-- **Wallet optimistic locking** — `version_id_col` wired (the column was dead); removed the manual
-  `wallet.version += 1` in `ledger.post()`. Concurrent debits can't both commit.
-- **`CHECK(cached_balance >= 0)`** hard backstop + **`uq_harvests_plant`** (harvest-once), via
-  migration `f1a2b3c4d5e6` (single head; `compare_metadata` clean → no drift).
-- **409 on conflict** — `StaleDataError` → clean 409 in the error handler (was an opaque 500).
-- **Fixed the F5 flaky rate-limit test** — `client` fixture resets limiter storage per test.
-- +4 tests in `tests/test_concurrency.py` (double-spend blocked, harvest-once, CHECK floor,
-  version bump). Docs: ADR in `DECISIONS.md`, ARCHITECTURE invariant #3 updated, BACKLOG + standup.
+> Corrected 2026-06-11: the original closeout left the previous chat's narrative here.
 
-## Verification split (this chat)
+**API-validation hardening** (RISK #11 + RISK #8 partial):
+- **`validation.number()`** — finite-float-in-range coercer (rejects NaN/inf/non-numeric),
+  `api/validation.py`.
+- **`set_environment`** validates its 5 sensor params → 400 (raw values used to TypeError on the
+  next sim read of every plant in the pod → 500).
+- **`advisor/auto-care`** validates `budget`/`max_actions` → 400, kept separate from the route's
+  404 plant-not-found mapping.
+- **`create_player`** strips + length-checks username, pre-checks email uniqueness → 400 (was a
+  201 junk account / 500 IntegrityError).
+- **+8 HTTP-boundary tests** in `tests/test_security.py`: withdraw/deposit auth (401), wrong-key +
+  cross-player IDOR (403), bad-amount (400), + the four validation-400 regressions.
+- Second commit added a read-only permission allowlist to `.claude/settings.json`
+  (scope-adjacent; flagged in the audit).
 
-**Agent-verifiable (proven — test-backed):**
-- `make test` → **189 passed, coverage 79.26% ≥ 79** · `make lint` ✅ · `make check-memory` ✅ ·
+## Verification split (PR #11)
+
+**Agent-verifiable (proven — test-backed; re-confirmed by the 2026-06-11 audit):**
+- `make test` → **197 passed, coverage 80.0% ≥ 79** · `make lint` ✅ · `make check-memory` ✅ ·
   `make check-migrations` ✅ (head `f1a2b3c4d5e6`).
-- `alembic upgrade head` on fresh sqlite + `compare_metadata` → **migration matches models (no drift)**.
-- Optimistic lock proven with two real sessions racing the same wallet (loser → `StaleDataError`).
+- Edge-path behavior changes (audit note, all junk-input paths): `max_actions` out of 1..100 was
+  clamped → now 400; whitespace-padded usernames were stored verbatim → now stripped; out-of-range
+  sensor values were accepted → now 400. Happy paths unchanged.
 
 **Device/human-verifiable (owner):**
 - Confirm the **409-on-conflict** UX is acceptable for double-clicks until the idempotency-key
@@ -86,7 +97,7 @@ Landed the **concurrency core** of RISK #6 (the root cause from the fleet sweep)
 | 5 | — | SessionStart hook was phantom. | was `BACKLOG.md` | **FIXED 2026-06-10**. |
 | 6 | HIGH | **No concurrency control on money/state paths.** Check-then-act, no row lock; `Wallet.version` dead. | `economy/ledger.py`, `db/models.py`, `simulation_service.py:41-45` | **CORE FIXED 2026-06-10** — wallet optimistic lock + `CHECK>=0` + harvest-once + 409 (migration `f1a2b3c4d5e6`); test-backed. SQLite parity fixed (PR #8). **Remaining:** idempotency-key header + stipend/achievement uniqueness (NEXT ACTION); `/state` duplicate-PlantEvents (C1) still open. |
 | 7 | HIGH | **Chain deposit trusts no on-chain proof.** Treasury→treasury no-op + DB-only `asa_balance` gate → withdraw/move-off/re-deposit drains treasury. No txid replay protection, no reconciliation, no address validation. | `settlement_service.py:116-140`, `db/models.py:92`, `game_service.py:123-129` | OPEN — blocks any real value moving (Sprint 4 gate). |
-| 8 | HIGH | **Web safety net is phantom** — e2e/vitest stubbed to `echo`, absent from devDeps + CI; treasury-cap + chain-failure rollback untested. | `web/package.json`, `.github/workflows/ci.yml`, coverage | PARTIAL — money-endpoint HTTP auth/IDOR/validation tests **added** (withdraw/deposit), F5 limiter fixed (PR #9). Remaining: real vitest/Playwright in CI, treasury-cap (F2) + chain-failure-rollback (F3) tests. |
+| 8 | HIGH | **Web safety net is phantom** — e2e/vitest stubbed to `echo`, absent from devDeps + CI; treasury-cap + chain-failure rollback untested. | `web/package.json`, `.github/workflows/ci.yml`, coverage | PARTIAL — money-endpoint HTTP auth/IDOR/validation tests **added** (withdraw/deposit), F5 limiter fixed (PR #9). Remaining: real vitest/Playwright in CI, treasury-cap (F2) + chain-failure-rollback (F3) tests, **mint-endpoint HTTP auth/IDOR tests** (restored 2026-06-11 — had silently dropped from this row). |
 | 9 | MED | **Sim dormancy semantics** — shifts `stage_entered_at`, can delay an earned harvest if `max_catchup_hours` is lowered below a stage; skips lethal decay. Masked at default cap. | `simulation/engine.py:285-294` | OPEN — needs a design decision + knob guard. |
 | 10 | MED | **Web: no global 401/403 handler** — stale key = "logged in" to a broken dashboard, no re-auth path. | `web/src/lib/api/client.ts`, `RequireAuth.tsx` | OPEN. |
 | 11 | LOW | Validation 500s (dup-email, username, `set_environment`, auto-care budget); rate-limiter `memory://` per-worker (set Redis); `get_level` public oracle. | see fleet-sweep | PARTIAL — **validation 500s→400 FIXED** (test-backed; `set_environment`, auto-care, dup-email, blank username). Remaining: Redis rate-limit storage (config), `get_level` gating. |
