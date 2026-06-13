@@ -214,31 +214,29 @@ export function GrowChamber({
       ctx!.translate(x, y);
       ctx!.rotate(rot);
       if (w > 2.4) {
-        // Big calyx (macro / cola): volumetric radial gradient + a glossy sheen
-        // so the bract reads as a swollen, waxy 3D pod rather than a flat shape.
+        // Big calyx (macro / cola): a soft volumetric gradient for depth — matte,
+        // not glossy. Real flower scatters light (dusty/frosted), so the bright
+        // stop is gentle and there is NO white specular highlight (that read as wet
+        // plastic); depth comes from the dark edge + the seam/ridge shadows.
         const g = ctx!.createRadialGradient(-w * 0.22, -h * 0.24, w * 0.08, 0, 0, w * 1.15);
-        g.addColorStop(0, `hsl(${hue}, ${sat}%, ${Math.min(80, lit + 18)}%)`);
+        g.addColorStop(0, `hsl(${hue}, ${sat}%, ${Math.min(66, lit + 7)}%)`);
         g.addColorStop(0.55, `hsl(${hue}, ${sat}%, ${lit}%)`);
-        g.addColorStop(1, `hsl(${hue}, ${Math.min(86, sat + 12)}%, ${Math.max(12, lit - 13)}%)`);
+        g.addColorStop(1, `hsl(${hue}, ${Math.min(86, sat + 12)}%, ${Math.max(12, lit - 14)}%)`);
         ctx!.fillStyle = g;
         podPath(w, h);
         ctx!.fill();
-        ctx!.strokeStyle = "rgba(0,0,0,0.22)";
+        ctx!.strokeStyle = "rgba(0,0,0,0.24)";
         ctx!.lineWidth = 0.6;
         ctx!.stroke();
-        ctx!.fillStyle = "rgba(255,255,255,0.15)";
-        ctx!.beginPath();
-        ctx!.ellipse(-w * 0.16, -h * 0.2, w * 0.24, h * 0.16, -0.5, 0, TAU);
-        ctx!.fill();
       } else {
         ctx!.fillStyle = `hsl(${hue}, ${sat}%, ${lit}%)`;
         podPath(w, h);
         ctx!.fill();
       }
-      // Inner cap — the lighter, younger calyx tip peeking out.
+      // Inner cap — the lighter, younger calyx tip peeking out (kept subtle/matte).
       ctx!.translate(0, -h * 0.14);
       ctx!.scale(0.55, 0.48);
-      ctx!.fillStyle = `hsla(${hue}, ${sat * 0.9}%, ${Math.min(76, lit + 16)}%, ${capA})`;
+      ctx!.fillStyle = `hsla(${hue}, ${sat * 0.9}%, ${Math.min(64, lit + 8)}%, ${capA})`;
       podPath(w, h);
       ctx!.fill();
       ctx!.restore();
@@ -436,9 +434,10 @@ export function GrowChamber({
             ctx!.beginPath();
             ctx!.arc(x1, y1, hr, 0, TAU);
             ctx!.fill();
-            ctx!.fillStyle = "rgba(255,255,255,0.65)";
+            // faint matte glint (not a wet-plastic specular)
+            ctx!.fillStyle = "rgba(236,242,236,0.22)";
             ctx!.beginPath();
-            ctx!.arc(x1 - hr * 0.3, y1 - hr * 0.3, hr * 0.32, 0, TAU);
+            ctx!.arc(x1 - hr * 0.3, y1 - hr * 0.3, hr * 0.26, 0, TAU);
             ctx!.fill();
           }
         }
@@ -568,8 +567,6 @@ export function GrowChamber({
       const nodeTarget = Math.floor((hN / S.internode) * SK.nodeDensity * SK.vertStack * flowerPack);
       const maxNodes = Math.min(18, Math.max(d <= 10 ? 1 : 2, nodeTarget));
       const grow = smooth(clamp((d - 8) / 22, 0, 1));
-      // Branches flex more when they're longer/thinner (lower branchMul).
-      const branchFlex = clamp(1.25 - S.branchMul * 0.5, 0.45, 1.05);
       for (let i = 0; i < maxNodes; i++) {
         // Genetic/organic internode spacing: tighter toward the apex (more so for
         // spear strains, via vertStack), plus per-node jitter so nodes aren't
@@ -793,7 +790,10 @@ export function GrowChamber({
     const FAN_A = [0, 0.42, -0.42, 0.85, -0.85, 1.22, -1.22, 1.5, -1.5];
     const FAN_M = [1, 0.86, 0.86, 0.7, 0.7, 0.52, 0.52, 0.36, 0.36];
     function drawFan(size: number, n: number, topBoost: number, claw: number) {
-      for (let i = 0; i < n; i++) {
+      // Clamp to the FAN_A/FAN_M table length: a future per-strain leaflet count
+      // above 9 would otherwise index past the arrays → undefined → NaN geometry.
+      const leaflets = Math.min(n, FAN_A.length);
+      for (let i = 0; i < leaflets; i++) {
         const L = size * FAN_M[i], Wd = L * 0.32 * S.leafW;
         const a = FAN_A[i] + (claw ? Math.sign(FAN_A[i] || 1) * claw * (0.2 + Math.abs(FAN_A[i]) * 0.5) : 0);
         ctx!.save();
@@ -812,7 +812,7 @@ export function GrowChamber({
         ctx!.strokeStyle = "rgba(0,0,0,0.20)";
         ctx!.lineWidth = 0.6;
         ctx!.stroke();
-        ctx!.strokeStyle = "rgba(255,255,255,0.10)";
+        ctx!.strokeStyle = "rgba(255,255,255,0.05)";
         ctx!.beginPath();
         ctx!.moveTo(0, 0);
         ctx!.lineTo(0, -L * 0.96);
@@ -1374,9 +1374,10 @@ export function GrowChamber({
             ctx!.fill();
           }
         }
-        // highlight: a thin sliver along the upper ridge (not a flat circle)
+        // edge sheen: a faint matte ridge-line (NOT a bright gloss sliver) — just
+        // enough to read the ridge, no plastic shine.
         if (c.depth > 0.5) {
-          ctx!.strokeStyle = `hsla(${c.hue}, ${c.sat}%, ${Math.min(92, lit + 22 + hb * 12)}%, ${0.4 + hb * 0.2})`;
+          ctx!.strokeStyle = `hsla(${c.hue}, ${c.sat}%, ${Math.min(70, lit + 8 + hb * 6)}%, ${0.14 + hb * 0.08})`;
           ctx!.lineWidth = Math.max(0.5, w * 0.05);
           ctx!.lineCap = "round";
           ctx!.beginPath();
@@ -1386,7 +1387,7 @@ export function GrowChamber({
         }
         // micro-fuzz hairs around the tip on front calyxes
         if (detail && c.depth > 0.78) {
-          ctx!.strokeStyle = `hsla(${c.hue}, ${Math.max(0, c.sat - 12)}%, ${Math.min(92, lit + 26)}%, 0.3)`;
+          ctx!.strokeStyle = `hsla(${c.hue}, ${Math.max(0, c.sat - 12)}%, ${Math.min(78, lit + 16)}%, 0.22)`;
           ctx!.lineWidth = 0.4;
           for (let f = 0; f < 4; f++) {
             const ang = -Math.PI / 2 + (f - 1.5) * 0.5;
@@ -1440,31 +1441,32 @@ export function GrowChamber({
       // ---- trichome frost: soft additive specks that build into fuzzy frost
       // patches (revealed with their host calyx, never floating) ----
       if (P.trich > 0) {
+        // Normal blend (not additive): matte, light-scattering resin dust — cool
+        // cream-grey, not a white glow. A little amber only on the most mature.
         ctx!.save();
-        ctx!.globalCompositeOperation = "lighter";
         for (const t of bud.trichs) {
           if (t.k > P.trich || grow < 0.04 + t.depth * 0.35) continue;
           const x = t.x - baseX, y = t.y - baseY;
           const mt = clamp(P.trich - t.mat * 0.4, 0, 1);
-          ctx!.globalAlpha = 0.12 + 0.18 * mt;
-          ctx!.fillStyle = mt > 0.85 ? "rgb(150,112,44)" : "rgb(224,238,236)";
+          ctx!.globalAlpha = 0.1 + 0.2 * mt;
+          ctx!.fillStyle = mt > 0.9 ? "rgb(168,140,86)" : "rgb(214,224,216)";
           ctx!.beginPath();
           ctx!.arc(x, y, t.r * Math.max(0.8, budW * 0.014), 0, TAU);
           ctx!.fill();
         }
-        ctx!.restore();
         ctx!.globalAlpha = 1;
+        ctx!.restore();
       }
       ctx!.restore();
 
-      // ---- frost bloom: a soft additive glow once trichomes mature ----
+      // ---- frost haze: a faint matte dusting around the cola (normal blend, not
+      // an additive bloom — a soft frosted atmosphere, no wet sheen) ----
       if (P.trich > 0.25) {
         ctx!.save();
-        ctx!.globalCompositeOperation = "screen";
         const gy = baseY - budH * 0.5;
         const gg = ctx!.createRadialGradient(baseX, gy, budH * 0.06, baseX, gy, budH * 0.6);
-        gg.addColorStop(0, `rgba(222,242,246,${0.04 + P.trich * 0.05})`);
-        gg.addColorStop(1, "rgba(222,242,246,0)");
+        gg.addColorStop(0, `rgba(214,224,219,${0.03 + P.trich * 0.03})`);
+        gg.addColorStop(1, "rgba(214,224,219,0)");
         ctx!.fillStyle = gg;
         ctx!.fillRect(0, 0, W, H);
         ctx!.restore();
@@ -1542,20 +1544,40 @@ export function GrowChamber({
 
     let raf = 0;
     let last = 0;
+    let visible = true;
+    const loop = (t: number) => {
+      const dt = Math.min(0.05, (t - last) / 1000 || 0.016);
+      if (t - last >= 33) {
+        last = t;
+        stepPhysics(dt);
+        draw(t / 1000);
+      }
+      raf = requestAnimationFrame(loop);
+    };
+    // Pause the RAF loop while the canvas is scrolled offscreen. The strain-lab
+    // hero is always mounted across tabs, so this stops it burning ~30fps redraws
+    // when it isn't even visible (browsers already pause RAF on a hidden tab).
+    const io = new IntersectionObserver(
+      (entries) => {
+        const vis = entries.some((e) => e.isIntersecting);
+        if (vis === visible) return;
+        visible = vis;
+        if (vis && motionOK && !raf) {
+          last = 0;
+          raf = requestAnimationFrame(loop);
+        } else if (!vis && raf) {
+          cancelAnimationFrame(raf);
+          raf = 0;
+        }
+      },
+      { threshold: 0 },
+    );
     if (motionOK) {
       canvas.addEventListener("pointerdown", onDown);
       canvas.addEventListener("pointermove", onMove);
       canvas.addEventListener("pointerup", onUp);
       canvas.addEventListener("pointercancel", onUp);
-      const loop = (t: number) => {
-        const dt = Math.min(0.05, (t - last) / 1000 || 0.016);
-        if (t - last >= 33) {
-          last = t;
-          stepPhysics(dt);
-          draw(t / 1000);
-        }
-        raf = requestAnimationFrame(loop);
-      };
+      io.observe(wrap);
       raf = requestAnimationFrame(loop);
     } else {
       draw(0);
@@ -1563,6 +1585,7 @@ export function GrowChamber({
 
     return () => {
       cancelAnimationFrame(raf);
+      io.disconnect();
       ro.disconnect();
       canvas.removeEventListener("pointerdown", onDown);
       canvas.removeEventListener("pointermove", onMove);

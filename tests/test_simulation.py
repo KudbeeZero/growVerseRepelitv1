@@ -47,6 +47,8 @@ def _conditions(plant):
 def test_catch_up_advances_growth_stage(session):
     _, _, plant = _plant(session)
     assert plant.growth_stage == "seed"
+    # 5 days clears the 3-day seed stage deterministically even when an early
+    # pest spawn (per-plant RNG) stretches it; a 4-day window would be flaky.
     engine.catch_up(session, plant, BASE + timedelta(days=5), CFG)
     assert plant.growth_stage != "seed"      # progressed out of seed stage
     assert plant.height > 0 or plant.growth_stage != "seed"
