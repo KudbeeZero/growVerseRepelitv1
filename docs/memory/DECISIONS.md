@@ -202,3 +202,19 @@ value moving). **Consequences:** zero payments code in the repo; a 🟡 BACKLOG 
 option with its preconditions so the thinking isn't lost; if revisited, the integration shape is
 Stripe Checkout Sessions (+ Billing if subscriptions), behind RISK #7 being closed and an
 explicit owner green-light.
+
+### 2026-06-13 — Whole-plant buds de-graped with a continuous bud-mass silhouette
+**Decision:** In the chamber whole-plant view, each `FlowerSite` now paints a single **continuous
+bud-mass** behind its calyxes — every developed cluster contributes an overlapping blob fused into
+one fill, each sized to reach ~70% of the way to its neighbour so the gaps close — and the calyx
+pods / pistils / trichomes render on top as texture (`drawFlowerSite` in `GrowChamber.tsx`). **Why:**
+at chamber distance the discrete teardrop calyxes are too small to overlap, so a flower site read
+as a handful of loose circles ("grapes"); the macro view already beats this with a solid cola core
+under layered calyxes, and the chamber site had no such core. The mass width follows the existing
+per-cluster width curve, so silhouettes stay strain-recognisable (G13 spiral → slim spear cola;
+PDP / Animal Mints nodal → chunky stacked masses), and the top cola + node/tip sites flow through
+the same path so they gain mass and merge near the apex. **Consequences:** silhouette-only, no new
+systems — one linear gradient + one fill per site per frame, placement precomputed once and shared
+with the texture pass for lock-step sway; pure logic (`morphology`/`budDna`/`strainVisuals`)
+untouched, so all 100 vitest tests (incl. Constellation sacred hashes) stay green. The pixels are
+owner-device-verifiable (no headless browser in CI to screenshot the chamber).
