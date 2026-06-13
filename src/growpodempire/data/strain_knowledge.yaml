@@ -695,9 +695,9 @@ animal-mints:
   terpenes:
     caryophyllene: "peppery, spicy — calming, CB2-active"
     limonene: "bright citrus — mood-lifting"
-    linalool: "floral lavender — soothing, anti-anxiety"
+    myrcene: "earthy, musky — relaxing, the classic indica note"
   cannabinoids: {thc: "20-27%", cbd: "0-1%", cbg: "low", thcv: "trace"}
-  morphology: "medium, bushy, compact; dense chunky buds — deep green with purple accents, bright orange pistils, heavy frost"
+  morphology: "medium, bushy, compact; dense chunky buds — deep green with purple accents, bright orange pistils, heavy frost; a creamy mint-diesel (linalool-rich) nose"
   grow:
     difficulty: moderate
     environment: [indoor, greenhouse, outdoor]

@@ -91,7 +91,11 @@ export function GrowChamber({
   live.current = { climate, dev, flags: conditionFlags, budColor };
 
   // Rebuild geometry only when these structural inputs change.
-  const buildKey = `${seed}|${stage}|${view}|${Math.round(day)}|${morphology.pattern}|${morphology.hue.toFixed(1)}|${morphology.heightMul.toFixed(2)}|${morphology.clusterLen.toFixed(2)}`;
+  // Macro geometry ignores `day` (buildMacro is seeded only by `seed`), so omit
+  // it there — otherwise scrubbing the growth slider would rebuild identical
+  // geometry on every integer-day step.
+  const dayKey = view === "macro" ? "" : Math.round(day);
+  const buildKey = `${seed}|${stage}|${view}|${dayKey}|${morphology.pattern}|${morphology.hue.toFixed(1)}|${morphology.heightMul.toFixed(2)}|${morphology.clusterLen.toFixed(2)}`;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -314,7 +318,9 @@ export function GrowChamber({
           // green bud) — chosen deterministically per pod via its blushK roll.
           const accent = bc.accentFrac != null && bc.accentHue != null && p.blushK < bc.accentFrac;
           const baseHueP = accent ? bc.accentHue! : calyxHue;
-          const hueP = baseHueP + p.dh + (p.blushK < P.blush ? 18 : 0);
+          // Accent calyxes are already a distinct hue — don't also apply the
+          // ripeness blush shift, which would push violet toward pink.
+          const hueP = baseHueP + p.dh + (!accent && p.blushK < P.blush ? 18 : 0);
           drawPod(px, py, Math.cos(p.a) * 0.4, podW * p.sz * g, podH * p.sz * g, hueP, calyxSat, baseLit + p.dl + (2 - p.ring) * 2, 0.42);
           drawn++;
         }
@@ -412,6 +418,10 @@ export function GrowChamber({
     let scene: Scene | null = null;
     let plant: Plant | null = null;
     let macroSite: FlowerSite | null = null;
+    // Precomputed-once macro backdrop (deterministic from seed + canvas size) so
+    // the per-frame draw never re-seeds PRNGs or re-allocates gradients.
+    let macroBokeh: Array<{ x: number; y: number; r: number; grad: CanvasGradient }> = [];
+    let macroLeaves: Array<{ lx: number; ly: number; lsz: number; rot: number }> = [];
 
     function stageOf(): string {
       return stage; // authoritative server stage drives discrete features
@@ -518,6 +528,31 @@ export function GrowChamber({
       // High lush so the showcase cola carries dense pistils + heavy trichome
       // frost — far more than the tiny node buds out in the chamber view.
       macroSite = buildFlowerSite(rnd, axis, baseW, { pattern: S.pattern, nClusters: nC, bracts: S.bracts, fatMul: 1.08, lush: 2.2 });
+
+      // Static backdrop, computed once (deterministic from seed + canvas size).
+      const brnd = mulberry32(seed * 131 + 17);
+      macroBokeh = [];
+      for (let i = 0; i < 9; i++) {
+        const x = brnd() * W, y = brnd() * H * 0.82, r = 26 + brnd() * 72;
+        const tone = brnd() < 0.5 ? "190,232,210" : "150,208,168";
+        const grad = ctx!.createRadialGradient(x, y, 0, x, y, r);
+        grad.addColorStop(0, `rgba(${tone},0.16)`);
+        grad.addColorStop(1, `rgba(${tone},0)`);
+        macroBokeh.push({ x, y, r, grad });
+      }
+      const lrnd = mulberry32(seed * 911 + 3);
+      macroLeaves = [];
+      const nLeaf = 7;
+      for (let i = 0; i < nLeaf; i++) {
+        const yf = 0.12 + (i / (nLeaf - 1)) * 0.74;
+        const side = i % 2 ? 1 : -1;
+        macroLeaves.push({
+          lx: side * baseW * (0.4 + lrnd() * 0.3),
+          ly: -yf * axis,
+          lsz: axis * (0.34 - 0.16 * yf) * (0.9 + lrnd() * 0.3),
+          rot: side * (1.05 + lrnd() * 0.3) - 0.1,
+        });
+      }
     }
 
     // ---- leaves ----
@@ -932,17 +967,12 @@ export function GrowChamber({
       g.addColorStop(1, "#070d0a");
       ctx!.fillStyle = g;
       ctx!.fillRect(0, 0, W, H);
-      // Soft out-of-focus bokeh — blurred grow-light glints behind the subject.
-      const brnd = mulberry32(seed * 131 + 17);
-      for (let i = 0; i < 9; i++) {
-        const bx = brnd() * W, by = brnd() * H * 0.82, br = 26 + brnd() * 72;
-        const tone = brnd() < 0.5 ? "190,232,210" : "150,208,168";
-        const bg = ctx!.createRadialGradient(bx, by, 0, bx, by, br);
-        bg.addColorStop(0, `rgba(${tone},0.16)`);
-        bg.addColorStop(1, `rgba(${tone},0)`);
-        ctx!.fillStyle = bg;
+      // Soft out-of-focus bokeh — blurred grow-light glints behind the subject
+      // (precomputed once in buildMacro; gradients reused frame to frame).
+      for (const b of macroBokeh) {
+        ctx!.fillStyle = b.grad;
         ctx!.beginPath();
-        ctx!.arc(bx, by, br, 0, TAU);
+        ctx!.arc(b.x, b.y, b.r, 0, TAU);
         ctx!.fill();
       }
       // Top light cone from the grow lamp.
@@ -967,22 +997,15 @@ export function GrowChamber({
       ctx!.translate(baseX, baseY);
       ctx!.rotate(phys.bud.ao + (motionOK ? Math.sin(tt * 0.8) * 0.008 : 0));
 
-      // ---- framing fan leaves behind the cola (kept green; they frame the bud
-      // the way the reference photo's sugar/fan leaves fan out around the cola).
-      const lrnd = mulberry32(seed * 911 + 3);
-      const nLeaf = 7;
+      // ---- framing fan leaves behind the cola (precomputed; kept green; they
+      // frame the bud as the reference photo's sugar/fan leaves do).
       ctx!.save();
       ctx!.globalAlpha = 0.92;
-      for (let i = 0; i < nLeaf; i++) {
-        const yf = 0.12 + (i / (nLeaf - 1)) * 0.74;
-        const side = i % 2 ? 1 : -1;
-        const lx = side * macroSite!.baseW * (0.4 + lrnd() * 0.3);
-        const ly = -yf * axis;
-        const lsz = axis * (0.34 - 0.16 * yf) * (0.9 + lrnd() * 0.3);
+      for (const lf of macroLeaves) {
         ctx!.save();
-        ctx!.translate(lx, ly);
-        ctx!.rotate(side * (1.05 + lrnd() * 0.3) - 0.1);
-        drawFan(lsz, Math.min(S.leafletMax, 7), 0.2, 0);
+        ctx!.translate(lf.lx, lf.ly);
+        ctx!.rotate(lf.rot);
+        drawFan(lf.lsz, Math.min(S.leafletMax, 7), 0.2, 0);
         ctx!.restore();
       }
       ctx!.restore();

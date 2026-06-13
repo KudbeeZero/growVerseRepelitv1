@@ -234,6 +234,22 @@ export function cycleDays(floweringDays = 60): number {
   return STAGE_DAYS.seed + STAGE_DAYS.germination + STAGE_DAYS.seedling + STAGE_DAYS.vegetative + floweringDays;
 }
 
+const VEG_END =
+  STAGE_DAYS.seed + STAGE_DAYS.germination + STAGE_DAYS.seedling + STAGE_DAYS.vegetative; // 44
+
+/**
+ * Development for the growth-PREVIEW scrubber, scaled to the strain's flowering
+ * length. devParams' ramps are tuned to a ~60-day-cycle absolute day; for a
+ * strain with a longer/shorter flowering window that would saturate buds too
+ * early/late. So we map flowering *progress* (0..1 across the strain's window)
+ * onto devParams' nominal flowering span (~day 34→70). Pre-flower = no buds.
+ */
+export function previewDev(day: number, floweringDays = 60): DevParams {
+  if (day < VEG_END) return { budDev: 0, ripe: 0, brown: 0, trich: 0, blush: 0 };
+  const p = clamp((day - VEG_END) / Math.max(1, floweringDays), 0, 1);
+  return devParams(34 + p * 36);
+}
+
 /**
  * Per-strain bud colouring (client-side, deterministic from the strain seed).
  * Cannabis colas range from frosty green→amber to deep anthocyanin purple; which

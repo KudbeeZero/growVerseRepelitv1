@@ -115,7 +115,7 @@ function StrainHero({ strain }: { strain: Strain }) {
   return (
     <div className="h-[420px] w-full overflow-hidden rounded-xl border border-ink-700 bg-[#050b12]">
       <GrowChamber
-        seed={(strain.slug ?? strain.id).length}
+        seed={seedForPlant(strain.slug ?? strain.id)}
         day={62}
         stage="flowering"
         morphology={morphology}

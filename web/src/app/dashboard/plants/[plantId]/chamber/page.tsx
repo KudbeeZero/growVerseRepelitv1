@@ -24,7 +24,7 @@ import {
   clamp,
   seedForPlant,
   stageForDay,
-  devParams,
+  previewDev,
   cycleDays,
 } from "@/lib/chamber/morphology";
 import { budColorForStrain } from "@/lib/chamber/strainVisuals";
@@ -163,7 +163,7 @@ function ChamberScreen({ plantId }: { plantId: string }) {
   const previewing = previewDay !== null;
   const day = previewing ? previewDay : liveDay;
   const renderStage = previewing ? stageForDay(day, flMid) : plant.growth_stage;
-  const dev = previewing ? devParams(day) : effectiveDev(plant.growth_stage, liveDay);
+  const dev = previewing ? previewDev(day, flMid) : effectiveDev(plant.growth_stage, liveDay);
   const maxPreviewDay = Math.round(cycleDays(flMid) + 8);
   const harvestDays = strain ? Math.round(daysToHarvest(plant.growth_stage, strain.flowering_days, plant.health)) : null;
   const c = climateModel({ fan: climate.fan, temp: climate.temperature, hum: climate.humidity, co2: climate.co2_level });
@@ -301,7 +301,7 @@ function ChamberScreen({ plantId }: { plantId: string }) {
                 min={0}
                 max={maxPreviewDay}
                 step={0.5}
-                value={day}
+                value={Math.min(day, maxPreviewDay)}
                 onChange={(e) => setPreviewDay(Number(e.target.value))}
                 className="h-1.5 flex-1 accent-grow-400"
                 aria-label="Preview growth day"
