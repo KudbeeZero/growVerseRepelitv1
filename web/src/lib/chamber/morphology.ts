@@ -274,6 +274,40 @@ export function previewDev(day: number, floweringDays = 60): DevParams {
   return devParams(34 + p * 36);
 }
 
+// ---- circadian leaf motion -------------------------------------------------
+// A slow day/night "breath" layered on top of the airflow sway: lights-on the
+// leaves pray upward toward the light, lights-off they relax downward. This is a
+// visual-only polish layer (no gameplay) — the pure math lives here so it can be
+// unit-tested, and the canvas applies it per leaf in GrowChamber.drawPlant.
+
+/** Seconds for one full wake→sleep→wake breath. Slow on purpose (≈11× the ~4s
+ *  airflow sway) so it reads as a circadian drift, not wind. */
+export const CIRCADIAN_PERIOD_S = 44;
+/** Angular speed (rad/s) for the circadian phase: multiply by the animation clock. */
+export const CIRCADIAN_W = TAU / CIRCADIAN_PERIOD_S;
+
+/**
+ * Circadian leaf lift, in RADIANS. `phase` is the animation clock × `CIRCADIAN_W`.
+ * Returns a signed leaf rotation: **positive lifts leaves toward the light**
+ * (lights-on prayer), **negative relaxes them downward** (lights-off droop). The
+ * renderer applies it as `-side * lift` at the leaf/petiole so it stacks with the
+ * separate airflow sway (this is NOT wind).
+ *
+ * Per-strain character comes from leaf width (derived from `indica_ratio`): wide-
+ * leaf indica strains (e.g. Purple Diddy Punch) relax/droop more at night, while
+ * narrow disciplined strains (e.g. G13) hold a tighter, more upward posture.
+ * Magnitudes stay inside the design band (~2–5°). Pure + deterministic — no RNG,
+ * no clock — so it unit-tests and a future `ResolvedPhenotype.leafPrayer` /
+ * `leafDroop` can drive it in place of this leaf-width default.
+ */
+export function circadianLeafLift(phase: number, leafW: number): number {
+  const day = Math.sin(phase); // +1 lights-on (noon) … -1 lights-off (midnight)
+  const wide = clamp((leafW - 0.62) / 0.68, 0, 1); // 0 narrow/sativa → 1 wide/indica
+  const up = lerp(0.058, 0.045, wide); // lights-on prayer  (~3.3° → 2.6°)
+  const down = lerp(0.038, 0.085, wide); // lights-off droop (~2.2° → 4.9°)
+  return day >= 0 ? day * up : day * down;
+}
+
 /**
  * Per-strain bud colouring (client-side, deterministic from the strain seed).
  * Cannabis colas range from frosty green→amber to deep anthocyanin purple; which

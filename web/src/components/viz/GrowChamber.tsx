@@ -20,6 +20,8 @@ import {
   smooth,
   mulberry32,
   climateModel,
+  circadianLeafLift,
+  CIRCADIAN_W,
   type ClimateInput,
   type DevParams,
   type Morphology,
@@ -1073,6 +1075,13 @@ export function GrowChamber({
       const wind = Math.sin(windPhase) * CL.windAmp;
       const claw = (CL.tooMuchFan ? 0.35 : 0) + condClaw;
       const sw0 = clamp(p.A * 0.012 * (0.5 + p.stemH / p.A), 2, 8) * (CL.tooLowFan ? 0.8 : 1);
+      // Circadian leaf breath — a slow day/night posture shift (lights-on prayer ↑,
+      // lights-off relax ↓), applied at the leaf/petiole as `-side * circLift` so it
+      // STACKS with the airflow sway above and never touches the bud-weight droop.
+      // Computed once per frame; per-leaf cost is a single add. TODO(phenotype):
+      // drive `circLift` from ResolvedPhenotype.leafPrayer / leafDroop once the
+      // renderer consumes the Phenotype Generator (web/src/lib/chamber/phenotype.ts).
+      const circLift = motionOK ? circadianLeafLift(tt * CIRCADIAN_W, S.leafW) : 0;
       for (let i = 0; i < p.spine.length - 1; i++) {
         const a = p.spine[i], b = p.spine[i + 1];
         if (b.y < p.baseY - p.stemH) break;
@@ -1129,14 +1138,16 @@ export function GrowChamber({
         ctx!.stroke();
         ctx!.save();
         ctx!.translate(endX, endY);
-        ctx!.rotate(nd.side * (0.5 + nd.tilt * 0.18));
+        // `-side * circLift` rotates the fan toward vertical at lights-on (prayer)
+        // and outward/down at lights-off (relax), stacking with the branch sway.
+        ctx!.rotate(nd.side * (0.5 + nd.tilt * 0.18) - nd.side * circLift);
         drawFan(nd.leafSize, nd.leaflets, nd.f, claw);
         ctx!.restore();
         // Leaf cluster hugging the stem at the node — every node carries foliage,
         // not just the branch tip, so internodes don't read as bare gaps.
         for (const [ang, scl] of [[-nd.side * 0.32, 0.55], [-nd.side * 0.74, 0.36], [nd.side * 0.22, 0.3]] as const) {
           ctx!.save();
-          ctx!.rotate(ang);
+          ctx!.rotate(ang - nd.side * circLift * 0.7);
           drawFan(nd.nodeLeafSize * scl, Math.max(3, nd.leaflets - 2), 0, claw);
           ctx!.restore();
         }
@@ -1160,7 +1171,7 @@ export function GrowChamber({
           ctx!.stroke();
           ctx!.save();
           ctx!.translate(bex, bey);
-          ctx!.rotate(bl.side * (0.4 + bl.tilt * 0.2));
+          ctx!.rotate(bl.side * (0.4 + bl.tilt * 0.2) - bl.side * circLift);
           drawFan(bl.leafSize, bl.leaflets, nd.f, claw);
           ctx!.restore();
           if (bl.site) {
@@ -1201,7 +1212,10 @@ export function GrowChamber({
         ctx!.translate(p.cola.x, p.cola.y);
         ctx!.rotate(phys.cola.ao + swayT + colaDroop);
         ctx!.save();
+        // Apex fan breathes with the circadian cycle; the cola/bud transform above
+        // is left untouched so the PR #26 bud-weight lean/droop is preserved.
         ctx!.translate(0, -p.cola.site.axisLen * 0.04);
+        ctx!.rotate(circLift * 0.5);
         drawFan(p.A * 0.08 * (1 - 0.35 * p.P.budDev), Math.min(S.leafletMax, 5 + Math.floor(day / 18)), 1, claw);
         ctx!.restore();
         drawFlowerSite(p.cola.site, p.P, cjig, tt);
@@ -1209,7 +1223,7 @@ export function GrowChamber({
       } else {
         ctx!.save();
         ctx!.translate(top.x, top.y);
-        ctx!.rotate(swayT);
+        ctx!.rotate(swayT + circLift * 0.5);
         drawFan(p.A * 0.08, Math.min(S.leafletMax, 5 + Math.floor(day / 18)), 1, claw);
         ctx!.restore();
       }
