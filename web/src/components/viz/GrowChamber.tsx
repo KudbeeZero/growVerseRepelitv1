@@ -26,7 +26,7 @@ import {
   type BudColor,
 } from "@/lib/chamber/morphology";
 import { CONDITION_VISUALS, SEVERITY_SCALE, dominantFlag } from "@/lib/conditionVisuals";
-import { pickPaletteColor, type BudDNA } from "@/lib/chamber/budDna";
+import { pickPaletteColor, dominantPaletteColor, type BudDNA } from "@/lib/chamber/budDna";
 
 export type ChamberView = "chamber" | "macro";
 
@@ -81,13 +81,14 @@ interface FlowerSite {
 // shape: 0 teardrop · 1 oval · 2 pointed bract · 3 foxtail
 interface MacroCalyx {
   x: number; y: number; w: number; h: number; rot: number;
-  depth: number; hue: number; sat: number; lit: number; shape: number;
+  depth: number; hue: number; sat: number; lit: number; shape: number; phase: number;
 }
 interface MacroPistil { x: number; y: number; a: number; len: number; bend: number; k: number }
-interface MacroTrich { x: number; y: number; r: number; k: number; mat: number }
+interface MacroTrich { x: number; y: number; r: number; k: number; mat: number; depth: number }
 interface MacroLeaf { x: number; y: number; sz: number; rot: number }
 interface MacroBud {
   centerX: number; baseY: number; topY: number; budH: number; budW: number;
+  coreHue: number; coreSat: number;
   calyxes: MacroCalyx[]; pistils: MacroPistil[]; trichs: MacroTrich[]; sugar: MacroLeaf[];
 }
 
@@ -120,7 +121,17 @@ export function GrowChamber({
   // in so the cola rebuilds when grow conditions shift it, but not every frame.
   const dnaKey =
     view === "macro"
-      ? `${budDna.maxBudWidth.toFixed(0)}|${budDna.trichomeDensity.toFixed(2)}|${(budDna.foxtailBias ?? 0).toFixed(2)}|${(budDna.topStretch ?? 0).toFixed(2)}|${budDna.palette.length}`
+      ? [
+          budDna.maxBudWidth.toFixed(0),
+          budDna.calyxSizeMax.toFixed(1),
+          budDna.overlap.toFixed(2),
+          budDna.trichomeDensity.toFixed(2),
+          (budDna.foxtailBias ?? 0).toFixed(2),
+          (budDna.topStretch ?? 0).toFixed(2),
+          // palette colour signature so drought-darkening / cool-night purple and
+          // different strains with equal palette length each trigger a rebuild.
+          budDna.palette.map((p) => `${p.hue | 0}:${p.lit | 0}`).join(","),
+        ].join("|")
       : "";
   const buildKey = `${seed}|${stage}|${view}|${dayKey}|${dnaKey}|${morphology.pattern}|${morphology.hue.toFixed(1)}|${morphology.heightMul.toFixed(2)}|${morphology.clusterLen.toFixed(2)}`;
 
@@ -610,8 +621,10 @@ export function GrowChamber({
           const foxBias = dna.foxtailBias ?? 0;
           const topStretch = dna.topStretch ?? 0;
           const sr = rnd();
-          const ovalCut = 0.65 - topness * topStretch * 0.2;
           const foxCut = 0.85 - foxtail * 0.2 - foxBias * 0.22 - topness * topStretch * 0.15;
+          // Keep the bands ordered so the "pointed" share never collapses even
+          // when foxtail pressure is high (it just shrinks toward foxCut).
+          const ovalCut = Math.min(0.65 - topness * topStretch * 0.2, foxCut - 0.04);
           let shape: number, h: number;
           if (sr < 0.4) { shape = 0; h = w * rr(1.25, 1.5); }
           else if (sr < ovalCut) { shape = 1; h = w * rr(1.2, 1.35); }
@@ -624,7 +637,7 @@ export function GrowChamber({
             rot: rr(-35, 35) * (Math.PI / 180) * (1 + topness * topStretch * 0.7),
             depth: pickDepth(),
             hue: col.hue + rr(-8, 8), sat: col.sat, lit: col.lit + rr(-6, 6),
-            shape,
+            shape, phase: rnd(),
           });
           if (rnd() < dna.pistilChance) {
             pistils.push({
@@ -637,10 +650,28 @@ export function GrowChamber({
           }
         }
       }
+
+      // Extra small front calyxes to break up large blobs (front-layer texture).
+      const nExtra = Math.round(dna.rows * 0.8);
+      for (let i = 0; i < nExtra; i++) {
+        const t = 0.1 + rnd() * 0.82;
+        const widthCurve = Math.sin(t * Math.PI);
+        const w = rr(dna.calyxSizeMin, dna.calyxSizeMax) * 0.58 * scale * sizeMul;
+        const col = pickPaletteColor(dna.palette, rnd());
+        calyxes.push({
+          x: centerX + (rnd() - 0.5) * widthCurve * budW * 0.85,
+          y: topY + t * budH,
+          w, h: w * rr(1.3, 1.6),
+          rot: rr(-30, 30) * (Math.PI / 180),
+          depth: 0.86 + rnd() * 0.14, // sits in front
+          hue: col.hue + rr(-8, 8), sat: col.sat, lit: col.lit + rr(-4, 8),
+          shape: rnd() < 0.5 ? 0 : 2, phase: rnd(),
+        });
+      }
       calyxes.sort((a, b) => a.depth - b.depth); // back → front
 
-      // Trichomes — fuzzy frost sitting on the calyx surface (not floating snow):
-      // anchored to real calyx positions, scaled by the strain's density.
+      // Trichomes — fine frost anchored to a calyx so it reveals with its host
+      // (not floating), scaled by the strain's density.
       const trichs: MacroTrich[] = [];
       const nT = Math.round(calyxes.length * dna.trichomeDensity * 2.4);
       for (let i = 0; i < nT; i++) {
@@ -648,10 +679,11 @@ export function GrowChamber({
         trichs.push({
           x: c.x + rr(-1, 1) * c.w * 0.5,
           y: c.y + rr(-1, 1) * c.h * 0.4,
-          r: 0.5 + rnd() * 0.9, k: rnd(), mat: rnd(),
+          r: 0.5 + rnd() * 0.9, k: rnd(), mat: rnd(), depth: c.depth,
         });
       }
-      macroBud = { centerX, baseY, topY, budH, budW, calyxes, pistils, trichs, sugar };
+      const core = dominantPaletteColor(dna.palette);
+      macroBud = { centerX, baseY, topY, budH, budW, coreHue: core.hue, coreSat: core.sat, calyxes, pistils, trichs, sugar };
 
       // Static backdrop, computed once (deterministic from seed + canvas size).
       const brnd = mulberry32(seed * 131 + 17);
@@ -1144,38 +1176,86 @@ export function GrowChamber({
       ctx!.lineTo(0, -budH * 0.04);
       ctx!.stroke();
 
-      // ---- dark cola core so gaps between calyxes don't show the backdrop ----
-      ctx!.fillStyle = `hsl(${bc.calyxHue}, ${bc.calyxSat}%, 17%)`;
+      // ---- dark cola core (palette-derived so it tracks env purple shift) ----
+      ctx!.fillStyle = `hsl(${bud.coreHue}, ${bud.coreSat}%, 16%)`;
       ctx!.beginPath();
       ctx!.ellipse(0, -budH * 0.5, budW * 0.46, budH * 0.5, 0, 0, TAU);
       ctx!.fill();
 
-      // ---- calyxes: small, overlapping, palette-coloured; sugar leaves woven
-      // between the back and front layers to break up the silhouette ----
+      // ---- calyxes: pointed, ribbed, fuzzy teardrops, layered; sugar leaves
+      // woven between back and front to break up the silhouette ----
       const grow = clamp(P.budDev, 0, 1);
+      const hb = live.current.budDna.highlightBoost ?? 0;
       const drawCalyx = (c: MacroCalyx) => {
         if (grow < 0.04 + c.depth * 0.35) return; // fill in as the bud develops
         const lit = clamp(c.lit + (c.depth - 0.6) * 18 + P.ripe * 2, 10, 82);
         const sc = 0.6 + 0.4 * grow;
+        const w = c.w * sc, h = c.h * sc;
+        const detail = w > 4.5 && c.depth > 0.55; // ribs/speckles only where they read
         ctx!.save();
         ctx!.globalAlpha = lerp(0.78, 1, c.depth);
         ctx!.translate(c.x - baseX, c.y - baseY);
         ctx!.rotate(c.rot);
+        // body
         ctx!.fillStyle = `hsl(${c.hue}, ${c.sat}%, ${lit}%)`;
-        calyxPath(c.shape, c.w * sc, c.h * sc);
+        calyxPath(c.shape, w, h);
         ctx!.fill();
-        ctx!.strokeStyle = "rgba(0,0,0,0.16)";
-        ctx!.lineWidth = 0.5;
+        // outer-rim edge shadow → reads as overlap / ambient occlusion
+        ctx!.strokeStyle = `hsla(${c.hue}, ${c.sat}%, ${Math.max(6, lit - 24)}%, 0.5)`;
+        ctx!.lineWidth = Math.max(0.5, w * 0.05);
         ctx!.stroke();
+        if (detail) {
+          ctx!.lineCap = "round";
+          // center seam/vein up to the tip
+          ctx!.strokeStyle = `hsla(${c.hue}, ${c.sat}%, ${Math.max(8, lit - 14)}%, 0.5)`;
+          ctx!.lineWidth = Math.max(0.4, w * 0.035);
+          ctx!.beginPath();
+          ctx!.moveTo(0, h * 0.42);
+          ctx!.lineTo(0, -h * 0.46);
+          ctx!.stroke();
+          // side ridges (vertebrae), mirrored
+          ctx!.lineWidth = Math.max(0.35, w * 0.025);
+          for (const s of [-1, 1]) {
+            for (let r = 1; r <= 2; r++) {
+              const sx = s * (r / 3) * w * 0.42;
+              ctx!.beginPath();
+              ctx!.moveTo(0, h * 0.34);
+              ctx!.quadraticCurveTo(sx, -h * 0.02, sx * 0.45, -h * 0.42);
+              ctx!.stroke();
+            }
+          }
+          // surface speckles (deterministic from the calyx's own phase)
+          ctx!.fillStyle = `hsla(${c.hue}, ${c.sat}%, ${Math.max(8, lit - 18)}%, 0.4)`;
+          for (let s = 0; s < 4; s++) {
+            const px = (((c.phase * 9.7 + s * 2.3) % 1) - 0.5) * w * 0.5;
+            const py = (((c.phase * 5.3 + s * 1.7) % 1) - 0.5) * h * 0.6;
+            ctx!.beginPath();
+            ctx!.arc(px, py, Math.max(0.3, w * 0.03), 0, TAU);
+            ctx!.fill();
+          }
+        }
+        // highlight: a thin sliver along the upper ridge (not a flat circle)
         if (c.depth > 0.5) {
-          const hb = live.current.budDna.highlightBoost ?? 0;
-          ctx!.fillStyle = `hsla(${c.hue}, ${c.sat}%, ${Math.min(90, lit + 20 + hb * 12)}%, ${0.45 + hb * 0.2})`;
-          ctx!.save();
-          ctx!.translate(-c.w * 0.14 * sc, -c.h * 0.22 * sc);
-          ctx!.scale(0.5, 0.46);
-          calyxPath(c.shape, c.w * sc, c.h * sc);
-          ctx!.fill();
-          ctx!.restore();
+          ctx!.strokeStyle = `hsla(${c.hue}, ${c.sat}%, ${Math.min(92, lit + 22 + hb * 12)}%, ${0.4 + hb * 0.2})`;
+          ctx!.lineWidth = Math.max(0.5, w * 0.05);
+          ctx!.lineCap = "round";
+          ctx!.beginPath();
+          ctx!.moveTo(-w * 0.1, h * 0.12);
+          ctx!.quadraticCurveTo(-w * 0.16, -h * 0.28, 0, -h * 0.45);
+          ctx!.stroke();
+        }
+        // micro-fuzz hairs around the tip on front calyxes
+        if (detail && c.depth > 0.78) {
+          ctx!.strokeStyle = `hsla(${c.hue}, ${Math.max(0, c.sat - 12)}%, ${Math.min(92, lit + 26)}%, 0.3)`;
+          ctx!.lineWidth = 0.4;
+          for (let f = 0; f < 4; f++) {
+            const ang = -Math.PI / 2 + (f - 1.5) * 0.5;
+            const ox = Math.cos(ang) * w * 0.3, oy = -h * 0.4 + Math.sin(ang) * h * 0.12;
+            ctx!.beginPath();
+            ctx!.moveTo(ox, oy);
+            ctx!.lineTo(ox + Math.cos(ang) * w * 0.16, oy + Math.sin(ang) * w * 0.16);
+            ctx!.stroke();
+          }
         }
         ctx!.restore();
       };
@@ -1192,42 +1272,47 @@ export function GrowChamber({
       for (const c of bud.calyxes) if (c.depth >= 0.55) drawCalyx(c); // front layer
       ctx!.globalAlpha = 1;
 
-      // ---- pistils from between the clusters ----
+      // ---- pistils: thin, curly, irregular, from between the calyxes ----
       if (grow > 0.1) {
         const fiber = pistilFiber(P.ripe, P.brown, bc.pistilMagenta);
         const ball = pistilBall(P.ripe, P.brown, bc.pistilMagenta);
-        ctx!.lineWidth = Math.max(0.6, budW * 0.006);
+        ctx!.lineWidth = Math.max(0.4, budW * 0.004);
         ctx!.lineCap = "round";
         for (const ps of bud.pistils) {
           if (ps.k > grow) continue;
-          const L = budW * 0.18 * ps.len * clamp((grow - ps.k * 0.5) / 0.6, 0.4, 1);
+          const L = budW * 0.2 * ps.len * clamp((grow - ps.k * 0.5) / 0.6, 0.4, 1);
           const x0 = ps.x - baseX, y0 = ps.y - baseY;
           const x1 = x0 + Math.cos(ps.a) * L, y1 = y0 + Math.sin(ps.a) * L;
+          const mx = (x0 + x1) / 2 + ps.bend * (3 + P.ripe * 3); // stronger curl
+          const my = (y0 + y1) / 2 - 3 - Math.abs(ps.bend) * 2;
           ctx!.strokeStyle = fiber;
           ctx!.beginPath();
           ctx!.moveTo(x0, y0);
-          ctx!.quadraticCurveTo((x0 + x1) / 2 + ps.bend * (1.5 + P.ripe * 2), (y0 + y1) / 2 - 2, x1, y1);
+          ctx!.quadraticCurveTo(mx, my, x1, y1);
           ctx!.stroke();
           ctx!.fillStyle = ball;
           ctx!.beginPath();
-          ctx!.arc(x1, y1, Math.max(0.6, budW * 0.008), 0, TAU);
+          ctx!.arc(x1, y1, Math.max(0.5, budW * 0.006), 0, TAU);
           ctx!.fill();
         }
       }
 
-      // ---- trichome frost: many tiny, soft, low-contrast specks read as a
-      // fuzzy frost coating rather than discrete snow dots ----
+      // ---- trichome frost: soft additive specks that build into fuzzy frost
+      // patches (revealed with their host calyx, never floating) ----
       if (P.trich > 0) {
+        ctx!.save();
+        ctx!.globalCompositeOperation = "lighter";
         for (const t of bud.trichs) {
-          if (t.k > P.trich) continue;
+          if (t.k > P.trich || grow < 0.04 + t.depth * 0.35) continue;
           const x = t.x - baseX, y = t.y - baseY;
           const mt = clamp(P.trich - t.mat * 0.4, 0, 1);
-          ctx!.globalAlpha = 0.45 + 0.4 * mt;
-          ctx!.fillStyle = trichHead(mt);
+          ctx!.globalAlpha = 0.12 + 0.18 * mt;
+          ctx!.fillStyle = mt > 0.85 ? "rgb(150,112,44)" : "rgb(224,238,236)";
           ctx!.beginPath();
-          ctx!.arc(x, y, t.r * Math.max(0.5, budW * 0.009), 0, TAU);
+          ctx!.arc(x, y, t.r * Math.max(0.8, budW * 0.014), 0, TAU);
           ctx!.fill();
         }
+        ctx!.restore();
         ctx!.globalAlpha = 1;
       }
       ctx!.restore();

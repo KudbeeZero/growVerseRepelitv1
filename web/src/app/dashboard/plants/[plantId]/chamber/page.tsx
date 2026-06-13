@@ -160,12 +160,14 @@ function ChamberScreen({ plantId }: { plantId: string }) {
   // Per-strain calyx/pistil colour: authored for curated strains (G13, PDP,
   // Animal Mints…), deterministic roll otherwise.
   const budColor = budColorForStrain(strain?.slug ?? strain?.name, morphology.hue, seedForPlant(plant.strain_id));
-  // Genetic base DNA, then the live grow conditions nudge the phenotype
-  // (cool nights → purple, UV → frost, light stress → foxtails, drought → tight).
+  // Genetic base DNA, then the grow conditions nudge the phenotype (cool nights →
+  // purple, UV → frost, light stress → foxtails, drought → tight). Read from the
+  // pod's COMMITTED environment (not the live in-drag slider) so the bud reacts to
+  // the real saved conditions and doesn't rebuild on every slider pixel.
   const budDna = applyEnvironmentToBudDNA(budDnaFor(strain?.slug ?? strain?.name, budColor), {
-    temp: climate.temperature,
-    light: climate.light_intensity,
-    humidity: climate.humidity,
+    temp: pod?.temperature ?? 24,
+    light: pod?.light_intensity ?? 600,
+    humidity: pod?.humidity ?? 50,
     water: plant.water_level,
   });
   const liveDay = ageDays(plant.planted_at);

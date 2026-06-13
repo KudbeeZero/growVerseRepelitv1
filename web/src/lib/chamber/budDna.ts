@@ -47,14 +47,25 @@ function pal(parts: Array<[keyof typeof C, number]>): PaletteColor[] {
   return parts.map(([k, weight]) => ({ ...C[k], weight }));
 }
 
+const FALLBACK_COLOR: PaletteColor = { hue: 110, sat: 45, lit: 36, weight: 1 };
+
 export function pickPaletteColor(palette: PaletteColor[], roll: number): PaletteColor {
-  const total = palette.reduce((s, p) => s + p.weight, 0);
+  if (palette.length === 0) return FALLBACK_COLOR; // never deref undefined in the draw loop
+  const total = palette.reduce((s, p) => s + Math.max(0, p.weight), 0);
+  if (total <= 0) return palette[0];
   let r = roll * total;
   for (const p of palette) {
-    r -= p.weight;
+    r -= Math.max(0, p.weight);
     if (r <= 0) return p;
   }
   return palette[palette.length - 1];
+}
+
+/** The dominant (highest-weight) palette colour — used for the cola core so it
+ * tracks the palette (incl. env purple shift) instead of a fixed base hue. */
+export function dominantPaletteColor(palette: PaletteColor[]): PaletteColor {
+  if (palette.length === 0) return FALLBACK_COLOR;
+  return palette.reduce((best, p) => (p.weight > best.weight ? p : best), palette[0]);
 }
 
 const AUTHORED: Record<string, BudDNA> = {
