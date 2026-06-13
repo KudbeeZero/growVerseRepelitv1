@@ -74,15 +74,17 @@ interface FlowerSite {
 // Macro ("Detailed Bud View") cola: a dense stack of small, overlapping calyxes
 // arranged in layered rows around a central spine, rather than a few large
 // teardrops. Painter's-algorithm depth (0 back → 1 front) gives the cola volume.
+// shape: 0 teardrop · 1 oval · 2 pointed bract · 3 foxtail
 interface MacroCalyx {
   x: number; y: number; w: number; h: number; rot: number;
-  depth: number; accent: boolean; hueJit: number; litJit: number;
+  depth: number; accent: boolean; hueJit: number; litJit: number; shape: number;
 }
 interface MacroPistil { x: number; y: number; a: number; len: number; bend: number; k: number }
 interface MacroTrich { x: number; y: number; r: number; k: number; mat: number }
+interface MacroLeaf { x: number; y: number; sz: number; rot: number }
 interface MacroBud {
   centerX: number; baseY: number; topY: number; budH: number; budW: number;
-  calyxes: MacroCalyx[]; pistils: MacroPistil[]; trichs: MacroTrich[];
+  calyxes: MacroCalyx[]; pistils: MacroPistil[]; trichs: MacroTrich[]; sugar: MacroLeaf[];
 }
 
 export function GrowChamber({
@@ -158,6 +160,24 @@ export function GrowChamber({
       ctx!.bezierCurveTo(-w * 0.92, h * 0.3, -w * 0.74, -h * 0.4, 0, -h * 0.6);
       ctx!.bezierCurveTo(w * 0.74, -h * 0.4, w * 0.92, h * 0.3, 0, h * 0.5);
       ctx!.closePath();
+    }
+    // Calyx body by sprite type: 0 teardrop · 1 oval · 2 pointed bract · 3 foxtail.
+    function calyxPath(shape: number, w: number, h: number) {
+      if (shape === 1) {
+        ctx!.beginPath();
+        ctx!.ellipse(0, 0, w * 0.5, h * 0.5, 0, 0, TAU);
+        return;
+      }
+      if (shape === 2) {
+        // pointed bract — sharper tip
+        ctx!.beginPath();
+        ctx!.moveTo(0, h * 0.5);
+        ctx!.bezierCurveTo(-w * 0.8, h * 0.25, -w * 0.5, -h * 0.5, 0, -h * 0.72);
+        ctx!.bezierCurveTo(w * 0.5, -h * 0.5, w * 0.8, h * 0.25, 0, h * 0.5);
+        ctx!.closePath();
+        return;
+      }
+      podPath(w, h); // teardrop (0) and foxtail (3, already elongated via h)
     }
     function drawPod(x: number, y: number, rot: number, w: number, h: number, hue: number, sat: number, lit: number, capA: number) {
       ctx!.save();
@@ -544,38 +564,66 @@ export function GrowChamber({
       const centerX = W * 0.5;
       const baseY = H * 0.9;
       const topY = baseY - budH;
-      const totalRows = Math.round(lerp(13, 18, fatT));
-      const rowSpacing = budH / totalRows;
       const widthExp = lerp(1.0, 1.32, fatT); // >1 pushes the widest point lower
       const accentFrac = live.current.budColor.accentFrac ?? 0;
+      const foxtail = clamp(S.foxtail ?? 0, 0, 1); // sativa-ish foxtailing
 
+      // Golden-angle (137.5°) phyllotaxy: place calyx i at theta = i*137.5° so
+      // the spiral itself produces organic overlap; cos(theta) → horizontal
+      // offset across the silhouette, sin(theta) → back↔front depth.
+      const GOLDEN = 2.39996323;
+      const N = Math.round(lerp(78, 116, fatT));
       const calyxes: MacroCalyx[] = [];
-      for (let r = 0; r < totalRows; r++) {
-        const rp = totalRows === 1 ? 0.5 : r / (totalRows - 1); // 0 top → 1 bottom
-        const env = Math.sin(Math.pow(rp, widthExp) * Math.PI); // cola silhouette
-        const rowWidth = env * budW;
-        const count = Math.max(2, Math.round(lerp(3, 8, env)));
-        for (let i = 0; i < count; i++) {
-          const x = centerX + (rnd() - 0.5) * rowWidth;
-          const y = topY + r * rowSpacing + (rnd() - 0.5) * rowSpacing * 0.45;
-          const centerness = 1 - Math.abs(x - centerX) / (rowWidth / 2 + 1);
-          const sizeF = clamp(0.4 + 0.6 * centerness, 0, 1) * (0.7 + 0.3 * env);
-          const w = budW * lerp(0.11, 0.22, sizeF) * (0.85 + 0.3 * rnd());
-          calyxes.push({
-            x, y, w, h: w * lerp(1.2, 1.55, rnd()),
-            rot: (rnd() - 0.5) * 0.9,
-            depth: clamp(0.15 + centerness * 0.55 + (rnd() - 0.5) * 0.5, 0, 1),
-            accent: rnd() < accentFrac,
-            hueJit: (rnd() - 0.5) * 16,
-            litJit: (rnd() - 0.5) * 10,
-          });
-        }
+      for (let i = 0; i < N; i++) {
+        const t = N === 1 ? 0.5 : i / (N - 1); // 0 top → 1 bottom
+        const env = Math.sin(Math.pow(t, widthExp) * Math.PI); // cola silhouette
+        const theta = i * GOLDEN;
+        const wrap = Math.cos(theta); // -1..1 across the spine
+        const radius = env * (budW / 2);
+        const x = centerX + wrap * radius * (0.7 + 0.3 * rnd());
+        const y = topY + t * budH + (rnd() - 0.5) * (budH / N) * 1.6;
+        const centerness = 1 - Math.abs(wrap); // near the spine → bigger/front
+        const sizeF = clamp(0.4 + 0.5 * centerness + 0.1 * env, 0, 1);
+        let w = budW * lerp(0.1, 0.2, sizeF) * (0.85 + 0.3 * rnd());
+        // Shape mix: teardrop 40 / oval 30 / pointed 20 / foxtail 10 (foxtail
+        // share rises with the strain's foxtail trait).
+        const sr = rnd();
+        const foxCut = 0.9 - foxtail * 0.25;
+        let shape: number, h: number;
+        if (sr < 0.4) { shape = 0; h = w * lerp(1.2, 1.45, rnd()); }
+        else if (sr < 0.7) { shape = 1; h = w * lerp(1.05, 1.2, rnd()); }
+        else if (sr < foxCut) { shape = 2; h = w * lerp(1.5, 1.75, rnd()); }
+        else { shape = 3; w *= 0.8; h = w * lerp(2.0, 2.4, rnd()); }
+        calyxes.push({
+          x, y, w, h,
+          rot: (rnd() - 0.5) * 0.9,
+          depth: clamp(0.2 + ((Math.sin(theta) + 1) / 2) * 0.6 + (rnd() - 0.5) * 0.2, 0, 1),
+          accent: rnd() < accentFrac,
+          hueJit: (rnd() - 0.5) * 16,
+          litJit: (rnd() - 0.5) * 10,
+          shape,
+        });
       }
       calyxes.sort((a, b) => a.depth - b.depth); // back → front
 
+      // Sugar leaves — a few small leaves protruding from the cola.
+      const sugar: MacroLeaf[] = [];
+      const nL = Math.round(lerp(5, 8, fatT));
+      for (let i = 0; i < nL; i++) {
+        const t = 0.18 + (i / nL) * 0.72;
+        const env = Math.sin(Math.pow(t, widthExp) * Math.PI);
+        const side = i % 2 ? 1 : -1;
+        sugar.push({
+          x: centerX + side * env * (budW / 2) * (0.8 + 0.3 * rnd()),
+          y: topY + t * budH,
+          sz: budH * (0.1 + 0.06 * env) * (0.85 + 0.3 * rnd()),
+          rot: side * (0.9 + rnd() * 0.5),
+        });
+      }
+
       // Pistils emerge from between clusters across the whole cola, not just the top.
       const pistils: MacroPistil[] = [];
-      const nP = Math.round(totalRows * 2.2);
+      const nP = Math.round(calyxes.length * 0.42); // ~25–40% spawn pistils
       for (let i = 0; i < nP; i++) {
         const rp = rnd();
         const rw = Math.sin(Math.pow(rp, 1.1) * Math.PI) * budW;
@@ -594,7 +642,7 @@ export function GrowChamber({
         const rw = Math.sin(Math.pow(rp, 1.05) * Math.PI) * budW;
         trichs.push({ x: centerX + (rnd() - 0.5) * rw, y: topY + rp * budH, r: 0.8 + rnd() * 1.0, k: rnd(), mat: rnd() });
       }
-      macroBud = { centerX, baseY, topY, budH, budW, calyxes, pistils, trichs };
+      macroBud = { centerX, baseY, topY, budH, budW, calyxes, pistils, trichs, sugar };
 
       // Static backdrop, computed once (deterministic from seed + canvas size).
       const brnd = mulberry32(seed * 131 + 17);
@@ -1107,7 +1155,7 @@ export function GrowChamber({
         ctx!.translate(c.x - baseX, c.y - baseY);
         ctx!.rotate(c.rot);
         ctx!.fillStyle = `hsl(${hue}, ${sat}%, ${lit}%)`;
-        podPath(c.w * sc, c.h * sc);
+        calyxPath(c.shape, c.w * sc, c.h * sc);
         ctx!.fill();
         ctx!.strokeStyle = "rgba(0,0,0,0.16)";
         ctx!.lineWidth = 0.5;
@@ -1117,12 +1165,23 @@ export function GrowChamber({
         ctx!.save();
         ctx!.translate(-c.w * 0.14 * sc, -c.h * 0.2 * sc);
         ctx!.scale(0.55, 0.5);
-        podPath(c.w * sc, c.h * sc);
+        calyxPath(c.shape, c.w * sc, c.h * sc);
         ctx!.fill();
         ctx!.restore();
         ctx!.restore();
       }
       ctx!.globalAlpha = 1;
+
+      // ---- sugar leaves protruding from the cola ----
+      if (grow > 0.15) {
+        for (const lf of bud.sugar) {
+          ctx!.save();
+          ctx!.translate(lf.x - baseX, lf.y - baseY);
+          ctx!.rotate(lf.rot);
+          drawFan(lf.sz * (0.6 + 0.4 * grow), 3, 0.4, 0);
+          ctx!.restore();
+        }
+      }
 
       // ---- pistils from between the clusters ----
       if (grow > 0.1) {
