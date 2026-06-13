@@ -48,6 +48,13 @@ colour expression.
 - **Airflow:** delayed physics, not random wiggle — top moves first, middle
   follows, bottom last (`windForce · branchFlex · leafFlex · budWeight`).
 - **Circadian:** lights-on leaves pray upward, lights-off droop slightly. Subtle.
+  **Implemented** (visual-only): `circadianLeafLift(phase, leafW)` in
+  `web/src/lib/chamber/morphology.ts` — a slow (~44 s) day/night breath applied per
+  leaf in `GrowChamber.drawPlant` as `-side * lift`, stacking with the airflow sway
+  and leaving the bud-weight droop untouched. Amplitude stays in a ~2–5° band; wide-
+  leaf indica strains relax more at night, narrow disciplined strains hold a tighter
+  upward posture. A future Phenotype-Generator PR can drive it from a resolved
+  `leafPrayer` / `leafDroop` instead of the leaf-width default.
 
 ## Performance (now that rendering is heavy)
 Offscreen-canvas cache · LOD · visibility culling · sprite batching · freeze
