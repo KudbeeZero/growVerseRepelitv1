@@ -123,6 +123,19 @@ Each entry: branch · what shipped · test count after merge.
   two-process wiring + "won't connect" gotchas, and added `docs/DEV_BUILD_LOG.md` (sequenced
   milestones from the backlog). Web-only change; backend untouched.
 
+## Plant grow timeline & countdown
+- `claude/plant-stage-timeline` · **Made the grow legible.** Added a pure, deterministic
+  `engine.stage_forecast(plant, cfg, now)` that reports where a plant is in its 6-stage
+  lifecycle and when — at current health — it reaches the next stage and harvest-readiness.
+  It mirrors the engine's own transition rule (`base * (1 + (100-health)/200)` hours), so poor
+  care visibly stretches the ETA. Exposed via `SimulationService.forecast()` as a `forecast`
+  block on `GET .../plants/<id>/state` (absolute ISO instants so a client countdown stays
+  accurate between polls). Web: a new `<StageTimeline>` (full, on the plant detail page) and
+  `<StageTimelineCompact>` (on dashboard cards) — a 6-stage stepper, current-stage progress bar,
+  live "next stage in" + "harvest-ready in" countdowns, a plain-language "what's happening now"
+  blurb per stage for newcomers, and precise effective/ideal-duration numbers for experts. +5
+  backend tests (191 total, green).
+
 ## Session summary
 16 feature branches built + merged to trunk (each its own pushed branch for review):
 daily-stipend-quests, player-leveling, api-key-auth, error-handling-validation,

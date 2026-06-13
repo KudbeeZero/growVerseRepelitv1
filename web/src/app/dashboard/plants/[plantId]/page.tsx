@@ -13,6 +13,7 @@ import { ConditionBadges } from "@/components/plant/ConditionBadges";
 import { CareButtons } from "@/components/plant/CareButtons";
 import { EventLog } from "@/components/plant/EventLog";
 import { PlantMetrics } from "@/components/plant/PlantMetrics";
+import { StageTimeline } from "@/components/plant/StageTimeline";
 import { AdvisorPanel } from "@/components/plant/AdvisorPanel";
 import { usePlantState } from "@/hooks/usePlantState";
 import { useStrainMap } from "@/hooks/queries";
@@ -81,6 +82,16 @@ function PlantDetail({ plantId }: { plantId: string }) {
         </Card>
 
         <Card className="space-y-4 lg:col-span-2">
+          {plant.forecast && (
+            <div>
+              <h3 className="mb-2 text-sm font-semibold text-gray-300">Growth timeline</h3>
+              <StageTimeline
+                forecast={plant.forecast}
+                harvested={plant.harvested}
+                isAlive={plant.is_alive}
+              />
+            </div>
+          )}
           {plant.metrics && (
             <div>
               <h3 className="instrument-label mb-2">Scientist readouts</h3>

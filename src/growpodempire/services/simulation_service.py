@@ -73,6 +73,12 @@ class SimulationService:
         env = engine.environment_for(plant, pod, self._sim)
         return horticulture.derived_metrics(env, self._sim)
 
+    def forecast(self, plant: Plant) -> dict:
+        """Lifecycle forecast: current stage, progress, and ETAs to the next stage
+        and harvest-readiness (at current health). Powers the player-facing
+        stage timeline + countdown."""
+        return engine.stage_forecast(plant, self.cfg, self.clock.now())
+
     def get_events(self, plant_id: str, limit: int = 50) -> List[PlantEvent]:
         return (
             self.session.query(PlantEvent)
