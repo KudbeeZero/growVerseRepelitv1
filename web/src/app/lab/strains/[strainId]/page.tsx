@@ -23,6 +23,11 @@ import { api } from "@/lib/api";
 import { useSession } from "@/lib/session";
 import { queryKeys } from "@/lib/queryKeys";
 import { num, titleCase, dateTime } from "@/lib/format";
+import type { Strain } from "@/lib/types";
+import { GrowChamber } from "@/components/viz/GrowChamber";
+import { morphologyFor, devParams, seedForPlant } from "@/lib/chamber/morphology";
+import { budColorForStrain } from "@/lib/chamber/strainVisuals";
+import { budDnaFor } from "@/lib/chamber/budDna";
 
 function StrainInner({ strainId }: { strainId: string }) {
   const { playerId } = useSession();
@@ -60,6 +65,8 @@ function StrainInner({ strainId }: { strainId: string }) {
           Buy seed
         </Button>
       </div>
+
+      <StrainHero strain={s} />
 
       <Card>
         <div className="grid grid-cols-2 gap-x-6 sm:grid-cols-3">
@@ -99,6 +106,28 @@ function StrainInner({ strainId }: { strainId: string }) {
       {tab === "dna" && <DnaTab strainId={strainId} />}
       {tab === "lineage" && <LineageTab strainId={strainId} />}
       {tab === "verify" && <VerifyTab strainId={strainId} />}
+    </div>
+  );
+}
+
+function StrainHero({ strain }: { strain: Strain }) {
+  const morphology = morphologyFor(strain.indica_ratio);
+  const budColor = budColorForStrain(strain.slug ?? strain.name, morphology.hue, seedForPlant(strain.id));
+  const budDna = budDnaFor(strain.slug ?? strain.name, budColor);
+  return (
+    <div className="h-[420px] w-full overflow-hidden rounded-xl border border-ink-700 bg-[#050b12]">
+      <GrowChamber
+        seed={seedForPlant(strain.slug ?? strain.id)}
+        day={62}
+        stage="flowering"
+        morphology={morphology}
+        dev={devParams(62)}
+        budColor={budColor}
+        budDna={budDna}
+        climate={{ fan: 45, temp: 24, hum: 50, co2: 900 }}
+        conditionFlags={[]}
+        view="macro"
+      />
     </div>
   );
 }
