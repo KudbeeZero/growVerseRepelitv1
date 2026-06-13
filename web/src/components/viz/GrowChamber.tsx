@@ -140,7 +140,8 @@ export function GrowChamber({
   // Silhouette signature (chamber skeleton shape) folds into the rebuild key so a
   // strain's node density / spread / cola mass rebuilds the plant, not every frame.
   const silKey = `${silhouette.nodeDensity.toFixed(2)}|${silhouette.vertStack.toFixed(2)}|${silhouette.branchletFrac.toFixed(2)}|${silhouette.lowerSpread.toFixed(2)}|${silhouette.upperShorten.toFixed(2)}|${silhouette.colaScale.toFixed(2)}|${silhouette.nodeLeaf.toFixed(2)}`;
-  const buildKey = `${seed}|${stage}|${view}|${dayKey}|${dnaKey}|${silKey}|${morphology.pattern}|${morphology.hue.toFixed(1)}|${morphology.heightMul.toFixed(2)}|${morphology.clusterLen.toFixed(2)}`;
+  const leafKey = `${morphology.leafletMax}|${morphology.leafW.toFixed(2)}|${morphology.leafSerr.toFixed(2)}|${morphology.leafSpread.toFixed(2)}`;
+  const buildKey = `${seed}|${stage}|${view}|${dayKey}|${dnaKey}|${silKey}|${morphology.pattern}|${morphology.hue.toFixed(1)}|${morphology.heightMul.toFixed(2)}|${morphology.clusterLen.toFixed(2)}|${leafKey}`;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -159,15 +160,19 @@ export function GrowChamber({
     let H = 0;
     let dpr = 1;
 
-    // ---- leaflet outline (pure shape) ----
+    // ---- leaflet outline (pure shape, per-strain serration) ----
+    // Tooth depth scales with the strain's leafSerr: 0 = smooth/rounded blade
+    // (indica), 1 = the classic toothy sativa edge. The 0.32 notch at serr=1
+    // reproduces the original fixed outline (1 → 0.68 on even points).
     const LEAF_OUT: Array<[number, number]> = (() => {
+      const serr = clamp(S.leafSerr ?? 1, 0, 1);
       const pts: Array<[number, number]> = [];
       const SEG = 13;
       for (let i = 1; i < SEG; i++) {
         const t = i / SEG;
         const env = Math.sin(Math.PI * Math.pow(t, 0.85));
-        const serr = t > 0.1 && t < 0.94 ? (i % 2 ? 1 : 0.68) : 1;
-        pts.push([env * serr * 0.5, t]);
+        const tooth = t > 0.1 && t < 0.94 ? (i % 2 ? 1 : 1 - 0.32 * serr) : 1;
+        pts.push([env * tooth * 0.5, t]);
       }
       return pts;
     })();
@@ -787,15 +792,28 @@ export function GrowChamber({
     }
 
     // ---- leaves ----
-    const FAN_A = [0, 0.42, -0.42, 0.85, -0.85, 1.22, -1.22, 1.5, -1.5];
-    const FAN_M = [1, 0.86, 0.86, 0.7, 0.7, 0.52, 0.52, 0.36, 0.36];
+    // Fan geometry is generated per leaflet so the count can vary by strain
+    // (indica ~7 broad blades ↔ sativa ~11 narrow fingers) without a fixed table.
+    // leaflet 0 points straight up; the rest pair off and splay outward, the angle
+    // scaled by the strain's leafSpread (compact indica < 1 < splayed sativa). For
+    // the inner pairs at leafSpread=1 this reproduces the original 9-entry tables.
+    const leafSpread = S.leafSpread ?? 1;
+    function fanLeaflet(i: number): { a: number; m: number } {
+      if (i === 0) return { a: 0, m: 1 };
+      const k = Math.ceil(i / 2); // pair index outward (1,1,2,2,3,3,…)
+      const side = i % 2 ? 1 : -1;
+      // angle ramp compresses slightly with each pair (matches the tuned table:
+      // k=1→.42, 2→.85, 3→1.22, 4→1.5) then clamps so outer fingers don't invert.
+      const a = clamp(side * (0.46 * k - 0.02 * k * k) * leafSpread, -1.9, 1.9);
+      const m = Math.max(0.26, 1 - 0.155 * k); // length falloff toward the edges
+      return { a, m };
+    }
     function drawFan(size: number, n: number, topBoost: number, claw: number) {
-      // Clamp to the FAN_A/FAN_M table length: a future per-strain leaflet count
-      // above 9 would otherwise index past the arrays → undefined → NaN geometry.
-      const leaflets = Math.min(n, FAN_A.length);
+      const leaflets = Math.max(1, Math.round(n));
       for (let i = 0; i < leaflets; i++) {
-        const L = size * FAN_M[i], Wd = L * 0.32 * S.leafW;
-        const a = FAN_A[i] + (claw ? Math.sign(FAN_A[i] || 1) * claw * (0.2 + Math.abs(FAN_A[i]) * 0.5) : 0);
+        const fl = fanLeaflet(i);
+        const L = size * fl.m, Wd = L * 0.32 * S.leafW;
+        const a = fl.a + (claw ? Math.sign(fl.a || 1) * claw * (0.2 + Math.abs(fl.a) * 0.5) : 0);
         ctx!.save();
         ctx!.rotate(a);
         const col = `hsl(${S.hue}, ${S.sat}%, ${S.lit + topBoost * 6}%)`;
