@@ -71,6 +71,20 @@ interface FlowerSite {
   pat: string;
 }
 
+// Macro ("Detailed Bud View") cola: a dense stack of small, overlapping calyxes
+// arranged in layered rows around a central spine, rather than a few large
+// teardrops. Painter's-algorithm depth (0 back → 1 front) gives the cola volume.
+interface MacroCalyx {
+  x: number; y: number; w: number; h: number; rot: number;
+  depth: number; accent: boolean; hueJit: number; litJit: number;
+}
+interface MacroPistil { x: number; y: number; a: number; len: number; bend: number; k: number }
+interface MacroTrich { x: number; y: number; r: number; k: number; mat: number }
+interface MacroBud {
+  centerX: number; baseY: number; topY: number; budH: number; budW: number;
+  calyxes: MacroCalyx[]; pistils: MacroPistil[]; trichs: MacroTrich[];
+}
+
 export function GrowChamber({
   seed,
   day,
@@ -417,7 +431,7 @@ export function GrowChamber({
     }
     let scene: Scene | null = null;
     let plant: Plant | null = null;
-    let macroSite: FlowerSite | null = null;
+    let macroBud: MacroBud | null = null;
     // Precomputed-once macro backdrop (deterministic from seed + canvas size) so
     // the per-frame draw never re-seeds PRNGs or re-allocates gradients.
     let macroBokeh: Array<{ x: number; y: number; r: number; grad: CanvasGradient }> = [];
@@ -522,12 +536,65 @@ export function GrowChamber({
 
     function buildMacro() {
       const rnd = mulberry32(seed * 5077 + 7);
-      const axis = H * 0.62;
-      const baseW = axis * (S.pattern === "spiral" ? 0.3 : 0.46) * S.clusterFat;
-      const nC = Math.round(S.bracts * (S.pattern === "spiral" ? 2.0 : 1.3));
-      // High lush so the showcase cola carries dense pistils + heavy trichome
-      // frost — far more than the tiny node buds out in the chamber view.
-      macroSite = buildFlowerSite(rnd, axis, baseW, { pattern: S.pattern, nClusters: nC, bracts: S.bracts, fatMul: 1.08, lush: 2.2 });
+      // Strain morphology: indica (high clusterFat ~1.3) → wider, chunkier cola
+      // with heavier lower mass; sativa (~0.74) → narrower, looser.
+      const fatT = clamp((S.clusterFat - 0.74) / (1.3 - 0.74), 0, 1);
+      const budH = H * 0.6;
+      const budW = budH * lerp(0.34, 0.52, fatT);
+      const centerX = W * 0.5;
+      const baseY = H * 0.9;
+      const topY = baseY - budH;
+      const totalRows = Math.round(lerp(13, 18, fatT));
+      const rowSpacing = budH / totalRows;
+      const widthExp = lerp(1.0, 1.32, fatT); // >1 pushes the widest point lower
+      const accentFrac = live.current.budColor.accentFrac ?? 0;
+
+      const calyxes: MacroCalyx[] = [];
+      for (let r = 0; r < totalRows; r++) {
+        const rp = totalRows === 1 ? 0.5 : r / (totalRows - 1); // 0 top → 1 bottom
+        const env = Math.sin(Math.pow(rp, widthExp) * Math.PI); // cola silhouette
+        const rowWidth = env * budW;
+        const count = Math.max(2, Math.round(lerp(3, 8, env)));
+        for (let i = 0; i < count; i++) {
+          const x = centerX + (rnd() - 0.5) * rowWidth;
+          const y = topY + r * rowSpacing + (rnd() - 0.5) * rowSpacing * 0.45;
+          const centerness = 1 - Math.abs(x - centerX) / (rowWidth / 2 + 1);
+          const sizeF = clamp(0.4 + 0.6 * centerness, 0, 1) * (0.7 + 0.3 * env);
+          const w = budW * lerp(0.11, 0.22, sizeF) * (0.85 + 0.3 * rnd());
+          calyxes.push({
+            x, y, w, h: w * lerp(1.2, 1.55, rnd()),
+            rot: (rnd() - 0.5) * 0.9,
+            depth: clamp(0.15 + centerness * 0.55 + (rnd() - 0.5) * 0.5, 0, 1),
+            accent: rnd() < accentFrac,
+            hueJit: (rnd() - 0.5) * 16,
+            litJit: (rnd() - 0.5) * 10,
+          });
+        }
+      }
+      calyxes.sort((a, b) => a.depth - b.depth); // back → front
+
+      // Pistils emerge from between clusters across the whole cola, not just the top.
+      const pistils: MacroPistil[] = [];
+      const nP = Math.round(totalRows * 2.2);
+      for (let i = 0; i < nP; i++) {
+        const rp = rnd();
+        const rw = Math.sin(Math.pow(rp, 1.1) * Math.PI) * budW;
+        pistils.push({
+          x: centerX + (rnd() - 0.5) * rw * 0.9,
+          y: topY + rp * budH,
+          a: -Math.PI / 2 + (rnd() - 0.5) * 1.9,
+          len: 0.5 + rnd() * 0.6, bend: (rnd() - 0.5) * 1.2, k: rnd() * 0.85,
+        });
+      }
+      // Trichomes — a light frost on the surface (reduced so it isn't "snow").
+      const trichs: MacroTrich[] = [];
+      const nT = Math.round(calyxes.length * 1.1);
+      for (let i = 0; i < nT; i++) {
+        const rp = rnd();
+        const rw = Math.sin(Math.pow(rp, 1.05) * Math.PI) * budW;
+        trichs.push({ x: centerX + (rnd() - 0.5) * rw, y: topY + rp * budH, r: 0.8 + rnd() * 1.0, k: rnd(), mat: rnd() });
+      }
+      macroBud = { centerX, baseY, topY, budH, budW, calyxes, pistils, trichs };
 
       // Static backdrop, computed once (deterministic from seed + canvas size).
       const brnd = mulberry32(seed * 131 + 17);
@@ -547,9 +614,9 @@ export function GrowChamber({
         const yf = 0.12 + (i / (nLeaf - 1)) * 0.74;
         const side = i % 2 ? 1 : -1;
         macroLeaves.push({
-          lx: side * baseW * (0.4 + lrnd() * 0.3),
-          ly: -yf * axis,
-          lsz: axis * (0.34 - 0.16 * yf) * (0.9 + lrnd() * 0.3),
+          lx: side * budW * (0.7 + lrnd() * 0.4),
+          ly: -yf * budH,
+          lsz: budH * (0.34 - 0.16 * yf) * (0.9 + lrnd() * 0.3),
           rot: side * (1.05 + lrnd() * 0.3) - 0.1,
         });
       }
@@ -989,16 +1056,17 @@ export function GrowChamber({
       ctx!.fill();
 
       const P = live.current.dev;
-      const baseX = W * 0.5, baseY = H * 0.9;
-      const axis = macroSite!.axisLen;
-      const jig = Math.min(3, Math.abs(phys.bud.av) * 7);
+      const bc = live.current.budColor;
+      const bud = macroBud!;
+      const baseX = bud.centerX, baseY = bud.baseY;
+      const budH = bud.budH, budW = bud.budW;
 
       ctx!.save();
       ctx!.translate(baseX, baseY);
       ctx!.rotate(phys.bud.ao + (motionOK ? Math.sin(tt * 0.8) * 0.008 : 0));
+      // Everything below is drawn relative to the bud base (0,0).
 
-      // ---- framing fan leaves behind the cola (precomputed; kept green; they
-      // frame the bud as the reference photo's sugar/fan leaves do).
+      // ---- framing fan leaves behind the cola (precomputed; kept green).
       ctx!.save();
       ctx!.globalAlpha = 0.92;
       for (const lf of macroLeaves) {
@@ -1011,25 +1079,99 @@ export function GrowChamber({
       ctx!.restore();
 
       // ---- stalk below the cola ----
-      ctx!.strokeStyle = `hsl(${S.hue - 12}, 34%, 28%)`;
-      ctx!.lineWidth = Math.max(4, macroSite!.baseW * 0.08);
+      ctx!.strokeStyle = `hsl(${S.hue - 12}, 34%, 26%)`;
+      ctx!.lineWidth = Math.max(4, budW * 0.12);
       ctx!.lineCap = "round";
       ctx!.beginPath();
       ctx!.moveTo(0, H * 0.06);
-      ctx!.lineTo(0, 0);
+      ctx!.lineTo(0, -budH * 0.04);
       ctx!.stroke();
 
-      // ---- the cola itself ----
-      drawFlowerSite(macroSite!, P, jig, tt);
+      // ---- dark cola core so gaps between calyxes don't show the backdrop ----
+      ctx!.fillStyle = `hsl(${bc.calyxHue}, ${bc.calyxSat}%, 17%)`;
+      ctx!.beginPath();
+      ctx!.ellipse(0, -budH * 0.5, budW * 0.46, budH * 0.5, 0, 0, TAU);
+      ctx!.fill();
+
+      // ---- calyxes: small, overlapping, layered back→front ----
+      const grow = clamp(P.budDev, 0, 1);
+      for (const c of bud.calyxes) {
+        // Buds fill in as they develop: back/upper calyxes appear first.
+        if (grow < 0.05 + c.depth * 0.35) continue;
+        const hue = (c.accent ? (bc.accentHue ?? bc.calyxHue) : bc.calyxHue) + c.hueJit;
+        const sat = bc.calyxSat;
+        const lit = clamp(33 + (c.depth - 0.5) * 16 + c.litJit + P.ripe * 2 + bc.anthocyanin * 2, 12, 80);
+        const sc = 0.6 + 0.4 * grow;
+        ctx!.save();
+        ctx!.globalAlpha = lerp(0.8, 1, c.depth);
+        ctx!.translate(c.x - baseX, c.y - baseY);
+        ctx!.rotate(c.rot);
+        ctx!.fillStyle = `hsl(${hue}, ${sat}%, ${lit}%)`;
+        podPath(c.w * sc, c.h * sc);
+        ctx!.fill();
+        ctx!.strokeStyle = "rgba(0,0,0,0.16)";
+        ctx!.lineWidth = 0.5;
+        ctx!.stroke();
+        // soft top-left highlight for a waxy, rounded read
+        ctx!.fillStyle = `hsla(${hue}, ${sat}%, ${Math.min(86, lit + 18)}%, 0.45)`;
+        ctx!.save();
+        ctx!.translate(-c.w * 0.14 * sc, -c.h * 0.2 * sc);
+        ctx!.scale(0.55, 0.5);
+        podPath(c.w * sc, c.h * sc);
+        ctx!.fill();
+        ctx!.restore();
+        ctx!.restore();
+      }
+      ctx!.globalAlpha = 1;
+
+      // ---- pistils from between the clusters ----
+      if (grow > 0.1) {
+        const fiber = pistilFiber(P.ripe, P.brown, bc.pistilMagenta);
+        const ball = pistilBall(P.ripe, P.brown, bc.pistilMagenta);
+        ctx!.lineWidth = Math.max(0.6, budW * 0.006);
+        ctx!.lineCap = "round";
+        for (const ps of bud.pistils) {
+          if (ps.k > grow) continue;
+          const L = budW * 0.18 * ps.len * clamp((grow - ps.k * 0.5) / 0.6, 0.4, 1);
+          const x0 = ps.x - baseX, y0 = ps.y - baseY;
+          const x1 = x0 + Math.cos(ps.a) * L, y1 = y0 + Math.sin(ps.a) * L;
+          ctx!.strokeStyle = fiber;
+          ctx!.beginPath();
+          ctx!.moveTo(x0, y0);
+          ctx!.quadraticCurveTo((x0 + x1) / 2 + ps.bend * (1.5 + P.ripe * 2), (y0 + y1) / 2 - 2, x1, y1);
+          ctx!.stroke();
+          ctx!.fillStyle = ball;
+          ctx!.beginPath();
+          ctx!.arc(x1, y1, Math.max(0.6, budW * 0.008), 0, TAU);
+          ctx!.fill();
+        }
+      }
+
+      // ---- trichome frost on the surface ----
+      if (P.trich > 0) {
+        for (const t of bud.trichs) {
+          if (t.k > P.trich) continue;
+          const x = t.x - baseX, y = t.y - baseY;
+          const hr = t.r * Math.max(0.7, budW * 0.012);
+          ctx!.fillStyle = trichHead(clamp(P.trich - t.mat * 0.4, 0, 1));
+          ctx!.beginPath();
+          ctx!.arc(x, y, hr, 0, TAU);
+          ctx!.fill();
+          ctx!.fillStyle = "rgba(255,255,255,0.6)";
+          ctx!.beginPath();
+          ctx!.arc(x - hr * 0.3, y - hr * 0.3, hr * 0.3, 0, TAU);
+          ctx!.fill();
+        }
+      }
       ctx!.restore();
 
-      // ---- frost bloom: a soft additive glow over the cola once trichomes
-      // mature, giving the whole bud that sugary, light-catching shimmer.
+      // ---- frost bloom: a soft additive glow once trichomes mature ----
       if (P.trich > 0.25) {
         ctx!.save();
         ctx!.globalCompositeOperation = "screen";
-        const gg = ctx!.createRadialGradient(baseX, baseY - axis * 0.5, axis * 0.08, baseX, baseY - axis * 0.5, axis * 0.72);
-        gg.addColorStop(0, `rgba(222,242,246,${0.05 + P.trich * 0.06})`);
+        const gy = baseY - budH * 0.5;
+        const gg = ctx!.createRadialGradient(baseX, gy, budH * 0.06, baseX, gy, budH * 0.6);
+        gg.addColorStop(0, `rgba(222,242,246,${0.04 + P.trich * 0.05})`);
         gg.addColorStop(1, "rgba(222,242,246,0)");
         ctx!.fillStyle = gg;
         ctx!.fillRect(0, 0, W, H);
