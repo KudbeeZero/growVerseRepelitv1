@@ -8,7 +8,7 @@
 // deep-purple bud can still carry classic bright-orange pistils (e.g. PDP,
 // Animal Mints) — they are separate genetic expressions.
 
-import { budColorFor, type BudColor } from "./morphology";
+import { budColorFor, clamp, lerp, type BudColor, type Silhouette } from "./morphology";
 
 /** name → slug, matching backend db/seed.py slugify. */
 export function slugify(s: string): string {
@@ -38,4 +38,38 @@ export function budColorForStrain(
     if (AUTHORED[key]) return AUTHORED[key];
   }
   return budColorFor(fallbackSeed, baseGreenHue);
+}
+
+// Authored whole-plant silhouettes — the skeleton shape that makes a strain
+// recognisable from across the room (knowledge/whole-plant-architecture.md §
+// Silhouette system). Tuned to the canonical targets:
+//   • G13 — slim spear / christmas-tree: tight nodes, short top, modest skirt.
+//   • Purple Diddy Punch — short, wide, chunky: heavy lateral branching, fat top.
+//   • Animal Mints — medium height, dense stacking, golf-ball clusters.
+const SILHOUETTES: Record<string, Silhouette> = {
+  g13: { nodeDensity: 1.16, vertStack: 1.22, branchletFrac: 0.4, lowerSpread: 0.95, upperShorten: 0.46, colaScale: 1.1, nodeLeaf: 0.95 },
+  "purple-diddy-punch": { nodeDensity: 1.08, vertStack: 0.94, branchletFrac: 0.78, lowerSpread: 1.42, upperShorten: 0.16, colaScale: 1.22, nodeLeaf: 1.16 },
+  "animal-mints": { nodeDensity: 1.3, vertStack: 1.08, branchletFrac: 0.64, lowerSpread: 1.12, upperShorten: 0.3, colaScale: 1.07, nodeLeaf: 1.12 },
+};
+
+/**
+ * Per-strain silhouette: authored for curated strains, else derived from indica
+ * dominance — indica trends bushier/wider/denser with a fat top, sativa taller/
+ * airier/leaner. Pure + deterministic so the chamber rebuilds identically.
+ */
+export function silhouetteFor(slugOrName: string | undefined, indicaRatio: number): Silhouette {
+  if (slugOrName) {
+    const key = SILHOUETTES[slugOrName] ? slugOrName : slugify(slugOrName);
+    if (SILHOUETTES[key]) return SILHOUETTES[key];
+  }
+  const r = clamp(indicaRatio, 0, 1);
+  return {
+    nodeDensity: lerp(0.92, 1.18, r),
+    vertStack: lerp(0.96, 1.16, r),
+    branchletFrac: lerp(0.4, 0.66, r),
+    lowerSpread: lerp(0.96, 1.32, r),
+    upperShorten: lerp(0.22, 0.4, r),
+    colaScale: lerp(0.95, 1.14, r),
+    nodeLeaf: lerp(0.9, 1.15, r),
+  };
 }

@@ -42,6 +42,30 @@ export function seedForPlant(plantId: string): number {
 
 export type BudPattern = "nodal" | "hybrid" | "spiral";
 
+/**
+ * Whole-plant silhouette knobs — the per-strain shape of the *skeleton* (node
+ * stacking, branch spread, secondary branchlets, cola mass), distinct from the
+ * leaf/bud colouring (`Morphology`). Authored for curated strains and derived
+ * from indica dominance otherwise (see `silhouetteFor` in strainVisuals). This
+ * is what lets a strain be recognisable by silhouette alone.
+ */
+export interface Silhouette {
+  /** Node-count multiplier — denser canopy (>1) vs. airy (<1). */
+  nodeDensity: number;
+  /** Vertical node-packing tightness — >1 stacks nodes tighter (spear). */
+  vertStack: number;
+  /** Fraction of main branches that sprout a secondary branchlet (0..1). */
+  branchletFrac: number;
+  /** Lateral reach multiplier for the lower branches (wider skirt). */
+  lowerSpread: number;
+  /** How much shorter the upper branches are than the lower (0..1). */
+  upperShorten: number;
+  /** Top-cola mass multiplier. */
+  colaScale: number;
+  /** Node-base leaf-cluster size multiplier. */
+  nodeLeaf: number;
+}
+
 /** Morphology parameters the geometry builder consumes. */
 export interface Morphology {
   hue: number;

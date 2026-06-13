@@ -24,6 +24,7 @@ import {
   type DevParams,
   type Morphology,
   type BudColor,
+  type Silhouette,
 } from "@/lib/chamber/morphology";
 import { CONDITION_VISUALS, SEVERITY_SCALE, dominantFlag } from "@/lib/conditionVisuals";
 import { pickPaletteColor, dominantPaletteColor, type BudDNA } from "@/lib/chamber/budDna";
@@ -35,6 +36,8 @@ interface Props {
   day: number;
   stage: GrowthStage;
   morphology: Morphology;
+  /** Per-strain whole-plant skeleton shape (node density, spread, cola mass). */
+  silhouette: Silhouette;
   dev: DevParams;
   climate: ClimateInput;
   conditionFlags: ConditionFlag[];
@@ -97,6 +100,7 @@ export function GrowChamber({
   day,
   stage,
   morphology,
+  silhouette,
   dev,
   climate,
   conditionFlags,
@@ -133,7 +137,10 @@ export function GrowChamber({
           budDna.palette.map((p) => `${p.hue | 0}:${p.lit | 0}`).join(","),
         ].join("|")
       : "";
-  const buildKey = `${seed}|${stage}|${view}|${dayKey}|${dnaKey}|${morphology.pattern}|${morphology.hue.toFixed(1)}|${morphology.heightMul.toFixed(2)}|${morphology.clusterLen.toFixed(2)}`;
+  // Silhouette signature (chamber skeleton shape) folds into the rebuild key so a
+  // strain's node density / spread / cola mass rebuilds the plant, not every frame.
+  const silKey = `${silhouette.nodeDensity.toFixed(2)}|${silhouette.vertStack.toFixed(2)}|${silhouette.branchletFrac.toFixed(2)}|${silhouette.lowerSpread.toFixed(2)}|${silhouette.upperShorten.toFixed(2)}|${silhouette.colaScale.toFixed(2)}|${silhouette.nodeLeaf.toFixed(2)}`;
+  const buildKey = `${seed}|${stage}|${view}|${dayKey}|${dnaKey}|${silKey}|${morphology.pattern}|${morphology.hue.toFixed(1)}|${morphology.heightMul.toFixed(2)}|${morphology.clusterLen.toFixed(2)}`;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -147,6 +154,7 @@ export function GrowChamber({
       !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
     const S = morphology;
+    const SK = silhouette;
     let W = 0;
     let H = 0;
     let dpr = 1;
@@ -460,12 +468,26 @@ export function GrowChamber({
       soilR: number;
       cracks: Array<{ a: number; r0: number; r1: number; al: number; wob: number }>;
     }
+    // A secondary branchlet sprouting off a main branch — carries its own small
+    // leaf cluster and (in flower) a small bud at its tip. This is the biggest
+    // "fullness" lever: it breaks the one-branch-per-node diagram look.
+    interface Branchlet {
+      along: number; // 0..1 position along the parent branch
+      side: number; // +1/-1 which way it forks off
+      len: number; tilt: number; curve: number;
+      leafSize: number; leaflets: number; phase: number;
+      site: FlowerSite | null; // small bud at the branchlet tip
+    }
     interface Node {
       x: number; y: number; f: number; side: number; tilt: number; len: number;
       leafSize: number; leaflets: number; phase: number; tipX: number; tipY: number;
       site: FlowerSite | null; budRot: number;
       curve: number; // branch upward bend (bezier), 0.1–0.4
       weight: number; // bud load on this branch → how much it droops
+      spread: number; // lateral reach multiplier (wide skirt low, tucked up top)
+      branchlets: Branchlet[]; // secondary forks
+      nodeLeafSize: number; // leaf cluster hugging the stem at this node
+      nodeBud: FlowerSite | null; // bud forming at the node intersection (upper)
     }
     interface Plant {
       P: DevParams; CL: ReturnType<typeof climateModel>; stage: string;
@@ -539,30 +561,43 @@ export function GrowChamber({
       }
 
       const nodes: Node[] = [];
-      const maxNodes = Math.min(13, Math.max(d <= 10 ? 1 : 2, Math.floor(hN / S.internode)));
+      const flowering = stageOf() === "flowering" || stageOf() === "harvest";
+      // Node density: the strain silhouette sets the canopy fill, and flowering
+      // packs a few more nodes in to close the gaps the bare skeleton left.
+      const flowerPack = flowering ? 1.18 : 1;
+      const nodeTarget = Math.floor((hN / S.internode) * SK.nodeDensity * SK.vertStack * flowerPack);
+      const maxNodes = Math.min(18, Math.max(d <= 10 ? 1 : 2, nodeTarget));
       const grow = smooth(clamp((d - 8) / 22, 0, 1));
       // Branches flex more when they're longer/thinner (lower branchMul).
       const branchFlex = clamp(1.25 - S.branchMul * 0.5, 0.45, 1.05);
       for (let i = 0; i < maxNodes; i++) {
-        // Genetic/organic internode spacing: a touch tighter toward the apex,
-        // plus per-node jitter so nodes aren't perfectly even (real plants vary).
+        // Genetic/organic internode spacing: tighter toward the apex (more so for
+        // spear strains, via vertStack), plus per-node jitter so nodes aren't
+        // perfectly even (real plants vary).
         const fBase = (i + 1) / (maxNodes + 1);
-        const f = clamp(Math.pow(fBase, 1.08) + (rnd() - 0.5) * 0.045, 0.04, 0.96);
+        const stackExp = lerp(1.0, 1.22, clamp(SK.vertStack - 0.96, 0, 0.3) / 0.3);
+        const f = clamp(Math.pow(fBase, stackExp) + (rnd() - 0.5) * 0.045, 0.04, 0.96);
         const p = spine[Math.round(f * 24)];
-        const low = Math.pow(1 - f, 0.75);
+        const low = Math.pow(1 - f, 0.75); // 1 at the base → 0 at the apex
+        // Lower branches splay wide (skirt); upper branches tuck in and shorten.
+        const spread = lerp(1, SK.lowerSpread, low);
+        const shorten = 1 - SK.upperShorten * f;
         const side = i % 2 ? 1 : -1;
-        const tilt = (0.92 + rnd() * 0.3) * (1 - f * 0.22);
-        const len = A * 0.27 * S.branchMul * (0.35 + 0.65 * low) * grow;
+        const tilt = (0.92 + rnd() * 0.3) * (1 - f * 0.22) * lerp(1, 1.12, low);
+        const len = A * 0.27 * S.branchMul * (0.35 + 0.65 * low) * grow * shorten;
         const nd: Node = {
-          x: p.x, y: p.y, f, side, tilt, len,
+          x: p.x, y: p.y, f, side, tilt, len, spread,
           leafSize: A * (0.08 + 0.05 * low) * (0.55 + 0.45 * grow) * (1 - 0.4 * P.budDev * f),
           leaflets: Math.min(S.leafletMax, 3 + 2 * Math.floor(d / 14)),
           phase: rnd() * TAU,
           tipX: 0, tipY: 0, site: null, budRot: 0,
           curve: 0.14 + rnd() * 0.22, // upward bend
           weight: 0,
+          branchlets: [],
+          nodeLeafSize: A * (0.05 + 0.04 * low) * (0.55 + 0.45 * grow) * SK.nodeLeaf * (1 - 0.35 * P.budDev * f),
+          nodeBud: null,
         };
-        nd.tipX = Math.sin(nd.tilt) * nd.side * nd.len;
+        nd.tipX = Math.sin(nd.tilt) * nd.side * nd.len * spread;
         nd.tipY = -Math.cos(nd.tilt) * nd.len * 0.55;
         if (P.budDev > 0 && f > S.flowerFrom) {
           const sizeUp = lerp(0.55, 1.15, f);
@@ -573,16 +608,50 @@ export function GrowChamber({
           nd.budRot = nd.side * 0.1;
           nd.weight = lerp(0.5, 1.1, f) * S.clusterFat; // higher / fatter buds weigh more
         }
+        // A bud forming at the node intersection itself (not just the tip) —
+        // upper/mid nodes only, where light reaches and flower sites set.
+        if (P.budDev > 0 && f > Math.max(S.flowerFrom, 0.38)) {
+          const axis = A * (0.035 + 0.05 * f) * S.clusterLen * (0.5 + 0.5 * P.budDev);
+          const baseW = axis * 0.4 * S.clusterFat;
+          const nC = Math.max(1, Math.round(S.bracts * 0.4 * f));
+          nd.nodeBud = buildFlowerSite(rnd, axis, baseW, { pattern: S.pattern, nClusters: nC, bracts: S.bracts, fatMul: 0.9, lush: 0.7 });
+          nd.weight += 0.25 * S.clusterFat;
+        }
+        // Secondary branchlets — small forks carrying their own foliage and, in
+        // flower, a small bud at the tip. Denser on the lower/mid canopy.
+        if (nd.len > A * 0.045 && d > 14) {
+          let nBL = rnd() < SK.branchletFrac ? 1 : 0;
+          if (low > 0.45 && rnd() < SK.branchletFrac * 0.75) nBL += 1;
+          for (let b = 0; b < nBL; b++) {
+            const along = 0.48 + rnd() * 0.34;
+            let blSite: FlowerSite | null = null;
+            if (P.budDev > 0 && f > S.flowerFrom * 0.8) {
+              const axis = A * 0.04 * S.clusterLen * (0.5 + 0.5 * P.budDev);
+              const baseW = axis * 0.4 * S.clusterFat;
+              blSite = buildFlowerSite(rnd, axis, baseW, { pattern: S.pattern, nClusters: 1, bracts: Math.max(5, Math.round(S.bracts * 0.7)), fatMul: 0.85, lush: 0.55 });
+              nd.weight += 0.2 * S.clusterFat;
+            }
+            nd.branchlets.push({
+              along, side: b % 2 ? 1 : -1,
+              len: nd.len * (0.4 + rnd() * 0.26), tilt: 0.55 + rnd() * 0.5, curve: 0.1 + rnd() * 0.2,
+              leafSize: nd.leafSize * (0.42 + rnd() * 0.16), leaflets: Math.max(3, nd.leaflets - 2),
+              phase: rnd() * TAU, site: blSite,
+            });
+          }
+        }
         nodes.push(nd);
       }
 
       let cola: Plant["cola"] = null;
       if (P.budDev > 0) {
-        const axis = stemH * (0.15 + 0.16 * P.budDev) * S.clusterLen;
-        const baseW = axis * (S.pattern === "spiral" ? 0.3 : 0.46) * S.clusterFat;
-        const nC = Math.round(S.bracts * (S.pattern === "spiral" ? 1.6 : 1.0));
+        // Top cola gains mass through flowering and swells further in late flower
+        // (ripeness) — the apex should be the visual climax, not a tidy spike.
+        const lateMass = 1 + P.ripe * 0.2;
+        const axis = stemH * (0.15 + 0.18 * P.budDev) * S.clusterLen * SK.colaScale * lateMass;
+        const baseW = axis * (S.pattern === "spiral" ? 0.3 : 0.46) * S.clusterFat * (0.95 + 0.18 * P.ripe);
+        const nC = Math.round(S.bracts * (S.pattern === "spiral" ? 1.7 : 1.15));
         cola = {
-          site: buildFlowerSite(rnd, axis, baseW, { pattern: S.pattern, nClusters: nC, bracts: S.bracts, fatMul: 1.05 }),
+          site: buildFlowerSite(rnd, axis, baseW, { pattern: S.pattern, nClusters: nC, bracts: S.bracts, fatMul: 1.1 }),
           x: spine[24].x, y: spine[24].y + axis * 0.06,
         };
       }
@@ -1063,10 +1132,55 @@ export function GrowChamber({
         ctx!.rotate(nd.side * (0.5 + nd.tilt * 0.18));
         drawFan(nd.leafSize, nd.leaflets, nd.f, claw);
         ctx!.restore();
-        ctx!.save();
-        ctx!.rotate(-nd.side * 0.35);
-        drawFan(nd.leafSize * 0.5, Math.max(3, nd.leaflets - 2), 0, claw);
-        ctx!.restore();
+        // Leaf cluster hugging the stem at the node — every node carries foliage,
+        // not just the branch tip, so internodes don't read as bare gaps.
+        for (const [ang, scl] of [[-nd.side * 0.32, 0.55], [-nd.side * 0.74, 0.36], [nd.side * 0.22, 0.3]] as const) {
+          ctx!.save();
+          ctx!.rotate(ang);
+          drawFan(nd.nodeLeafSize * scl, Math.max(3, nd.leaflets - 2), 0, claw);
+          ctx!.restore();
+        }
+        // Secondary branchlets — forks part-way along the branch (sharing the
+        // branch's sway/droop), each with its own foliage and small tip bud.
+        for (const bl of nd.branchlets) {
+          const t = bl.along;
+          // point on the branch's bezier at t≈along (linear path + its upward arc)
+          const bx = endX * t;
+          const by = endY * t - nd.len * nd.curve * Math.sin(Math.PI * t);
+          const bex = Math.sin(bl.tilt) * nd.side * bl.len;
+          const bey = -Math.cos(bl.tilt) * bl.len * 0.5 + sag * 0.25;
+          ctx!.save();
+          ctx!.translate(bx, by);
+          ctx!.strokeStyle = `hsl(${S.hue - 8}, 30%, 32%)`;
+          ctx!.lineWidth = clamp(sw0 * 0.32 * (1 - nd.f * 0.4), 0.8, 2.4);
+          ctx!.lineCap = "round";
+          ctx!.beginPath();
+          ctx!.moveTo(0, 0);
+          ctx!.quadraticCurveTo(bex * 0.5, bey * 0.5 - bl.len * bl.curve, bex, bey);
+          ctx!.stroke();
+          ctx!.save();
+          ctx!.translate(bex, bey);
+          ctx!.rotate(bl.side * (0.4 + bl.tilt * 0.2));
+          drawFan(bl.leafSize, bl.leaflets, nd.f, claw);
+          ctx!.restore();
+          if (bl.site) {
+            ctx!.save();
+            ctx!.translate(bex, bey);
+            ctx!.rotate(nd.side * 0.12 + nd.side * droopRot * 0.4);
+            drawFlowerSite(bl.site, p.P, jig, tt);
+            ctx!.restore();
+          }
+          ctx!.restore();
+        }
+        // Bud forming at the node intersection itself (upper/mid nodes).
+        if (nd.nodeBud) {
+          ctx!.save();
+          ctx!.translate(0, -2);
+          ctx!.rotate(-nd.side * 0.12);
+          drawFlowerSite(nd.nodeBud, p.P, jig, tt);
+          ctx!.restore();
+        }
+        // Bud at the branch tip.
         if (nd.site) {
           ctx!.save();
           ctx!.translate(endX * 0.85, endY * 0.85);
