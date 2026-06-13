@@ -116,7 +116,13 @@ export function GrowChamber({
   // it there — otherwise scrubbing the growth slider would rebuild identical
   // geometry on every integer-day step.
   const dayKey = view === "macro" ? "" : Math.round(day);
-  const buildKey = `${seed}|${stage}|${view}|${dayKey}|${morphology.pattern}|${morphology.hue.toFixed(1)}|${morphology.heightMul.toFixed(2)}|${morphology.clusterLen.toFixed(2)}`;
+  // Macro geometry depends on the (env-modified) bud DNA; fold a coarse signature
+  // in so the cola rebuilds when grow conditions shift it, but not every frame.
+  const dnaKey =
+    view === "macro"
+      ? `${budDna.maxBudWidth.toFixed(0)}|${budDna.trichomeDensity.toFixed(2)}|${(budDna.foxtailBias ?? 0).toFixed(2)}|${(budDna.topStretch ?? 0).toFixed(2)}|${budDna.palette.length}`
+      : "";
+  const buildKey = `${seed}|${stage}|${view}|${dayKey}|${dnaKey}|${morphology.pattern}|${morphology.hue.toFixed(1)}|${morphology.heightMul.toFixed(2)}|${morphology.clusterLen.toFixed(2)}`;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -597,19 +603,25 @@ export function GrowChamber({
           const x = centerX + Math.cos(angle) * localWidth * rr(0.15, 0.5);
           const sizePx = rr(dna.calyxSizeMin, dna.calyxSizeMax) * lerp(0.75, 1.2, widthCurve) * sizeMul;
           let w = sizePx * scale * rr(0.85, 1.05);
-          // Shape mix (blueprint §5): teardrop 40 / oval 25 / pointed 20 / foxtail 15
-          // (foxtail share rises with the strain's foxtail trait). Height > width always.
+          // Shape mix (blueprint §5): teardrop 40 / oval 25 / pointed 20 / foxtail 15.
+          // Light-stress env modifiers push more pointed/foxtail calyxes, more so
+          // near the top, and stretch + tilt the top irregularly. Height > width.
+          const topness = clamp((0.4 - progress) / 0.4, 0, 1);
+          const foxBias = dna.foxtailBias ?? 0;
+          const topStretch = dna.topStretch ?? 0;
           const sr = rnd();
-          const foxCut = 0.85 - foxtail * 0.2;
+          const ovalCut = 0.65 - topness * topStretch * 0.2;
+          const foxCut = 0.85 - foxtail * 0.2 - foxBias * 0.22 - topness * topStretch * 0.15;
           let shape: number, h: number;
           if (sr < 0.4) { shape = 0; h = w * rr(1.25, 1.5); }
-          else if (sr < 0.65) { shape = 1; h = w * rr(1.2, 1.35); }
+          else if (sr < ovalCut) { shape = 1; h = w * rr(1.2, 1.35); }
           else if (sr < foxCut) { shape = 2; h = w * rr(1.5, 1.8); }
           else { shape = 3; w *= 0.78; h = w * rr(2.0, 2.5); }
+          if (topStretch > 0) h *= 1 + topness * topStretch * 0.6; // stretched top
           const col = pickPaletteColor(dna.palette, rnd());
           calyxes.push({
             x, y: y + rr(-4, 4) * scale, w, h,
-            rot: rr(-35, 35) * (Math.PI / 180),
+            rot: rr(-35, 35) * (Math.PI / 180) * (1 + topness * topStretch * 0.7),
             depth: pickDepth(),
             hue: col.hue + rr(-8, 8), sat: col.sat, lit: col.lit + rr(-6, 6),
             shape,
@@ -1156,7 +1168,8 @@ export function GrowChamber({
         ctx!.lineWidth = 0.5;
         ctx!.stroke();
         if (c.depth > 0.5) {
-          ctx!.fillStyle = `hsla(${c.hue}, ${c.sat}%, ${Math.min(88, lit + 20)}%, 0.45)`;
+          const hb = live.current.budDna.highlightBoost ?? 0;
+          ctx!.fillStyle = `hsla(${c.hue}, ${c.sat}%, ${Math.min(90, lit + 20 + hb * 12)}%, ${0.45 + hb * 0.2})`;
           ctx!.save();
           ctx!.translate(-c.w * 0.14 * sc, -c.h * 0.22 * sc);
           ctx!.scale(0.5, 0.46);

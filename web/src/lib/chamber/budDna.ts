@@ -10,6 +10,7 @@ import { slugify } from "./strainVisuals";
 export interface PaletteColor { hue: number; sat: number; lit: number; weight: number }
 
 export interface BudDNA {
+  // ---- GENETIC (the strain's base look; set in the authored presets) ----
   budHeight: number;
   maxBudWidth: number;
   rows: number;
@@ -22,6 +23,14 @@ export interface BudDNA {
   sugarLeafChance: number;
   trichomeDensity: number;
   palette: PaletteColor[]; // weighted calyx colours
+
+  // ---- ENVIRONMENTAL MODIFIERS (added by applyEnvironmentToBudDNA; default 0)
+  // These nudge the rendered phenotype from grow conditions WITHOUT replacing
+  // the genetic identity. They are absent on the raw presets.
+  foxtailBias?: number;   // light stress → more pointed/foxtail calyxes
+  topStretch?: number;    // light stress → stretched, irregular top
+  highlightBoost?: number;// high UV → brighter specular highlights
+  moldRisk?: number;      // high humidity → hidden risk score (no visual yet)
 }
 
 // Named calyx colours used to compose strain palettes.
@@ -85,5 +94,57 @@ export function budDnaFor(slugOrName: string | undefined, color: BudColor): BudD
     budHeight: 160, maxBudWidth: 85, rows: 16, calyxPerRowMin: 3, calyxPerRowMax: 7,
     calyxSizeMin: 7, calyxSizeMax: 15, overlap: 0.7, pistilChance: 0.32,
     sugarLeafChance: 0.12, trichomeDensity: clamp(0.6 + color.anthocyanin * 0.25, 0, 1), palette,
+  };
+}
+
+// Raw grow conditions the bud reacts to. Pulled from the pod environment + the
+// plant's water level on the chamber page; left at neutral defaults elsewhere.
+export interface GrowEnvironment {
+  temp: number;     // °C  (low → cool nights)
+  light: number;    // PPFD-ish 0..1000 (high → UV/strong light; very high → light stress)
+  humidity: number; // %   (high → mold risk)
+  water: number;    // plant water level 0..100 (low → drought stress)
+}
+
+const PURPLE_LO = 255, PURPLE_HI = 320; // hue band counted as "purple-capable"
+
+/**
+ * Return a NEW BudDNA with the grow environment's subtle visual modifiers
+ * applied — never mutates the genetic preset. Identity-preserving by design:
+ * green strains gain only a faint purple shadow on cool nights, while
+ * purple-capable strains shift much harder.
+ */
+export function applyEnvironmentToBudDNA(base: BudDNA, env: GrowEnvironment): BudDNA {
+  const cool = clamp((20 - env.temp) / 8, 0, 1);          // cool nights
+  const uv = clamp((env.light - 600) / 400, 0, 1);         // strong light
+  const lightStress = clamp((env.light - 850) / 150, 0, 1);// extreme light
+  const drought = clamp((45 - env.water) / 45, 0, 1);      // dry root zone
+  const humid = clamp((env.humidity - 60) / 30, 0, 1);     // damp canopy
+
+  // How purple-capable the strain already is (share of purple-band palette weight).
+  const totalW = base.palette.reduce((s, p) => s + p.weight, 0) || 1;
+  const purpleW = base.palette.filter((p) => p.hue >= PURPLE_LO && p.hue <= PURPLE_HI).reduce((s, p) => s + p.weight, 0);
+  const purpleCap = purpleW / totalW;
+
+  const palette = base.palette.map((p) => ({ ...p }));
+  if (cool > 0.05) {
+    // Subtle purple edges/shadows first; strongest on purple-capable strains.
+    palette.push({ hue: 274, sat: 56, lit: 30, weight: cool * (0.4 + 2.6 * purpleCap) });
+    if (purpleCap > 0.2) palette.push({ hue: 286, sat: 58, lit: 41, weight: cool * 1.5 * purpleCap });
+  }
+  if (drought > 0.1) for (const p of palette) p.lit = Math.max(8, p.lit - drought * 6); // darker greens
+
+  return {
+    ...base,
+    palette,
+    maxBudWidth: base.maxBudWidth * (1 - drought * 0.12),      // drought → tighter cola
+    calyxSizeMin: base.calyxSizeMin * (1 - drought * 0.15),     // drought → smaller calyxes
+    calyxSizeMax: base.calyxSizeMax * (1 - drought * 0.15),
+    overlap: clamp(base.overlap - drought * 0.05, 0.5, 0.8),    // drought → less plump
+    trichomeDensity: clamp(base.trichomeDensity + uv * 0.25, 0, 1), // UV → frostier
+    foxtailBias: clamp(lightStress * 0.55, 0, 1),               // light stress → foxtails
+    topStretch: clamp(lightStress * 0.7, 0, 1),                 // light stress → stretched top
+    highlightBoost: clamp(uv * 0.6, 0, 1),                      // UV → brighter highlights
+    moldRisk: clamp(humid, 0, 1),                               // humidity → hidden risk
   };
 }

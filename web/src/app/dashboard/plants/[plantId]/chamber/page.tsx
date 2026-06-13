@@ -28,7 +28,7 @@ import {
   cycleDays,
 } from "@/lib/chamber/morphology";
 import { budColorForStrain } from "@/lib/chamber/strainVisuals";
-import { budDnaFor } from "@/lib/chamber/budDna";
+import { budDnaFor, applyEnvironmentToBudDNA } from "@/lib/chamber/budDna";
 import { titleCase } from "@/lib/format";
 
 // Local climate state: the five persisted fields + a visual-only FAN.
@@ -160,7 +160,14 @@ function ChamberScreen({ plantId }: { plantId: string }) {
   // Per-strain calyx/pistil colour: authored for curated strains (G13, PDP,
   // Animal Mints…), deterministic roll otherwise.
   const budColor = budColorForStrain(strain?.slug ?? strain?.name, morphology.hue, seedForPlant(plant.strain_id));
-  const budDna = budDnaFor(strain?.slug ?? strain?.name, budColor);
+  // Genetic base DNA, then the live grow conditions nudge the phenotype
+  // (cool nights → purple, UV → frost, light stress → foxtails, drought → tight).
+  const budDna = applyEnvironmentToBudDNA(budDnaFor(strain?.slug ?? strain?.name, budColor), {
+    temp: climate.temperature,
+    light: climate.light_intensity,
+    humidity: climate.humidity,
+    water: plant.water_level,
+  });
   const liveDay = ageDays(plant.planted_at);
   const previewing = previewDay !== null;
   const day = previewing ? previewDay : liveDay;
