@@ -99,6 +99,19 @@ once they appear here. Last reconciled: **2026-06-10**.
   before any low-end-mobile push, not before launch.
 - 🟡 ⬜ Sprint 6 LiveOps: seasonal strains rotation, timed events, breeding competitions, admin
   console with hot-reload `balance.yaml`, analytics/telemetry.
+- ❄️ **Multi-crop "CropDNA" module — v2 expansion idea (parked by owner, 2026-06-13)** — sparked
+  by a Sunfire Cherry **tomato** profile card. **Decision:** the tomato is NOT a cannabis strain and
+  is explicitly **out of MVP**; do **not** fork the cannabis renderer, add tomato simulation, or
+  contaminate the cannabis-specific architecture for it. If we ever support non-cannabis crops it must
+  be a **separate `CropFamily` system** (cannabis | tomato | pepper | herb) with its own morphology,
+  reproductive model, harvest logic, renderer, and growth stages — a clean parallel track, not a
+  retrofit. Keep the current MVP renderer cannabis-pod-only. Build only on explicit owner green-light.
+- 🟡 ⬜ **Launch cannabis strain roster (profile-card batch, owner 2026-06-13)** — MVP cannabis set:
+  G13, Purple Diddy Punch, Animal Mints (✅ in `strains.yaml`), Girl Scout Cookies (✅ in catalog),
+  plus **White Rhino, White Fire OG, Gelato, Wedding Cake** (⬜ need genome + `strain_knowledge.yaml`
+  + visual entries). **White Rhino is the final strain** added for this batch and is queued for
+  mainnet go-live (stop-and-ask per the charter). Adding strain *data* is a separate PR from the
+  graphics phase — do not bundle it into the visual-polish work.
 - 🟡 ⬜ Non-custodial Pera/WalletConnect path for player-owned NFTs.
 - 🟡 ⬜ **Fiat payment rail (parked by owner, 2026-06-11)** — launch liquidity is bring-your-own
   ALGO; see the ADR in `DECISIONS.md` (2026-06-11). If/when revisited: Stripe Checkout Sessions
