@@ -464,6 +464,8 @@ export function GrowChamber({
       x: number; y: number; f: number; side: number; tilt: number; len: number;
       leafSize: number; leaflets: number; phase: number; tipX: number; tipY: number;
       site: FlowerSite | null; budRot: number;
+      curve: number; // branch upward bend (bezier), 0.1–0.4
+      weight: number; // bud load on this branch → how much it droops
     }
     interface Plant {
       P: DevParams; CL: ReturnType<typeof climateModel>; stage: string;
@@ -516,29 +518,40 @@ export function GrowChamber({
       const ceil = cap.haloY + cap.h * 0.1, A = baseY - ceil;
       const d = day;
 
+      // Stretch animation: the flowering stretch ramps over ~4 weeks (not a few
+      // days), driven by the strain's stretchFactor (S.stretch) — sativas explode
+      // upward, indicas barely move. Animates as `day` advances.
       let hN: number;
       if (d <= 10) hN = lerp(0.05, 0.13, smooth(d / 10));
-      else if (d <= 34) hN = lerp(0.13, 0.6, Math.pow((d - 10) / 24, 0.75));
-      else hN = lerp(0.6, clamp(0.6 * S.stretch, 0, 0.97), smooth(clamp((d - 34) / 14, 0, 1)));
+      else if (d <= 34) hN = lerp(0.13, 0.55, Math.pow((d - 10) / 24, 0.75));
+      else hN = lerp(0.55, clamp(0.6 * S.stretch, 0, 0.97), smooth(clamp((d - 34) / 28, 0, 1)));
       hN = clamp(hN * S.heightMul * (0.85 + 0.15 * CL.growthMult), 0.05, 0.97);
       const stemH = A * hN;
 
-      const wob1 = (rnd() - 0.5) * stemH * 0.13, wob2 = (rnd() - 0.5) * stemH * 0.08;
+      // Main stem: tapered (drawn thick→thin) with gentle noise so it isn't a
+      // straight line.
+      const wob1 = (rnd() - 0.5) * stemH * 0.15, wob2 = (rnd() - 0.5) * stemH * 0.09;
       const spine = [];
       for (let i = 0; i <= 24; i++) {
         const t = i / 24;
-        spine.push({ x: cx + wob1 * Math.sin(Math.PI * t) + wob2 * Math.sin(TAU * t) * 0.5, y: baseY - stemH * t, t });
+        const segNoise = (rnd() - 0.5) * stemH * 0.012; // small per-segment kink
+        spine.push({ x: cx + wob1 * Math.sin(Math.PI * t) + wob2 * Math.sin(TAU * t) * 0.5 + segNoise * Math.sin(t * 9), y: baseY - stemH * t, t });
       }
 
       const nodes: Node[] = [];
       const maxNodes = Math.min(13, Math.max(d <= 10 ? 1 : 2, Math.floor(hN / S.internode)));
       const grow = smooth(clamp((d - 8) / 22, 0, 1));
+      // Branches flex more when they're longer/thinner (lower branchMul).
+      const branchFlex = clamp(1.25 - S.branchMul * 0.5, 0.45, 1.05);
       for (let i = 0; i < maxNodes; i++) {
-        const f = (i + 1) / (maxNodes + 1);
+        // Genetic/organic internode spacing: a touch tighter toward the apex,
+        // plus per-node jitter so nodes aren't perfectly even (real plants vary).
+        const fBase = (i + 1) / (maxNodes + 1);
+        const f = clamp(Math.pow(fBase, 1.08) + (rnd() - 0.5) * 0.045, 0.04, 0.96);
         const p = spine[Math.round(f * 24)];
         const low = Math.pow(1 - f, 0.75);
         const side = i % 2 ? 1 : -1;
-        const tilt = (0.92 + rnd() * 0.25) * (1 - f * 0.22);
+        const tilt = (0.92 + rnd() * 0.3) * (1 - f * 0.22);
         const len = A * 0.27 * S.branchMul * (0.35 + 0.65 * low) * grow;
         const nd: Node = {
           x: p.x, y: p.y, f, side, tilt, len,
@@ -546,6 +559,8 @@ export function GrowChamber({
           leaflets: Math.min(S.leafletMax, 3 + 2 * Math.floor(d / 14)),
           phase: rnd() * TAU,
           tipX: 0, tipY: 0, site: null, budRot: 0,
+          curve: 0.14 + rnd() * 0.22, // upward bend
+          weight: 0,
         };
         nd.tipX = Math.sin(nd.tilt) * nd.side * nd.len;
         nd.tipY = -Math.cos(nd.tilt) * nd.len * 0.55;
@@ -556,6 +571,7 @@ export function GrowChamber({
           const nC = Math.max(2, Math.round(S.bracts * 0.55 * (0.6 + 0.5 * f)));
           nd.site = buildFlowerSite(rnd, axis, baseW, { pattern: S.pattern, nClusters: nC, bracts: S.bracts, fatMul: 1 });
           nd.budRot = nd.side * 0.1;
+          nd.weight = lerp(0.5, 1.1, f) * S.clusterFat; // higher / fatter buds weigh more
         }
         nodes.push(nd);
       }
@@ -1013,23 +1029,37 @@ export function GrowChamber({
         ctx!.restore();
         return;
       }
+      const bd = clamp(live.current.dev.budDev, 0, 1);
+      const branchFlex = clamp(1.25 - S.branchMul * 0.5, 0.45, 1.05);
       for (let i = 0; i < p.nodes.length; i++) {
         const nd = p.nodes[i];
-        const sway = motionOK ? Math.sin(tt * 1.3 + nd.phase) * CL.windAmp * 2 + wind : 0;
+        // Airflow WAVE (not random wiggle): the top leads and lower nodes lag, with
+        // bigger amplitude up top — a travelling wave, ~3° max.
+        const amp = CL.windAmp * (0.8 + nd.f * 1.2) * branchFlex;
+        const sway = motionOK ? Math.sin(tt * 1.6 - (1 - nd.f) * 1.3) * amp + wind * (0.4 + nd.f * 0.6) : 0;
         const spring = phys.nodes[i] ? phys.nodes[i].ao : 0;
         const jig = Math.min(3, Math.abs(phys.nodes[i] ? phys.nodes[i].av : 0) * 7);
+        // Bud-weight droop: the branch tip sags as buds fill in (live budDev).
+        const droopRot = clamp(nd.weight * branchFlex * bd * 0.5, 0, 0.45);
+        const sag = Math.sin(droopRot) * nd.len * 0.65;
+        const endX = nd.tipX, endY = nd.tipY + sag;
         ctx!.save();
         ctx!.translate(nd.x, nd.y);
         ctx!.rotate(sway + spring + nd.side * condClaw * 0.4);
         ctx!.strokeStyle = `hsl(${S.hue - 10}, 32%, 30%)`;
         ctx!.lineWidth = clamp(sw0 * 0.5 * (1 - nd.f * 0.4), 1, 4);
         ctx!.lineCap = "round";
+        // Curved branch: arcs upward (nd.curve) then sags at the tip under weight.
         ctx!.beginPath();
         ctx!.moveTo(0, 0);
-        ctx!.quadraticCurveTo(nd.tipX * 0.5, nd.tipY * 0.5 - nd.len * 0.12, nd.tipX, nd.tipY);
+        ctx!.bezierCurveTo(
+          nd.tipX * 0.35, nd.tipY * 0.4 - nd.len * nd.curve,
+          nd.tipX * 0.72, nd.tipY * 0.7 - nd.len * nd.curve * 0.4 + sag * 0.5,
+          endX, endY,
+        );
         ctx!.stroke();
         ctx!.save();
-        ctx!.translate(nd.tipX, nd.tipY);
+        ctx!.translate(endX, endY);
         ctx!.rotate(nd.side * (0.5 + nd.tilt * 0.18));
         drawFan(nd.leafSize, nd.leaflets, nd.f, claw);
         ctx!.restore();
@@ -1039,20 +1069,23 @@ export function GrowChamber({
         ctx!.restore();
         if (nd.site) {
           ctx!.save();
-          ctx!.translate(nd.tipX * 0.7, nd.tipY * 0.7);
-          ctx!.rotate(nd.budRot);
+          ctx!.translate(endX * 0.85, endY * 0.85);
+          ctx!.rotate(nd.budRot + nd.side * droopRot * 0.5); // bud nods down with weight
           drawFlowerSite(nd.site, p.P, jig, tt);
           ctx!.restore();
         }
         ctx!.restore();
       }
       const top = p.spine[24];
-      const swayT = motionOK ? Math.sin(tt * 1.1) * CL.windAmp * 1.5 + wind : 0;
+      const swayT = motionOK ? Math.sin(tt * 1.5) * CL.windAmp * 2.2 + wind : 0;
       if (p.cola) {
         const cjig = Math.min(3, Math.abs(phys.cola.av) * 7);
+        // Heavy top cola leans slightly with bud weight (consistent direction).
+        const leanDir = Math.sign(top.x - p.cx) || 1;
+        const colaDroop = clamp(bd * 0.16, 0, 0.16) * leanDir;
         ctx!.save();
         ctx!.translate(p.cola.x, p.cola.y);
-        ctx!.rotate(phys.cola.ao + swayT);
+        ctx!.rotate(phys.cola.ao + swayT + colaDroop);
         ctx!.save();
         ctx!.translate(0, -p.cola.site.axisLen * 0.04);
         drawFan(p.A * 0.08 * (1 - 0.35 * p.P.budDev), Math.min(S.leafletMax, 5 + Math.floor(day / 18)), 1, claw);
