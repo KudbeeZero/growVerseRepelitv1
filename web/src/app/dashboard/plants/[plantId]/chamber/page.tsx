@@ -22,6 +22,11 @@ import {
   daysToHarvest,
   climateModel,
   clamp,
+  budColorFor,
+  seedForPlant,
+  stageForDay,
+  devParams,
+  cycleDays,
 } from "@/lib/chamber/morphology";
 import { titleCase } from "@/lib/format";
 
@@ -76,9 +81,12 @@ function ChamberScreen({ plantId }: { plantId: string }) {
   const { map } = useStrainMap();
   const { data: pods } = usePods();
 
-  const [tab, setTab] = useState<"grow" | "climate" | "view">("grow");
+  const [tab, setTab] = useState<"grow" | "climate" | "time" | "view">("grow");
   const [view, setView] = useState<ChamberView>("chamber");
   const [climate, setClimate] = useState<ChamberClimate>(DEFAULT_CLIMATE);
+  // Growth-preview scrubber: null = track the real (server) age; a number =
+  // preview that day on the cycle. Preview never mutates server state.
+  const [previewDay, setPreviewDay] = useState<number | null>(null);
 
   const pod = pods?.find((p) => p.id === plant?.pod_id);
 
@@ -147,8 +155,15 @@ function ChamberScreen({ plantId }: { plantId: string }) {
   const strain = map.get(plant.strain_id);
   const indicaRatio = strain?.indica_ratio ?? 0.5;
   const morphology = morphologyFor(indicaRatio);
-  const day = ageDays(plant.planted_at);
-  const dev = effectiveDev(plant.growth_stage, day);
+  const flMid = strain ? (strain.flowering_days[0] + strain.flowering_days[1]) / 2 : 60;
+  // Per-strain calyx/pistil colour (green→amber ↔ anthocyanin purple), stable per strain.
+  const budColor = budColorFor(seedForPlant(plant.strain_id), morphology.hue);
+  const liveDay = ageDays(plant.planted_at);
+  const previewing = previewDay !== null;
+  const day = previewing ? previewDay : liveDay;
+  const renderStage = previewing ? stageForDay(day, flMid) : plant.growth_stage;
+  const dev = previewing ? devParams(day) : effectiveDev(plant.growth_stage, liveDay);
+  const maxPreviewDay = Math.round(cycleDays(flMid) + 8);
   const harvestDays = strain ? Math.round(daysToHarvest(plant.growth_stage, strain.flowering_days, plant.health)) : null;
   const c = climateModel({ fan: climate.fan, temp: climate.temperature, hum: climate.humidity, co2: climate.co2_level });
   const health = clamp(plant.health, 0, 100);
@@ -173,15 +188,17 @@ function ChamberScreen({ plantId }: { plantId: string }) {
         <GrowChamber
           seed={plantId.length}
           day={day}
-          stage={plant.growth_stage}
+          stage={renderStage}
           morphology={morphology}
           dev={dev}
+          budColor={budColor}
           climate={{ fan: climate.fan, temp: climate.temperature, hum: climate.humidity, co2: climate.co2_level }}
           conditionFlags={plant.condition_flags}
           view={view}
         />
         <div className="pointer-events-none absolute left-2.5 top-2.5 rounded-lg border border-cyan-400/40 bg-[#08141e]/70 px-2.5 py-1.5 font-mono text-[11px] tracking-wide backdrop-blur">
-          {strain?.name ?? "Plant"} · {titleCase(plant.growth_stage)}
+          {strain?.name ?? "Plant"} · {titleCase(renderStage)}
+          {previewing && <span className="text-grow-300"> · preview</span>}
         </div>
         <div className="pointer-events-none absolute right-2 top-2 flex flex-col gap-1.5">
           <ReadoutCard k="TO HARVEST" v={harvestDays ?? "—"} unit="d" />
@@ -213,7 +230,7 @@ function ChamberScreen({ plantId }: { plantId: string }) {
       {/* dashboard */}
       <div className="max-h-[44dvh] flex-none overflow-y-auto bg-gradient-to-b from-transparent to-[#0a1622] px-3 pb-[calc(10px+env(safe-area-inset-bottom))] pt-2">
         <div className="mb-2 flex gap-1.5">
-          {(["grow", "climate", "view"] as const).map((t) => (
+          {(["grow", "climate", "time", "view"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -270,6 +287,46 @@ function ChamberScreen({ plantId }: { plantId: string }) {
               {c.co2Boost > 0.05 ? " · CO₂ boosting growth." : ""}
               {sharedPod ? " · Affects all plants in this pod." : ""}
               {setEnv.isPending ? " · saving…" : ""}
+            </p>
+          </div>
+        )}
+
+        {tab === "time" && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2.5 rounded-lg border border-[#1c3447] bg-[#0d1d2b] px-2.5 py-1.5">
+              <span className="w-[66px] flex-none font-mono text-[10px] tracking-[0.08em] text-[#7fa9bf]">GROW DAY</span>
+              <input
+                type="range"
+                min={0}
+                max={maxPreviewDay}
+                step={0.5}
+                value={day}
+                onChange={(e) => setPreviewDay(Number(e.target.value))}
+                className="h-1.5 flex-1 accent-grow-400"
+                aria-label="Preview growth day"
+              />
+              <span className="w-[52px] flex-none text-right font-mono text-[11px] font-bold text-white">
+                d{Math.round(day)}
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-2 px-1">
+              <span className="text-[10px] leading-relaxed text-[#7fa9bf]">
+                {previewing
+                  ? `Previewing ${titleCase(renderStage)} — not this plant's real age.`
+                  : `Tracking live growth · ${titleCase(renderStage)}, day ${Math.round(day)}.`}
+              </span>
+              {previewing && (
+                <button
+                  onClick={() => setPreviewDay(null)}
+                  className="flex-none rounded-md border border-[#3a6a86] bg-[#16364c] px-2 py-1 text-[10px] font-bold text-[#eaf7ff]"
+                >
+                  Back to live
+                </button>
+              )}
+            </div>
+            <p className="px-1 text-[10px] leading-relaxed text-[#7fa9bf]">
+              Scrub to watch this strain grow seed → harvest. Buds swell, pistils colour and
+              trichome frost builds in as it matures — try it in Bud Macro.
             </p>
           </div>
         )}

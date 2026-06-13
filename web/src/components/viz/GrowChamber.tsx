@@ -23,6 +23,7 @@ import {
   type ClimateInput,
   type DevParams,
   type Morphology,
+  type BudColor,
 } from "@/lib/chamber/morphology";
 import { CONDITION_VISUALS, SEVERITY_SCALE, dominantFlag } from "@/lib/conditionVisuals";
 
@@ -37,6 +38,8 @@ interface Props {
   climate: ClimateInput;
   conditionFlags: ConditionFlag[];
   view: ChamberView;
+  /** Per-strain calyx/pistil colouring (green→amber ↔ anthocyanin purple). */
+  budColor: BudColor;
   className?: string;
 }
 
@@ -44,6 +47,7 @@ interface LiveState {
   climate: ClimateInput;
   dev: DevParams;
   flags: ConditionFlag[];
+  budColor: BudColor;
 }
 
 interface Cluster {
@@ -76,14 +80,15 @@ export function GrowChamber({
   climate,
   conditionFlags,
   view,
+  budColor,
   className = "",
 }: Props) {
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   // Fast-changing inputs read each frame (no geometry rebuild on slider moves).
-  const live = useRef<LiveState>({ climate, dev, flags: conditionFlags });
-  live.current = { climate, dev, flags: conditionFlags };
+  const live = useRef<LiveState>({ climate, dev, flags: conditionFlags, budColor });
+  live.current = { climate, dev, flags: conditionFlags, budColor };
 
   // Rebuild geometry only when these structural inputs change.
   const buildKey = `${seed}|${stage}|${view}|${Math.round(day)}|${morphology.pattern}|${morphology.hue.toFixed(1)}|${morphology.heightMul.toFixed(2)}|${morphology.clusterLen.toFixed(2)}`;
@@ -140,45 +145,67 @@ export function GrowChamber({
       ctx!.save();
       ctx!.translate(x, y);
       ctx!.rotate(rot);
-      ctx!.fillStyle = `hsl(${hue}, ${sat}%, ${lit}%)`;
-      podPath(w, h);
-      ctx!.fill();
       if (w > 2.4) {
-        ctx!.strokeStyle = "rgba(0,0,0,0.20)";
-        ctx!.lineWidth = 0.5;
+        // Big calyx (macro / cola): volumetric radial gradient + a glossy sheen
+        // so the bract reads as a swollen, waxy 3D pod rather than a flat shape.
+        const g = ctx!.createRadialGradient(-w * 0.22, -h * 0.24, w * 0.08, 0, 0, w * 1.15);
+        g.addColorStop(0, `hsl(${hue}, ${sat}%, ${Math.min(80, lit + 18)}%)`);
+        g.addColorStop(0.55, `hsl(${hue}, ${sat}%, ${lit}%)`);
+        g.addColorStop(1, `hsl(${hue}, ${Math.min(86, sat + 12)}%, ${Math.max(12, lit - 13)}%)`);
+        ctx!.fillStyle = g;
+        podPath(w, h);
+        ctx!.fill();
+        ctx!.strokeStyle = "rgba(0,0,0,0.22)";
+        ctx!.lineWidth = 0.6;
         ctx!.stroke();
+        ctx!.fillStyle = "rgba(255,255,255,0.15)";
+        ctx!.beginPath();
+        ctx!.ellipse(-w * 0.16, -h * 0.2, w * 0.24, h * 0.16, -0.5, 0, TAU);
+        ctx!.fill();
+      } else {
+        ctx!.fillStyle = `hsl(${hue}, ${sat}%, ${lit}%)`;
+        podPath(w, h);
+        ctx!.fill();
       }
+      // Inner cap — the lighter, younger calyx tip peeking out.
       ctx!.translate(0, -h * 0.14);
       ctx!.scale(0.55, 0.48);
-      ctx!.fillStyle = `hsla(${hue}, ${sat * 0.9}%, ${Math.min(72, lit + 15)}%, ${capA})`;
+      ctx!.fillStyle = `hsla(${hue}, ${sat * 0.9}%, ${Math.min(76, lit + 16)}%, ${capA})`;
       podPath(w, h);
       ctx!.fill();
       ctx!.restore();
     }
-    function pistilFiber(w: number, brown: number) {
+    // Pistil colour: white → cream/amber with ripeness+browning, then blended
+    // toward magenta/pink for anthocyanin phenotypes (mag 0..1).
+    function pistilFiber(w: number, brown: number, mag: number) {
       let r = lerp(244, 226, w), g = lerp(238, 138, w), b = lerp(220, 58, w);
       r = lerp(r, 152, brown); g = lerp(g, 88, brown); b = lerp(b, 48, brown);
+      r = lerp(r, 232, mag); g = lerp(g, 74, mag); b = lerp(b, 150, mag);
       return `rgb(${r | 0},${g | 0},${b | 0})`;
     }
-    function pistilBall(w: number, brown: number) {
+    function pistilBall(w: number, brown: number, mag: number) {
       let r = lerp(250, 246, w), g = lerp(244, 170, w), b = lerp(230, 86, w);
       r = lerp(r, 188, brown); g = lerp(g, 116, brown); b = lerp(b, 60, brown);
+      r = lerp(r, 244, mag); g = lerp(g, 120, mag); b = lerp(b, 178, mag);
       return `rgb(${r | 0},${g | 0},${b | 0})`;
     }
+    // Resin-head colour by maturity: clear → cloudy-white (the dominant frosty
+    // band) → amber only at the very end. Frost should read mostly white.
     function trichHead(p: number) {
-      if (p < 0.45) return "rgba(248,252,255,0.5)";
-      if (p < 0.82) return "rgba(250,250,246,0.92)";
-      return "rgba(226,178,92,0.92)";
+      if (p < 0.5) return "rgba(236,250,255,0.6)";
+      if (p < 0.9) return "rgba(248,250,244,0.95)";
+      return "rgba(228,188,110,0.95)";
     }
 
     function buildFlowerSite(
       rnd: () => number,
       axisLen: number,
       baseW: number,
-      opt: { pattern: string; nClusters: number; bracts: number; fatMul: number },
+      opt: { pattern: string; nClusters: number; bracts: number; fatMul: number; lush?: number },
     ): FlowerSite {
       const pat = opt.pattern;
       const nClusters = opt.nClusters;
+      const lush = opt.lush ?? 1;
       const clusters: Cluster[] = [];
       for (let i = 0; i < nClusters; i++) {
         const yf = nClusters === 1 ? 0.5 : i / (nClusters - 1);
@@ -213,11 +240,12 @@ export function GrowChamber({
         }
         pods.sort((p, q) => p.ring - q.ring);
         const hairs = [];
-        const nH = pat === "spiral" ? 8 : 10;
+        const nH = Math.round((pat === "spiral" ? 8 : 10) * lush);
         for (let j = 0; j < nH; j++)
           hairs.push({ a: -Math.PI / 2 + (rnd() - 0.5) * 2.2, len: 0.55 + rnd() * 0.6, bend: (rnd() - 0.5) * 1.3, ball: 0.7 + rnd() * 0.4, k: rnd() * 0.85 });
         const tris = [];
-        for (let j = 0; j < 6; j++)
+        const nT = Math.round(6 * lush * lush);
+        for (let j = 0; j < nT; j++)
           tris.push({ a: rnd() * TAU, len: 0.5 + rnd() * 0.5, headR: 0.7 + rnd() * 0.5, k: rnd(), mat: rnd() });
         clusters.push({
           yf, along, lateral, fat: fat * opt.fatMul, tipTaper, centerBias, pods, hairs, tris,
@@ -252,8 +280,10 @@ export function GrowChamber({
         const cw = site.baseW * cl.fat * cl.tipTaper * (0.55 + 0.45 * d);
         const podW = Math.max(1.2, cw * 0.2);
         const podH = podW * 1.5;
-        const hue = S.hue + 3;
-        const baseLit = 38 - (1 - cl.yf) * 5;
+        const bc = live.current.budColor;
+        const calyxHue = bc.calyxHue + 3;
+        const calyxSat = bc.calyxSat;
+        const baseLit = 38 - (1 - cl.yf) * 5 + bc.anthocyanin * 3;
         const detailed = podW > 1.8;
 
         if (cl.leaf && d > 0.25 && detailed) {
@@ -280,48 +310,61 @@ export function GrowChamber({
           const g = 0.5 + 0.5 * d;
           const px = cx + Math.cos(p.a) * p.rad * cw * 0.55;
           const py = cy + Math.sin(p.a) * p.rad * cw * 0.35 + p.ring * podH * 0.18;
-          const hueP = hue + p.dh + (p.blushK < P.blush ? 26 : 0);
-          drawPod(px, py, Math.cos(p.a) * 0.4, podW * p.sz * g, podH * p.sz * g, hueP, 40, baseLit + p.dl + (2 - p.ring) * 2, 0.42);
+          const hueP = calyxHue + p.dh + (p.blushK < P.blush ? 18 : 0);
+          drawPod(px, py, Math.cos(p.a) * 0.4, podW * p.sz * g, podH * p.sz * g, hueP, calyxSat, baseLit + p.dl + (2 - p.ring) * 2, 0.42);
           drawn++;
         }
         if (drawn === 0) continue;
 
-        const fiberCol = pistilFiber(P.ripe, P.brown), ballCol = pistilBall(P.ripe, P.brown);
+        const fiberCol = pistilFiber(P.ripe, P.brown, bc.pistilMagenta);
+        const ballCol = pistilBall(P.ripe, P.brown, bc.pistilMagenta);
         for (const h of cl.hairs) {
           if (h.k > d) continue;
           const stretch = clamp((d - h.k * 0.5) / 0.6, 0.35, 1);
-          const L = cw * 0.4 * h.len * stretch;
-          const x0 = cx + Math.cos(h.a) * cw * 0.18, y0 = cy + Math.sin(h.a) * cw * 0.14 - podH * 0.2;
+          const L = cw * 0.2 * h.len * stretch;
+          const x0 = cx + Math.cos(h.a) * cw * 0.16, y0 = cy + Math.sin(h.a) * cw * 0.12 - podH * 0.2;
           const x1 = x0 + Math.cos(h.a) * L, y1 = y0 + Math.sin(h.a) * L;
           ctx!.strokeStyle = fiberCol;
-          ctx!.lineWidth = Math.max(0.6, cw * 0.015);
+          ctx!.lineWidth = Math.max(0.5, cw * 0.01);
           ctx!.lineCap = "round";
           ctx!.beginPath();
           ctx!.moveTo(x0, y0);
-          ctx!.quadraticCurveTo((x0 + x1) / 2 + h.bend * (2.5 + P.brown * 3), (y0 + y1) / 2 - 2, x1, y1);
+          // Curl grows with ripeness so spent pistils curl back over the bud.
+          ctx!.quadraticCurveTo((x0 + x1) / 2 + h.bend * (1.6 + P.ripe * 2.2), (y0 + y1) / 2 - 2, x1, y1);
           ctx!.stroke();
           if (detailed) {
             ctx!.fillStyle = ballCol;
             ctx!.beginPath();
-            ctx!.arc(x1, y1, h.ball * Math.max(0.8, cw * 0.02), 0, TAU);
+            ctx!.arc(x1, y1, h.ball * Math.max(0.5, cw * 0.011), 0, TAU);
             ctx!.fill();
           }
         }
+        // Trichomes — stalked capitate glands spread across the calyx surface:
+        // a clear glassy stalk, a bulbous resin head (clear→cloudy→amber with
+        // maturity) and a specular sparkle. Dense coverage reads as frost.
         if (P.trich > 0 && detailed) {
+          ctx!.lineCap = "round";
           for (const tr of cl.tris) {
             if (tr.k > P.trich) continue;
-            const L = cw * 0.26 * (0.5 + tr.len * P.trich);
-            const x0 = cx + Math.cos(tr.a) * cw * 0.22, y0 = cy + Math.sin(tr.a) * cw * 0.18;
+            // Dense, SHORT glands coating the calyx surface — a frost, not spikes.
+            const rad = cw * (0.08 + 0.44 * tr.k);
+            const L = cw * (0.025 + 0.05 * tr.len);
+            const x0 = cx + Math.cos(tr.a) * rad, y0 = cy + Math.sin(tr.a) * rad - podH * 0.08;
             const x1 = x0 + Math.cos(tr.a) * L, y1 = y0 + Math.sin(tr.a) * L;
-            ctx!.strokeStyle = "rgba(244,250,252,0.5)";
-            ctx!.lineWidth = 0.55;
+            ctx!.strokeStyle = "rgba(228,244,248,0.28)";
+            ctx!.lineWidth = Math.max(0.4, cw * 0.007);
             ctx!.beginPath();
             ctx!.moveTo(x0, y0);
             ctx!.lineTo(x1, y1);
             ctx!.stroke();
-            ctx!.fillStyle = trichHead(clamp(P.trich * 1.15 - tr.mat * 0.25, 0, 1));
+            const hr = tr.headR * Math.max(0.55, cw * 0.013);
+            ctx!.fillStyle = trichHead(clamp(P.trich - tr.mat * 0.4, 0, 1));
             ctx!.beginPath();
-            ctx!.arc(x1, y1, tr.headR * Math.max(0.7, cw * 0.018), 0, TAU);
+            ctx!.arc(x1, y1, hr, 0, TAU);
+            ctx!.fill();
+            ctx!.fillStyle = "rgba(255,255,255,0.65)";
+            ctx!.beginPath();
+            ctx!.arc(x1 - hr * 0.3, y1 - hr * 0.3, hr * 0.32, 0, TAU);
             ctx!.fill();
           }
         }
@@ -465,10 +508,12 @@ export function GrowChamber({
 
     function buildMacro() {
       const rnd = mulberry32(seed * 5077 + 7);
-      const axis = H * 0.56;
-      const baseW = axis * (S.pattern === "spiral" ? 0.26 : 0.4) * S.clusterFat;
-      const nC = Math.round(S.bracts * (S.pattern === "spiral" ? 1.7 : 1.1));
-      macroSite = buildFlowerSite(rnd, axis, baseW, { pattern: S.pattern, nClusters: nC, bracts: S.bracts, fatMul: 1 });
+      const axis = H * 0.62;
+      const baseW = axis * (S.pattern === "spiral" ? 0.3 : 0.46) * S.clusterFat;
+      const nC = Math.round(S.bracts * (S.pattern === "spiral" ? 2.0 : 1.3));
+      // High lush so the showcase cola carries dense pistils + heavy trichome
+      // frost — far more than the tiny node buds out in the chamber view.
+      macroSite = buildFlowerSite(rnd, axis, baseW, { pattern: S.pattern, nClusters: nC, bracts: S.bracts, fatMul: 1.08, lush: 2.2 });
     }
 
     // ---- leaves ----
@@ -876,46 +921,93 @@ export function GrowChamber({
     }
 
     function drawMacro(tt: number) {
+      // ---- grow-tent depth-of-field backdrop ----
       let g = ctx!.createLinearGradient(0, 0, 0, H);
-      g.addColorStop(0, "#081521");
-      g.addColorStop(1, "#050b12");
+      g.addColorStop(0, "#0b1a12");
+      g.addColorStop(0.5, "#0a1410");
+      g.addColorStop(1, "#070d0a");
       ctx!.fillStyle = g;
       ctx!.fillRect(0, 0, W, H);
-      ctx!.strokeStyle = "rgba(127,212,240,0.06)";
-      ctx!.lineWidth = 1;
-      for (const [i, j] of scene!.links) {
+      // Soft out-of-focus bokeh — blurred grow-light glints behind the subject.
+      const brnd = mulberry32(seed * 131 + 17);
+      for (let i = 0; i < 9; i++) {
+        const bx = brnd() * W, by = brnd() * H * 0.82, br = 26 + brnd() * 72;
+        const tone = brnd() < 0.5 ? "190,232,210" : "150,208,168";
+        const bg = ctx!.createRadialGradient(bx, by, 0, bx, by, br);
+        bg.addColorStop(0, `rgba(${tone},0.16)`);
+        bg.addColorStop(1, `rgba(${tone},0)`);
+        ctx!.fillStyle = bg;
         ctx!.beginPath();
-        ctx!.moveTo(scene!.stars[i].x, scene!.stars[i].y);
-        ctx!.lineTo(scene!.stars[j].x, scene!.stars[j].y);
-        ctx!.stroke();
+        ctx!.arc(bx, by, br, 0, TAU);
+        ctx!.fill();
       }
-      g = ctx!.createLinearGradient(0, 0, 0, H * 0.8);
-      g.addColorStop(0, "rgba(140,214,244,0.10)");
-      g.addColorStop(1, "rgba(140,214,244,0)");
+      // Top light cone from the grow lamp.
+      g = ctx!.createLinearGradient(0, 0, 0, H * 0.9);
+      g.addColorStop(0, "rgba(196,242,222,0.10)");
+      g.addColorStop(1, "rgba(196,242,222,0)");
       ctx!.fillStyle = g;
       ctx!.beginPath();
-      ctx!.moveTo(W * 0.32, 0);
-      ctx!.lineTo(W * 0.68, 0);
-      ctx!.lineTo(W * 0.85, H * 0.85);
-      ctx!.lineTo(W * 0.15, H * 0.85);
+      ctx!.moveTo(W * 0.34, 0);
+      ctx!.lineTo(W * 0.66, 0);
+      ctx!.lineTo(W * 0.86, H * 0.9);
+      ctx!.lineTo(W * 0.14, H * 0.9);
       ctx!.closePath();
       ctx!.fill();
 
       const P = live.current.dev;
-      const baseX = W * 0.5, baseY = H * 0.82;
+      const baseX = W * 0.5, baseY = H * 0.9;
+      const axis = macroSite!.axisLen;
       const jig = Math.min(3, Math.abs(phys.bud.av) * 7);
+
+      ctx!.save();
+      ctx!.translate(baseX, baseY);
+      ctx!.rotate(phys.bud.ao + (motionOK ? Math.sin(tt * 0.8) * 0.008 : 0));
+
+      // ---- framing fan leaves behind the cola (kept green; they frame the bud
+      // the way the reference photo's sugar/fan leaves fan out around the cola).
+      const lrnd = mulberry32(seed * 911 + 3);
+      const nLeaf = 7;
+      ctx!.save();
+      ctx!.globalAlpha = 0.92;
+      for (let i = 0; i < nLeaf; i++) {
+        const yf = 0.12 + (i / (nLeaf - 1)) * 0.74;
+        const side = i % 2 ? 1 : -1;
+        const lx = side * macroSite!.baseW * (0.4 + lrnd() * 0.3);
+        const ly = -yf * axis;
+        const lsz = axis * (0.34 - 0.16 * yf) * (0.9 + lrnd() * 0.3);
+        ctx!.save();
+        ctx!.translate(lx, ly);
+        ctx!.rotate(side * (1.05 + lrnd() * 0.3) - 0.1);
+        drawFan(lsz, Math.min(S.leafletMax, 7), 0.2, 0);
+        ctx!.restore();
+      }
+      ctx!.restore();
+
+      // ---- stalk below the cola ----
       ctx!.strokeStyle = `hsl(${S.hue - 12}, 34%, 28%)`;
       ctx!.lineWidth = Math.max(4, macroSite!.baseW * 0.08);
       ctx!.lineCap = "round";
       ctx!.beginPath();
-      ctx!.moveTo(baseX, H * 0.94);
-      ctx!.lineTo(baseX, baseY);
+      ctx!.moveTo(0, H * 0.06);
+      ctx!.lineTo(0, 0);
       ctx!.stroke();
-      ctx!.save();
-      ctx!.translate(baseX, baseY);
-      ctx!.rotate(phys.bud.ao + (motionOK ? Math.sin(tt * 0.8) * 0.008 : 0));
+
+      // ---- the cola itself ----
       drawFlowerSite(macroSite!, P, jig, tt);
       ctx!.restore();
+
+      // ---- frost bloom: a soft additive glow over the cola once trichomes
+      // mature, giving the whole bud that sugary, light-catching shimmer.
+      if (P.trich > 0.25) {
+        ctx!.save();
+        ctx!.globalCompositeOperation = "screen";
+        const gg = ctx!.createRadialGradient(baseX, baseY - axis * 0.5, axis * 0.08, baseX, baseY - axis * 0.5, axis * 0.72);
+        gg.addColorStop(0, `rgba(222,242,246,${0.05 + P.trich * 0.06})`);
+        gg.addColorStop(1, "rgba(222,242,246,0)");
+        ctx!.fillStyle = gg;
+        ctx!.fillRect(0, 0, W, H);
+        ctx!.restore();
+      }
     }
 
     function drawDust() {

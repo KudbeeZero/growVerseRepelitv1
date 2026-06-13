@@ -168,13 +168,19 @@ export interface DevParams {
   blush: number;
 }
 
-/** day -> development fractions (bud fill, ripeness, browning, trichomes). */
+/**
+ * day -> development fractions (bud fill, ripeness, browning, trichomes).
+ * Each ramp is eased with smoothstep so swelling/ripening accelerates into the
+ * middle of its window and settles at the end, instead of marching linearly —
+ * this is what makes the growth animation feel organic and satisfying. The
+ * 0 and 1 endpoints are preserved (smooth(0)=0, smooth(1)=1).
+ */
 export function devParams(day: number): DevParams {
   return {
-    budDev: clamp((day - 34) / 32, 0, 1),
-    ripe: clamp((day - 40) / 22, 0, 1),
-    brown: clamp((day - 58) / 12, 0, 1),
-    trich: clamp((day - 48) / 18, 0, 1),
+    budDev: smooth(clamp((day - 34) / 32, 0, 1)),
+    ripe: smooth(clamp((day - 40) / 22, 0, 1)),
+    brown: smooth(clamp((day - 58) / 12, 0, 1)),
+    trich: smooth(clamp((day - 48) / 18, 0, 1)),
     blush: clamp((day - 55) / 15, 0, 1) * 0.5,
   };
 }
@@ -202,6 +208,64 @@ export function ageDays(plantedAt: string | null, now: number = Date.now()): num
   const t = Date.parse(plantedAt);
   if (Number.isNaN(t)) return 0;
   return Math.max(0, (now - t) / 86_400_000);
+}
+
+/**
+ * The render stage for an arbitrary day on the cycle. Mirrors the nominal stage
+ * durations; flowering length comes from the strain. Used by the growth-preview
+ * slider so scrubbing the timeline shows the right discrete features (cotyledons
+ * in seedling, flowers in flowering) even when the live server stage differs.
+ */
+export function stageForDay(day: number, floweringDays = 60): GrowthStage {
+  const seedEnd = STAGE_DAYS.seed;
+  const germEnd = seedEnd + STAGE_DAYS.germination;
+  const seedlingEnd = germEnd + STAGE_DAYS.seedling;
+  const vegEnd = seedlingEnd + STAGE_DAYS.vegetative;
+  if (day < seedEnd) return "seed";
+  if (day < germEnd) return "germination";
+  if (day < seedlingEnd) return "seedling";
+  if (day < vegEnd) return "vegetative";
+  if (day < vegEnd + floweringDays) return "flowering";
+  return "harvest";
+}
+
+/** Total nominal length of one grow cycle (days) for a given flowering window. */
+export function cycleDays(floweringDays = 60): number {
+  return STAGE_DAYS.seed + STAGE_DAYS.germination + STAGE_DAYS.seedling + STAGE_DAYS.vegetative + floweringDays;
+}
+
+/**
+ * Per-strain bud colouring (client-side, deterministic from the strain seed).
+ * Cannabis colas range from frosty green→amber to deep anthocyanin purple; which
+ * a strain expresses is a stable genetic trait. We roll it per strain so the
+ * GenBank stays visually diverse — ~40% express some purple, a few of those
+ * deeply — without any backend genetics change. Leaves stay green; this only
+ * tints the calyxes and (for vivid purples) the pistils toward magenta.
+ */
+export interface BudColor {
+  /** 0 = classic green→amber, 1 = deep purple/violet calyxes. */
+  anthocyanin: number;
+  /** Final calyx base hue (green ~hue..violet ~285), pre-blended by anthocyanin. */
+  calyxHue: number;
+  /** Calyx saturation (richer for purple phenos). */
+  calyxSat: number;
+  /** 0 = warm amber pistils, 1 = magenta/pink pistils (vivid purple phenos). */
+  pistilMagenta: number;
+}
+
+export function budColorFor(strainSeed: number, baseGreenHue: number): BudColor {
+  const r = mulberry32(strainSeed >>> 0);
+  const roll = r();
+  let anthocyanin: number;
+  if (roll < 0.4) anthocyanin = clamp(0.45 + r() * 0.55, 0, 1); // ~40% express purple
+  else if (roll < 0.58) anthocyanin = r() * 0.28; // a faint blush band
+  else anthocyanin = 0; // classic green
+  const purpleHue = 272 + r() * 34; // violet → magenta-leaning purple
+  // Hue must interpolate the short way; green (~110) → purple (~285) is fine direct.
+  const calyxHue = lerp(baseGreenHue, purpleHue, anthocyanin);
+  const calyxSat = lerp(40, 60, anthocyanin);
+  const pistilMagenta = clamp((anthocyanin - 0.35) / 0.65, 0, 1);
+  return { anthocyanin, calyxHue, calyxSat, pistilMagenta };
 }
 
 /**
