@@ -6,11 +6,12 @@
 
 **Last rewritten:** 2026-06-13 · **By:** plant-visuals / whole-plant chat
 **Active branch:** `claude/planning-session-4v29n1`
-**Open PR awaiting merge:** **#18** — Detailed Bud View overhaul + 3 launch strains + whole-plant
-systems. Independent audit: **CONCERNS** (receipt `docs/audits/PR-18-plant-visuals.md`) — substance
-solid (all gates green locally, 8/8 claims verified, de-flake 10/10), concerns were CI-on-head not
-yet registered + this PR being an owner-directed pivot off the old baton + widened RISK #8. Owner
-approved merge once the head CI is green.
+**Merged to main:** **PR #18** (merge `48ea3cb`, 2026-06-13) — Detailed Bud View overhaul + 3 launch
+strains + whole-plant systems. Independent audit: **CONCERNS** (receipt `docs/audits/PR-18-plant-visuals.md`)
+— substance solid (all gates green locally, 8/8 claims verified), the only real gap was a flaky
+backend test (`test_service_forecast_uses_its_clock`) that #18 merged with red.
+**Follow-up PR (this branch → main):** lands the **de-flake fix** for that test (it's flaky on main
+until this merges) + this audit receipt + the baton rewrite. Owner-directed pivot off the old baton.
 
 > **Pivot note:** this session did **not** do the previous baton's NEXT ACTION (idempotency keys).
 > The owner redirected the whole session to **plant visuals → strains → whole-plant** as the launch
