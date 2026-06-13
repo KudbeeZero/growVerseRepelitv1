@@ -100,6 +100,10 @@ once they appear here. Last reconciled: **2026-06-10**.
 - 🟡 ⬜ Sprint 6 LiveOps: seasonal strains rotation, timed events, breeding competitions, admin
   console with hot-reload `balance.yaml`, analytics/telemetry.
 - 🟡 ⬜ Non-custodial Pera/WalletConnect path for player-owned NFTs.
+- 🟡 ⬜ **Fiat payment rail (parked by owner, 2026-06-11)** — launch liquidity is bring-your-own
+  ALGO; see the ADR in `DECISIONS.md` (2026-06-11). If/when revisited: Stripe Checkout Sessions
+  (+ Billing for subscriptions), gated behind RISK #7 (real settlement) being closed, a matching
+  sink for the new faucet, and an explicit owner green-light (charter: real money = stop-and-ask).
 - 🟡 ⬜ Observability upgrade: logs → metrics → traces as traffic grows.
 - 🟡 ⬜ Secrets management hardening before any real value (encrypt keys at rest / secrets manager).
 - 🟡 ⬜ Age-gating/compliance + ToS/privacy review (simulated cannabis only).

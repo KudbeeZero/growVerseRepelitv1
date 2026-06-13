@@ -189,3 +189,16 @@ double-spend, harvest-once, and the CHECK floor; the F5 flaky rate-limit test is
 storage reset per `client` fixture). **Still open (next baton):** a general `Idempotency-Key`
 header so a duplicate returns the *original* response instead of a 409 (nicer UX), plus
 one-shot-grant uniqueness (daily stipend, achievements). 189 tests, 79.26%.
+
+### 2026-06-11 — Launch liquidity = bring-your-own ALGO; fiat payment rails deferred
+**Decision:** At launch, players fund participation by acquiring ALGO themselves (exchange or
+wallet of their choice — the non-custodial Pera/WalletConnect path already on the backlog). No
+fiat payment rail (Stripe or otherwise) is in scope now. **Why (owner call):** plenty of
+liquidity routes exist without us building one; a fiat rail is a whole new pillar — PCI/compliance
+surface, merchant-of-record and refund policy, and a real-money **faucet** that needs a matching
+sink and treasury policy — and per the charter every real-money decision is owner-gated anyway.
+It also makes no sense before chain settlement itself is real (RISK #7 still blocks any real
+value moving). **Consequences:** zero payments code in the repo; a 🟡 BACKLOG item records the
+option with its preconditions so the thinking isn't lost; if revisited, the integration shape is
+Stripe Checkout Sessions (+ Billing if subscriptions), behind RISK #7 being closed and an
+explicit owner green-light.

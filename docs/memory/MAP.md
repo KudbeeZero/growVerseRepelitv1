@@ -85,6 +85,30 @@ The five player-facing pillars: **The Grow** 🔨 · **The Genetics** 🔨 · **
 **The Economy** ✅ (`economy/ledger.py`, `economy/pricing.py`) · **The Chain** 🔨 (provider ABC + mock
 real; TestNet/IPFS deferred — Sprint 4).
 
+## Verification map — how "known-good" is enforced
+What stops each area from silently breaking. Tags: 🧪 **test-backed** (CI fails if it regresses) ·
+📌 **hash-pinned** (source-contract pins; currently hand-run, CI-enforced once vitest lands —
+RISK #8) · 👁 **eye-audited** (a human/agent read it carefully on the date shown — **rots on the
+next edit**, counts for far less than 🧪) · ⬜ **unverified**.
+
+| Area | Code | Verified by | Depth |
+|------|------|-------------|-------|
+| Money / ledger | `economy/ledger.py`, `economy/pricing.py` | `tests/test_economy.py` + invariant suite `tests/test_properties.py` + `tests/test_concurrency.py` (double-spend, CHECK floor, harvest-once) | 🧪 strong |
+| Genetics / provenance | `genetics/` | `tests/test_genetics.py`, `tests/test_properties.py`, `tests/test_provenance.py`, `tests/test_stabilization.py` | 🧪 strong |
+| Simulation | `simulation/` | `tests/test_simulation.py` (incl. dormancy convergence + parity), `tests/test_horticulture.py`, `tests/test_curing.py` | 🧪 — dormancy *semantics* still a design risk (#9) |
+| API auth / security | `api/` | `tests/test_security.py` (18: auth, IDOR, rate-limit, validation), `tests/test_auth.py`, `tests/test_errors.py` | 🧪 |
+| Game services (cup, university, shop, research, …) | `services/` | per-service suites — `tests/test_cup.py`, `tests/test_university.py`, `tests/test_research.py`, `tests/test_shop.py`, etc. (35 files, 197 tests, coverage gate 80%) | 🧪 |
+| Chain / settlement | `chain/`, `services/settlement_service.py`, `services/minting_service.py` | `tests/test_chain.py`, `tests/test_settlement.py`, `tests/test_minting.py` — mock-provider paths only; the **deposit trust gap is untested** (RISK #7) | 🧪 shallow |
+| Web: Constellation render core | `web/src/components/viz/Constellation.tsx` | 📌 sacred sha256 pins in `web/src/components/viz/__tests__/constellationLifecycle.test.ts` + listener/RAF contracts; hand-verified 2026-06-11 (4×) | 📌 — needs vitest in CI to become 🧪 |
+| Web: everything else | `web/src/` | 👁 helper review + independent audit, 2026-06-11 (`docs/audits/PR-15-grovers-leaf.md`) | 👁 → ⬜ as it's edited (RISK #8) |
+| Memory docs | `docs/memory/` | `scripts/check_memory.py` in CI (links, ✅ citations, layer map) | 🧪 |
+
+**The rule:** when something is verified for real, the proof lands as a **test or pin** (and the
+row here flips to 🧪/📌) — never as a "checked this" comment in code; those rot silently and then
+lie. An 👁 entry must carry its date and is treated as expired once the file changes. The goal
+state isn't "the whole codebase read twice" — it's this table all-🧪 on the paths that matter,
+so correctness is *re-proven on every push* instead of remembered.
+
 ## Surface area (anchors, not exhaustive)
 - **API:** ~52 routes under `/api/game` in `api/game_api.py` (writes auth'd + rate-limited; reads
   public). Trust surface: public `GET /strains/<id>/provenance` replays a cross to prove its genome,
