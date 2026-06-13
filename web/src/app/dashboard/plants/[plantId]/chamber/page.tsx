@@ -28,6 +28,7 @@ import {
   cycleDays,
 } from "@/lib/chamber/morphology";
 import { budColorForStrain } from "@/lib/chamber/strainVisuals";
+import { budDnaFor } from "@/lib/chamber/budDna";
 import { titleCase } from "@/lib/format";
 
 // Local climate state: the five persisted fields + a visual-only FAN.
@@ -159,6 +160,7 @@ function ChamberScreen({ plantId }: { plantId: string }) {
   // Per-strain calyx/pistil colour: authored for curated strains (G13, PDP,
   // Animal Mints…), deterministic roll otherwise.
   const budColor = budColorForStrain(strain?.slug ?? strain?.name, morphology.hue, seedForPlant(plant.strain_id));
+  const budDna = budDnaFor(strain?.slug ?? strain?.name, budColor);
   const liveDay = ageDays(plant.planted_at);
   const previewing = previewDay !== null;
   const day = previewing ? previewDay : liveDay;
@@ -193,6 +195,7 @@ function ChamberScreen({ plantId }: { plantId: string }) {
           morphology={morphology}
           dev={dev}
           budColor={budColor}
+          budDna={budDna}
           climate={{ fan: climate.fan, temp: climate.temperature, hum: climate.humidity, co2: climate.co2_level }}
           conditionFlags={plant.condition_flags}
           view={view}

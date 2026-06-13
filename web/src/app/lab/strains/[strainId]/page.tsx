@@ -27,6 +27,7 @@ import type { Strain } from "@/lib/types";
 import { GrowChamber } from "@/components/viz/GrowChamber";
 import { morphologyFor, devParams, seedForPlant } from "@/lib/chamber/morphology";
 import { budColorForStrain } from "@/lib/chamber/strainVisuals";
+import { budDnaFor } from "@/lib/chamber/budDna";
 
 function StrainInner({ strainId }: { strainId: string }) {
   const { playerId } = useSession();
@@ -112,6 +113,7 @@ function StrainInner({ strainId }: { strainId: string }) {
 function StrainHero({ strain }: { strain: Strain }) {
   const morphology = morphologyFor(strain.indica_ratio);
   const budColor = budColorForStrain(strain.slug ?? strain.name, morphology.hue, seedForPlant(strain.id));
+  const budDna = budDnaFor(strain.slug ?? strain.name, budColor);
   return (
     <div className="h-[420px] w-full overflow-hidden rounded-xl border border-ink-700 bg-[#050b12]">
       <GrowChamber
@@ -121,6 +123,7 @@ function StrainHero({ strain }: { strain: Strain }) {
         morphology={morphology}
         dev={devParams(62)}
         budColor={budColor}
+        budDna={budDna}
         climate={{ fan: 45, temp: 24, hum: 50, co2: 900 }}
         conditionFlags={[]}
         view="macro"
