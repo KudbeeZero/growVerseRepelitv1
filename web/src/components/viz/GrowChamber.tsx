@@ -28,6 +28,13 @@ import {
 } from "@/lib/chamber/morphology";
 import { CONDITION_VISUALS, SEVERITY_SCALE, dominantFlag } from "@/lib/conditionVisuals";
 import { pickPaletteColor, dominantPaletteColor, type BudDNA } from "@/lib/chamber/budDna";
+import {
+  branchFlex as branchFlexFor,
+  branchDroop,
+  colaLean,
+  flowerStageMultiplier,
+  airflowWeighting,
+} from "@/lib/chamber/budPhysics";
 
 export type ChamberView = "chamber" | "macro";
 
@@ -1099,22 +1106,29 @@ export function GrowChamber({
         return;
       }
       const bd = clamp(live.current.dev.budDev, 0, 1);
-      const branchFlex = clamp(1.25 - S.branchMul * 0.5, 0.45, 1.05);
+      const flex = branchFlexFor(S.branchMul);
+      // Flowering weight ladder (seed/veg 0 → harvest 1): scales all bud-load droop.
+      const stageMul = flowerStageMultiplier(p.stage as GrowthStage, bd);
       for (let i = 0; i < p.nodes.length; i++) {
         const nd = p.nodes[i];
+        // Bud-weight physics: heavier branches droop more (rotated, not just a tip
+        // sag, so the whole branch bows) and move with more inertia in the airflow.
+        const droopRot = branchDroop(nd.weight, flex, stageMul, SK.budWeightMul, SK.branchStrength);
+        const af = airflowWeighting(nd.weight, stageMul);
         // Airflow WAVE (not random wiggle): the top leads and lower nodes lag, with
-        // bigger amplitude up top — a travelling wave, ~3° max.
-        const amp = CL.windAmp * (0.8 + nd.f * 1.2) * branchFlex;
-        const sway = motionOK ? Math.sin(tt * 1.6 - (1 - nd.f) * 1.3) * amp + wind * (0.4 + nd.f * 0.6) : 0;
+        // bigger amplitude up top. Heavy buds damp the swing, lag further, slow down.
+        const amp = CL.windAmp * (0.8 + nd.f * 1.2) * flex * af.ampMul;
+        const sway = motionOK ? Math.sin(tt * 1.6 * af.freqMul - (1 - nd.f) * 1.3 * af.lagMul) * amp + wind * (0.4 + nd.f * 0.6) : 0;
         const spring = phys.nodes[i] ? phys.nodes[i].ao : 0;
         const jig = Math.min(3, Math.abs(phys.nodes[i] ? phys.nodes[i].av : 0) * 7);
-        // Bud-weight droop: the branch tip sags as buds fill in (live budDev).
-        const droopRot = clamp(nd.weight * branchFlex * bd * 0.5, 0, 0.45);
-        const sag = Math.sin(droopRot) * nd.len * 0.65;
+        // Residual tip bow on top of the branch rotation, for a compound sag curve.
+        const sag = Math.sin(droopRot) * nd.len * 0.35;
         const endX = nd.tipX, endY = nd.tipY + sag;
         ctx!.save();
         ctx!.translate(nd.x, nd.y);
-        ctx!.rotate(sway + spring + nd.side * condClaw * 0.4);
+        // The whole branch rotates downward under load (nd.side keeps the sign so
+        // both sides droop toward the floor), then sways/springs around that.
+        ctx!.rotate(sway + spring + nd.side * droopRot + nd.side * condClaw * 0.4);
         ctx!.strokeStyle = `hsl(${S.hue - 10}, 32%, 30%)`;
         ctx!.lineWidth = clamp(sw0 * 0.5 * (1 - nd.f * 0.4), 1, 4);
         ctx!.lineCap = "round";
@@ -1166,7 +1180,8 @@ export function GrowChamber({
           if (bl.site) {
             ctx!.save();
             ctx!.translate(bex, bey);
-            ctx!.rotate(nd.side * 0.12 + nd.side * droopRot * 0.4);
+            // Small extra nod: the bud hangs a touch beyond the (already drooped) branch.
+            ctx!.rotate(nd.side * 0.12 + nd.side * droopRot * 0.15);
             drawFlowerSite(bl.site, p.P, jig, tt);
             ctx!.restore();
           }
@@ -1184,7 +1199,7 @@ export function GrowChamber({
         if (nd.site) {
           ctx!.save();
           ctx!.translate(endX * 0.85, endY * 0.85);
-          ctx!.rotate(nd.budRot + nd.side * droopRot * 0.5); // bud nods down with weight
+          ctx!.rotate(nd.budRot + nd.side * droopRot * 0.2); // bud nods a touch past the drooped branch
           drawFlowerSite(nd.site, p.P, jig, tt);
           ctx!.restore();
         }
@@ -1194,12 +1209,15 @@ export function GrowChamber({
       const swayT = motionOK ? Math.sin(tt * 1.5) * CL.windAmp * 2.2 + wind : 0;
       if (p.cola) {
         const cjig = Math.min(3, Math.abs(phys.cola.av) * 7);
-        // Heavy top cola leans slightly with bud weight (consistent direction).
+        // Heavy top cola: leans 1–5° toward its offset side and nods slowly with
+        // inertia (the airflow weighting slows + damps its sway as it gains mass).
         const leanDir = Math.sign(top.x - p.cx) || 1;
-        const colaDroop = clamp(bd * 0.16, 0, 0.16) * leanDir;
+        const colaDroop = colaLean(stageMul, SK.budWeightMul) * leanDir;
+        const caf = airflowWeighting(SK.colaScale * SK.budWeightMul, stageMul);
+        const colaSway = motionOK ? Math.sin(tt * 1.5 * caf.freqMul) * CL.windAmp * 2.2 * caf.ampMul + wind : 0;
         ctx!.save();
         ctx!.translate(p.cola.x, p.cola.y);
-        ctx!.rotate(phys.cola.ao + swayT + colaDroop);
+        ctx!.rotate(phys.cola.ao + colaSway + colaDroop);
         ctx!.save();
         ctx!.translate(0, -p.cola.site.axisLen * 0.04);
         drawFan(p.A * 0.08 * (1 - 0.35 * p.P.budDev), Math.min(S.leafletMax, 5 + Math.floor(day / 18)), 1, claw);

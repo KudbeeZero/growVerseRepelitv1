@@ -64,6 +64,10 @@ export interface Silhouette {
   colaScale: number;
   /** Node-base leaf-cluster size multiplier. */
   nodeLeaf: number;
+  /** Branch stiffness — >1 sturdier stems (less droop), <1 weaker (more sag). */
+  branchStrength: number;
+  /** Bud-weight multiplier — >1 heavier flowers (more droop / cola lean). */
+  budWeightMul: number;
 }
 
 /** Morphology parameters the geometry builder consumes. */
