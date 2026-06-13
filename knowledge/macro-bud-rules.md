@@ -12,11 +12,19 @@ Sugar Leaves → Trichomes → Phenotype Colours → Final Render`
 - `progress = row / (rows−1)` (0 top → 1 bottom): **narrow top, wide center,
   tapered base**. `k ≥ 1` (indica) pushes the widest point lower (heavier base).
 
-## Placement
-- **Golden angle 137.5°** within each row (`angle = (i + row·3)·137.5°`);
-  `cos(angle)` sets horizontal offset across the row width.
-- Calyxes per row scale with row width (`calyxPerRowMin … calyxPerRowMax`).
-- Extra small **front** calyxes are added to break up large blobs.
+## Placement — concentric ring packing (not independent blobs)
+- Calyxes are packed in **rings** around the spine, one ring per spine segment
+  (`nRings ≈ rows·1.25`). Each ring is a circumference at that height.
+- Per-ring radius = `sin(progress^k·π)·budW/2`; per-ring **count** peaks in the
+  middle (`round(widthCurve · calyxPerRowMax)`, e.g. 1·3·5·8·5·3) → narrow top,
+  wide centre, tapered base.
+- Around the ring: `angle = i·(360/count)` + a **golden-angle (137.5°) twist per
+  ring** so rings never column up + a **half-step brick offset** so each calyx
+  nests in the previous ring's gap (pinecone / sunflower / dragon-scale packing).
+- **Depth comes from the ring angle**: `cos(angle)` → horizontal offset across the
+  silhouette, `(sin(angle)+1)/2` → back↔front, so calyxes wrap around the cola.
+- **Organic noise** keeps it natural: angle ±8°, radius ±6%, rotation ±25°,
+  scale ±15%. No perfect spacing or symmetry.
 
 ## Layering (painter's algorithm, back → front)
 - Each calyx carries a `depth` (0 back … 1 front): back = darker/smaller/lower

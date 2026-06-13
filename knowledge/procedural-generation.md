@@ -13,9 +13,10 @@
 ```
 BudSeed
   → resolve BudDNA (authored preset or derived; + environment modifiers)
-  → cola spine + row layout (sin(progress·π) silhouette)
-  → calyx clusters (golden-angle 137.5°, shape mix, depth layers, palette colour)
-  → extra small front calyxes (break up blobs)
+  → cola spine + ring layout (sin(progress·π) silhouette; rings per segment)
+  → concentric ring packing: per-ring count peaks mid; golden-angle twist per
+    ring + half-step brick offset (nest in gaps); depth from ring angle; shape
+    mix + palette colour; organic noise (±8°/±6%/±25°/±15%)
   → pistils (per-calyx spawn, thin/curly, between calyxes)
   → sugar leaves (woven between back/front layers)
   → trichomes (density-scaled, anchored to host calyxes)

@@ -592,56 +592,67 @@ export function GrowChamber({
       const baseY = H * 0.9;
       const topY = baseY - budH;
       const sizeMul = lerp(1.0, 1.28, clamp((dna.overlap - 0.6) / 0.15, 0, 1));
-      const GOLD = 137.5 * (Math.PI / 180);
 
-      // 3-tier depth so layers read back→front.
-      const pickDepth = () => {
-        const r = rnd();
-        return r < 0.32 ? 0.25 + rnd() * 0.12 : r < 0.72 ? 0.55 + rnd() * 0.15 : 0.85 + rnd() * 0.15;
-      };
+      // ---- Concentric ring packing (botanical bracts, NOT independent blobs) ----
+      // Calyxes are packed in rings around the cola spine. Each ring is offset half
+      // a step from the previous so calyxes nest in the gaps (pinecone / sunflower /
+      // dragon-scale packing). Ring radius follows the sin silhouette (narrow top,
+      // wide centre, tapered base) and the count peaks in the middle (e.g. 1·3·5·8·5·3).
+      // Depth comes from the ring angle, so calyxes wrap front↔back for real volume.
+      // Organic noise (±8° angle, ±6% radius, ±25° rotation, ±15% scale) avoids any
+      // perfect spacing or symmetry.
+      const ratio = dna.maxBudWidth / dna.budHeight;
+      const fatT = clamp((ratio - 0.44) / 0.19, 0, 1);
+      const widthExp = lerp(1.0, 1.3, fatT); // chunkier strains carry mass lower
+      const nRings = Math.round(dna.rows * 1.25);
+      const ANG_NOISE = 8 * (Math.PI / 180);
 
       const calyxes: MacroCalyx[] = [];
       const pistils: MacroPistil[] = [];
       const sugar: MacroLeaf[] = [];
-      for (let row = 0; row < dna.rows; row++) {
-        const progress = dna.rows === 1 ? 0.5 : row / (dna.rows - 1); // 0 top → 1 bottom
+      for (let ring = 0; ring < nRings; ring++) {
+        const progress = nRings === 1 ? 0.5 : ring / (nRings - 1); // 0 top → 1 bottom
         const y = topY + progress * budH;
-        const widthCurve = Math.sin(progress * Math.PI); // narrow ends, wide middle
-        const localWidth = widthCurve * budW;
-        const rowCount = Math.max(2, Math.round(lerp(dna.calyxPerRowMin, dna.calyxPerRowMax, widthCurve)));
-        for (let i = 0; i < rowCount; i++) {
-          const angle = (i + row * 3) * GOLD; // golden-angle spread within the row
-          const x = centerX + Math.cos(angle) * localWidth * rr(0.15, 0.5);
-          const sizePx = rr(dna.calyxSizeMin, dna.calyxSizeMax) * lerp(0.75, 1.2, widthCurve) * sizeMul;
-          let w = sizePx * scale * rr(0.85, 1.05);
-          // Shape mix (blueprint §5): teardrop 40 / oval 25 / pointed 20 / foxtail 15.
-          // Light-stress env modifiers push more pointed/foxtail calyxes, more so
-          // near the top, and stretch + tilt the top irregularly. Height > width.
-          const topness = clamp((0.4 - progress) / 0.4, 0, 1);
-          const foxBias = dna.foxtailBias ?? 0;
-          const topStretch = dna.topStretch ?? 0;
+        const widthCurve = Math.sin(Math.pow(progress, widthExp) * Math.PI);
+        const ringRadius = (widthCurve * budW) / 2;
+        const count = Math.max(1, Math.round(widthCurve * dna.calyxPerRowMax)); // 1 → max → 1
+        const angleStep = TAU / count;
+        // Ring offset = golden-angle twist per ring (137.5°, so rings never column
+        // up — pinecone/sunflower phyllotaxy) + a half-step brick nest so each
+        // calyx sits in the previous ring's gap.
+        const ringOffset = ring * 2.39996323 + (ring % 2) * angleStep * 0.5;
+        const topness = clamp((0.4 - progress) / 0.4, 0, 1);
+        const foxBias = dna.foxtailBias ?? 0;
+        const topStretch = dna.topStretch ?? 0;
+        for (let i = 0; i < count; i++) {
+          const angle = i * angleStep + ringOffset + rr(-ANG_NOISE, ANG_NOISE); // ±8°
+          const radius = ringRadius * (1 + rr(-0.06, 0.06)); // ±6%
+          const x = centerX + Math.cos(angle) * radius;
+          const depth = clamp((Math.sin(angle) + 1) / 2, 0, 1); // back(0) → front(1)
+          const sizePx = rr(dna.calyxSizeMin, dna.calyxSizeMax) * lerp(0.78, 1.15, widthCurve) * sizeMul * (1 + rr(-0.15, 0.15)); // ±15%
+          let w = sizePx * scale;
+          // Shape mix (§5): teardrop 40 / oval 25 / pointed 20 / foxtail 15; env
+          // light-stress pushes pointed/foxtail near the top. Height > width.
           const sr = rnd();
           const foxCut = 0.85 - foxtail * 0.2 - foxBias * 0.22 - topness * topStretch * 0.15;
-          // Keep the bands ordered so the "pointed" share never collapses even
-          // when foxtail pressure is high (it just shrinks toward foxCut).
           const ovalCut = Math.min(0.65 - topness * topStretch * 0.2, foxCut - 0.04);
           let shape: number, h: number;
           if (sr < 0.4) { shape = 0; h = w * rr(1.25, 1.5); }
           else if (sr < ovalCut) { shape = 1; h = w * rr(1.2, 1.35); }
           else if (sr < foxCut) { shape = 2; h = w * rr(1.5, 1.8); }
           else { shape = 3; w *= 0.78; h = w * rr(2.0, 2.5); }
-          if (topStretch > 0) h *= 1 + topness * topStretch * 0.6; // stretched top
+          if (topStretch > 0) h *= 1 + topness * topStretch * 0.6;
           const col = pickPaletteColor(dna.palette, rnd());
           calyxes.push({
-            x, y: y + rr(-4, 4) * scale, w, h,
-            rot: rr(-35, 35) * (Math.PI / 180) * (1 + topness * topStretch * 0.7),
-            depth: pickDepth(),
+            x, y: y + rr(-3, 3) * scale, w, h,
+            rot: rr(-25, 25) * (Math.PI / 180) * (1 + topness * topStretch * 0.7), // ±25°
+            depth,
             hue: col.hue + rr(-8, 8), sat: col.sat, lit: col.lit + rr(-6, 6),
             shape, phase: rnd(),
           });
           if (rnd() < dna.pistilChance) {
             pistils.push({
-              x, y, a: -Math.PI / 2 + rr(-0.95, 0.95),
+              x, y: y + rr(-3, 3) * scale, a: -Math.PI / 2 + rr(-0.95, 0.95),
               len: 0.5 + rnd() * 0.6, bend: rr(-1.1, 1.1), k: rnd() * 0.85,
             });
           }
@@ -649,24 +660,6 @@ export function GrowChamber({
             sugar.push({ x, y, sz: budH * (0.08 + 0.05 * widthCurve) * rr(0.85, 1.2), rot: rr(-0.95, 0.95) });
           }
         }
-      }
-
-      // Extra small front calyxes to break up large blobs (front-layer texture).
-      const nExtra = Math.round(dna.rows * 0.8);
-      for (let i = 0; i < nExtra; i++) {
-        const t = 0.1 + rnd() * 0.82;
-        const widthCurve = Math.sin(t * Math.PI);
-        const w = rr(dna.calyxSizeMin, dna.calyxSizeMax) * 0.58 * scale * sizeMul;
-        const col = pickPaletteColor(dna.palette, rnd());
-        calyxes.push({
-          x: centerX + (rnd() - 0.5) * widthCurve * budW * 0.85,
-          y: topY + t * budH,
-          w, h: w * rr(1.3, 1.6),
-          rot: rr(-30, 30) * (Math.PI / 180),
-          depth: 0.86 + rnd() * 0.14, // sits in front
-          hue: col.hue + rr(-8, 8), sat: col.sat, lit: col.lit + rr(-4, 8),
-          shape: rnd() < 0.5 ? 0 : 2, phase: rnd(),
-        });
       }
       calyxes.sort((a, b) => a.depth - b.depth); // back → front
 
