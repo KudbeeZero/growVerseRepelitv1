@@ -509,3 +509,12 @@ class MarketListing(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     highest_bid: Mapped[Optional[Decimal]] = mapped_column(MONEY)
     highest_bidder_id: Mapped[Optional[str]] = mapped_column(ForeignKey("players.id"))
     expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
+    # Optimistic-lock counter (same pattern as Wallet). A bid/buy mutates this
+    # row's status/highest_bid; SQLAlchemy stamps `WHERE version = :old` and bumps
+    # it on flush. Two concurrent first bids (which debit two *different* wallets,
+    # so the wallet lock can't serialize them) now collide here: the loser gets a
+    # StaleDataError and rolls back its AUCTION_BID debit, instead of being debited
+    # with no standing bid and no refund.
+    version: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+
+    __mapper_args__ = {"version_id_col": version}
