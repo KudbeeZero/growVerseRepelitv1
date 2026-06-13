@@ -81,10 +81,20 @@ def test_harvest_stage_is_terminal(session):
 
 def test_service_forecast_uses_its_clock(session):
     _, _, plant = _plant(session)
-    svc = SimulationService(session, config=CFG, clock=FrozenClock(BASE + timedelta(days=4)))
+    # Prime a healthy, well-fed plant so it advances deterministically: the sim's
+    # per-plant RNG (seeded by the plant's id) can otherwise let health drift down
+    # over the uncared-for catch-up and stretch the 3-day seed stage past the
+    # 4-day mark on some ids — a flaky "still seed" result.
+    plant.health = 100.0
+    plant.water_level = 95.0
+    plant.nutrient_level = 95.0
+    session.flush()
+    # 5 days gives a robust margin over the 3-day seed stage even when the
+    # per-plant RNG drifts health down across the uncared-for catch-up (a 4-day
+    # window was occasionally still "seed").
+    svc = SimulationService(session, config=CFG, clock=FrozenClock(BASE + timedelta(days=5)))
     svc.sync(plant)  # the /state route syncs before forecasting
     f = svc.forecast(plant)
-    # 4 days in: past the 3-day seed stage, so it has advanced and reports an ETA.
-    assert f["stage"] != GrowthStage.SEED.value
+    assert f["stage"] != GrowthStage.SEED.value  # advanced past seed
     assert f["harvest_eta"] is not None
-    assert f["age_hours"] == 96.0
+    assert f["age_hours"] == 120.0
