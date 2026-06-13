@@ -567,8 +567,6 @@ export function GrowChamber({
       const nodeTarget = Math.floor((hN / S.internode) * SK.nodeDensity * SK.vertStack * flowerPack);
       const maxNodes = Math.min(18, Math.max(d <= 10 ? 1 : 2, nodeTarget));
       const grow = smooth(clamp((d - 8) / 22, 0, 1));
-      // Branches flex more when they're longer/thinner (lower branchMul).
-      const branchFlex = clamp(1.25 - S.branchMul * 0.5, 0.45, 1.05);
       for (let i = 0; i < maxNodes; i++) {
         // Genetic/organic internode spacing: tighter toward the apex (more so for
         // spear strains, via vertStack), plus per-node jitter so nodes aren't
@@ -792,7 +790,10 @@ export function GrowChamber({
     const FAN_A = [0, 0.42, -0.42, 0.85, -0.85, 1.22, -1.22, 1.5, -1.5];
     const FAN_M = [1, 0.86, 0.86, 0.7, 0.7, 0.52, 0.52, 0.36, 0.36];
     function drawFan(size: number, n: number, topBoost: number, claw: number) {
-      for (let i = 0; i < n; i++) {
+      // Clamp to the FAN_A/FAN_M table length: a future per-strain leaflet count
+      // above 9 would otherwise index past the arrays → undefined → NaN geometry.
+      const leaflets = Math.min(n, FAN_A.length);
+      for (let i = 0; i < leaflets; i++) {
         const L = size * FAN_M[i], Wd = L * 0.32 * S.leafW;
         const a = FAN_A[i] + (claw ? Math.sign(FAN_A[i] || 1) * claw * (0.2 + Math.abs(FAN_A[i]) * 0.5) : 0);
         ctx!.save();
