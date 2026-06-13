@@ -199,7 +199,7 @@ function ChamberScreen({ plantId }: { plantId: string }) {
       {/* stage */}
       <div className="relative min-h-0 flex-1">
         <GrowChamber
-          seed={plantId.length}
+          seed={seedForPlant(plantId)}
           day={day}
           stage={renderStage}
           morphology={morphology}
