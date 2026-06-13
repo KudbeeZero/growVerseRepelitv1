@@ -4,108 +4,83 @@
 > the end of every chat; read by `/handoff-audit` at the start of the next. If this file and
 > the code disagree, the code wins — fix the baton. See `docs/SESSION_PROTOCOL.md`.
 
-**Last rewritten:** 2026-06-10 · **By:** API-validation-hardening chat
-**Active branch:** `claude/api-validation-hardening`
-**Merged to main:** PR #3 (protocol+gates+sim cap), #8 (fleet sweep + SQLite parity),
-#9 (concurrency core), #10 (web viz fixes, lands #6) — all CI-green. **This chat:** validation
-500s→400 + money-endpoint HTTP tests (coverage 79.3%→**80.0%**, 197 tests).
-**Held cross-session PRs (need rebase, not button-merge):** #7 (maintenance, baton conflicts),
-#2 (stale-base forecast), #5 (docs + prod-deploy), #4 (**migration fork — would break prod** +
-`GPE_DEV_LOGIN` default-on).
-**Open PR awaiting audit:** _this branch's PR; next chat runs `/handoff-audit`._
+**Last rewritten:** 2026-06-13 · **By:** plant-visuals / whole-plant chat
+**Active branch:** `claude/planning-session-4v29n1`
+**Open PR awaiting merge:** **#18** — Detailed Bud View overhaul + 3 launch strains + whole-plant
+systems. Independent audit: **CONCERNS** (receipt `docs/audits/PR-18-plant-visuals.md`) — substance
+solid (all gates green locally, 8/8 claims verified, de-flake 10/10), concerns were CI-on-head not
+yet registered + this PR being an owner-directed pivot off the old baton + widened RISK #8. Owner
+approved merge once the head CI is green.
 
-> **Bomb Squad addendum (2026-06-10, same day, separate branch):** fixed two lifecycle
-> defects in `web/src/components/viz/Constellation.tsx` — (1) reduced-motion users got a
-> permanently blank canvas (ResizeObserver's initial async callback reset `canvas.width`
-> after the single static draw); (2) unhandled `pointercancel` could strand `dragging=true`
-> (phantom pan + particle velocity injection). RAF lifecycle audited and confirmed inert.
-> Source-contract tripwires added in `web/src/components/viz/__tests__/constellationLifecycle.test.ts`
-> (incl. sacred-render hashes pinning leafParticles/graphParticles/step/draw). Full report:
-> `night-reports/BOMB-SQUAD-2026-06-10.md`. Note: web CI still doesn't execute vitest —
-> recommended follow-up in the report. The NEXT ACTION below is unchanged.
-
-> **GROVERS-leaf addendum (2026-06-11, branch `claude/grovers-particle-leaf-i1s759`):**
-> **PR #15 — MERGED to main.** Audited a prior chat's claims (≈half were phantom) and made
-> them real — leaf-mode neighbor mesh + hover/touch proximity repulsion in `Constellation.tsx`
-> (sacred hashes untouched, verified 4×), `GroversWordmark.tsx` (GR + leaf-as-the-O + VERS v2)
-> as the onboarding hero, `AnnouncementsBanner.tsx` above it, anti-bot framework spec in
-> `BACKLOG.md`. Helper review (SHIP-WITH-FIXES → all landed: small-phone overflow, WCAG banner,
-> touch-pan-y, passive wheel) + independent audit (PASS); receipt at
-> `docs/audits/PR-15-grovers-leaf.md`. Deferred perf items (edge batching etc., need a
-> sacred re-pin) are in `BACKLOG.md`. **Follow-up governance PR (same branch, separate from
-> #15):** owner delegation charter + end-of-chat report convention added to `CLAUDE.md`;
-> project-scoped permission rules in `.claude/settings.json` tightened after an advisor pass
-> (arbitrary-exec wildcards `node */npm run */make *` removed, pushes narrowed to `claude/*`,
-> force/refspec/amend/discard variants denied); egg-info untracked. The NEXT ACTION below is
-> unchanged.
+> **Pivot note:** this session did **not** do the previous baton's NEXT ACTION (idempotency keys).
+> The owner redirected the whole session to **plant visuals → strains → whole-plant** as the launch
+> priority, and decided the Macro Bud View is "done enough" for launch (becomes an optional
+> inspection/collector/NFT mode). The canonical spec for all of this now lives in **`/knowledge/`**
+> (Botanical Bible + 10 docs). The launch-hardening risks below are therefore still OPEN.
 
 ---
 
 ## NEXT ACTION (the one scoped item the next chat does)
 
-**Finish idempotency: general `Idempotency-Key` header + one-shot-grant uniqueness (RISK #6
-remainder).** The concurrency *core* landed this chat (optimistic lock + CHECK + harvest-once +
-409-on-conflict), so double-spend / double-harvest / negative-balance are now DB-impossible. What
-remains is the nicer-UX + faucet side:
-- An `Idempotency-Key` request header on money mutations → a small table storing
-  `(player_id, key) → {response, status}` with a unique constraint; on a duplicate key, **replay
-  the original response** (instead of today's 409). Store the key in the *same* transaction as the
-  effect so they commit atomically.
-- One-shot-grant uniqueness: daily stipend per `(player_id, day)` and achievement per
-  `(player_id, key)` (a tiny claims table or a scoped unique index) so a raced double-claim can't
-  double-pay the faucet.
-- Tests: duplicate-key replay returns the original body; concurrent stipend claim pays once.
-
-- **Scope:** `api/` (header plumbing), one migration + small table(s), `progression_service.py`, tests.
-- **Risks:** the idempotency store holds *responses*, not money truth — the ledger stays
-  authoritative. Transaction boundary: key-store and effect must commit together. Watch single-head.
-- **Off-limits:** chain settlement (RISK #7), web, sim.
+**Whole Plant phase, step 2 — finish the "alive" feel + start closing the web-test gap.** The five
+core systems landed this chat (node-spacing genetics, branch curvature, bud-weight droop, airflow
+wave, stretch animation). Next:
+- **Per-strain fan-leaf morphology** (`leafFingerCount`/`leafWidth`/`leafLength`/`serrationDepth`)
+  so leaves differ between strains, and **circadian** leaf motion (lights-on pray up, lights-off
+  droop) — see `knowledge/whole-plant-architecture.md`.
+- **Stand up a real vitest smoke** for the pure chamber logic (`morphology.ts`, `budDna.ts`,
+  `strainVisuals.ts`) and wire it into web CI — begins closing **RISK #8** (the now ~heavy canvas
+  code has zero executing JS test).
+- **Scope:** `web/` only (`GrowChamber.tsx`, `lib/chamber/*`, a vitest config + tests).
+- **Off-limits:** backend/api/sim/chain (no migration), the macro bud generator (it's done).
+- **Then (separate):** the performance pass (offscreen-cache + visibility-gate the always-mounted
+  strain hero) and the dashboard/GameState wiring toward the MVP loop.
 
 ---
 
-## What THIS chat did
+## What THIS chat did (PR #18)
 
-Landed the **concurrency core** of RISK #6 (the root cause from the fleet sweep):
-- **Wallet optimistic locking** — `version_id_col` wired (the column was dead); removed the manual
-  `wallet.version += 1` in `ledger.post()`. Concurrent debits can't both commit.
-- **`CHECK(cached_balance >= 0)`** hard backstop + **`uq_harvests_plant`** (harvest-once), via
-  migration `f1a2b3c4d5e6` (single head; `compare_metadata` clean → no drift).
-- **409 on conflict** — `StaleDataError` → clean 409 in the error handler (was an opaque 500).
-- **Fixed the F5 flaky rate-limit test** — `client` fixture resets limiter storage per test.
-- +4 tests in `tests/test_concurrency.py` (double-spend blocked, harvest-once, CHECK floor,
-  version bump). Docs: ADR in `DECISIONS.md`, ARCHITECTURE invariant #3 updated, BACKLOG + standup.
+Owner-directed plant-visuals → strains → whole-plant phase:
+- **Detailed Bud View**: DNA-driven generator (`BudDNA` presets per strain in
+  `web/src/lib/chamber/budDna.ts`) → concentric **ring-packing** with golden-angle twist + brick
+  nesting (`GrowChamber.tsx` `buildMacro`) → teardrop/ribbed/fuzzy calyx **texture** (center vein,
+  side ridges, speckles, edge shadow, micro-fuzz) → additive **frost** patches → **§11 environmental
+  reactions** (`applyEnvironmentToBudDNA`, non-mutating).
+- **Per-strain bud colour** (`strainVisuals.ts`) — authored, pistil colour decoupled from anthocyanin.
+- **Three launch strains** in the engine: **G13** (EPIC), **Purple Diddy Punch** (RARE, original),
+  **Animal Mints** (RARE) — `data/strains.yaml` + full `strain_knowledge.yaml` (catalog↔KB sync at
+  25). Growable + breedable via the generic cross.
+- **Growth-preview slider** (chamber TIME tab); **strain-profile hero bud** (`/lab/strains/[id]`).
+- **Whole-plant chamber systems**: node-spacing genetics, bezier **branch curvature**, **bud-weight
+  droop**, **airflow wave** (top leads), **stretch animation** over flowering (`buildPlant`/`drawPlant`).
+- **Canonical `/knowledge/` base** (Botanical Bible + anatomy/macro-rules/strain-dna/environment/
+  mutation/genetics/grow-tent/procedural/whole-plant docs).
+- De-flaked `test_service_forecast_uses_its_clock` + `test_catch_up_advances_growth_stage` (per-plant
+  RNG + tight window → primed healthy + 5-day margin; 25/25 locally).
 
 ## Verification split (this chat)
 
-**Agent-verifiable (proven — test-backed):**
-- `make test` → **189 passed, coverage 79.26% ≥ 79** · `make lint` ✅ · `make check-memory` ✅ ·
-  `make check-migrations` ✅ (head `f1a2b3c4d5e6`).
-- `alembic upgrade head` on fresh sqlite + `compare_metadata` → **migration matches models (no drift)**.
-- Optimistic lock proven with two real sessions racing the same wallet (loser → `StaleDataError`).
+**Agent-verifiable (proven):** `make test` **222 passed, coverage 80.87% ≥ 79** · `make lint` ✅ ·
+`make check-memory` ✅ (18 files) · `make check-migrations` ✅ (head `f1a2b3c4d5e6`, no new migration) ·
+web `tsc`/`lint`/`build` ✅ · de-flake loop **10/10** · independent audit verified 8/8 claims at
+file:line (`docs/audits/PR-18-plant-visuals.md`).
 
-**Device/human-verifiable (owner):**
-- Confirm the **409-on-conflict** UX is acceptable for double-clicks until the idempotency-key
-  header lands (NEXT ACTION makes a duplicate replay the original response instead).
-- Decide sim dormancy semantics (RISK #9); chain-settlement (RISK #7) is TestNet-gated.
+**Device/human-verifiable (owner):** the plant/bud render is **eye-verified via screenshots only** —
+no test asserts canvas output (RISK #8). Confirm the whole-plant + bud look in-app.
 
 ---
 
 ## OPEN RISKS (carried) — clears only when VERIFIED FIXED (test-backed)
 
-| # | Sev | Risk | Evidence | Status |
-|---|-----|------|----------|--------|
-| 1 | HIGH | Phantom integrity gates / no CI. | was `Makefile`/`BACKLOG.md` | **FIXED 2026-06-10** (PR #3, CI green on real runner). |
-| 2 | HIGH | Sim compute-on-read unbounded convergence. | `tests/test_simulation.py` | **FIXED 2026-06-10** (dormancy-snap; ADR in `DECISIONS.md`). |
-| 3 | HIGH | No idempotency keys on mutations. | `api/game_api.py` | PARTIAL — concurrency core fixed (RISK #6); general `Idempotency-Key` header is the NEXT ACTION. |
-| 4 | MED→HIGH | **Chain settlement not real** — see RISK #7 (re-scoped by the sweep). | `services/settlement_service.py` | OPEN. |
-| 5 | — | SessionStart hook was phantom. | was `BACKLOG.md` | **FIXED 2026-06-10**. |
-| 6 | HIGH | **No concurrency control on money/state paths.** Check-then-act, no row lock; `Wallet.version` dead. | `economy/ledger.py`, `db/models.py`, `simulation_service.py:41-45` | **CORE FIXED 2026-06-10** — wallet optimistic lock + `CHECK>=0` + harvest-once + 409 (migration `f1a2b3c4d5e6`); test-backed. SQLite parity fixed (PR #8). **Remaining:** idempotency-key header + stipend/achievement uniqueness (NEXT ACTION); `/state` duplicate-PlantEvents (C1) still open. |
-| 7 | HIGH | **Chain deposit trusts no on-chain proof.** Treasury→treasury no-op + DB-only `asa_balance` gate → withdraw/move-off/re-deposit drains treasury. No txid replay protection, no reconciliation, no address validation. | `settlement_service.py:116-140`, `db/models.py:92`, `game_service.py:123-129` | OPEN — blocks any real value moving (Sprint 4 gate). |
-| 8 | HIGH | **Web safety net is phantom** — e2e/vitest stubbed to `echo`, absent from devDeps + CI; treasury-cap + chain-failure rollback untested. | `web/package.json`, `.github/workflows/ci.yml`, coverage | PARTIAL — money-endpoint HTTP auth/IDOR/validation tests **added** (withdraw/deposit), F5 limiter fixed (PR #9). Remaining: real vitest/Playwright in CI, treasury-cap (F2) + chain-failure-rollback (F3) tests. |
-| 9 | MED | **Sim dormancy semantics** — shifts `stage_entered_at`, can delay an earned harvest if `max_catchup_hours` is lowered below a stage; skips lethal decay. Masked at default cap. | `simulation/engine.py:285-294` | OPEN — needs a design decision + knob guard. |
-| 10 | MED | **Web: no global 401/403 handler** — stale key = "logged in" to a broken dashboard, no re-auth path. | `web/src/lib/api/client.ts`, `RequireAuth.tsx` | OPEN. |
-| 11 | LOW | Validation 500s (dup-email, username, `set_environment`, auto-care budget); rate-limiter `memory://` per-worker (set Redis); `get_level` public oracle. | see fleet-sweep | PARTIAL — **validation 500s→400 FIXED** (test-backed; `set_environment`, auto-care, dup-email, blank username). Remaining: Redis rate-limit storage (config), `get_level` gating. |
+| # | Sev | Risk | Status |
+|---|-----|------|--------|
+| 3 / 6 | HIGH | Idempotency-Key header + one-shot-grant uniqueness (stipend/achievement). | OPEN — concurrency core fixed earlier; the header + faucet-uniqueness remainder is untouched. |
+| 4 / 7 | HIGH | Chain settlement not real / deposit trusts no on-chain proof. | OPEN — TestNet-gated; owner keeps chain docs/design-only for now. ALGO launch is the stated end goal. |
+| 8 | HIGH | **Web safety net phantom + now WIDENED** — vitest/Playwright still stubbed to `echo`; this PR added ~500 lines of untested canvas code (`GrowChamber.tsx`, `lib/chamber/*`). | OPEN/worse — first item of the NEXT ACTION starts a real vitest smoke. |
+| 9 | MED | Sim dormancy semantics. | OPEN. |
+| 10 | MED | Web: no global 401/403 handler. | OPEN. |
+| 11 | LOW | Redis rate-limit storage; `get_level` public oracle. | PARTIAL. |
 
-> Reassuring (verified solid, not assumed): **no IDOR**, auth/authz server-authoritative; **AI
-> SpendGuard** unescapable + CI never hits a live key; ledger correct single-threaded; **no
-> model↔migration drift**; "401 race" does not reproduce; `NEXT_PUBLIC_API_BASE` fallback robust.
+> Reassuring (verified solid): no model↔migration drift; ledger/genetics/concurrency test-backed;
+> AI SpendGuard unescapable; CI never hits a live key; catalog↔KB sync enforced (25 strains).
+> The plant-visual systems are eye-verified, not test-backed — that's RISK #8.
