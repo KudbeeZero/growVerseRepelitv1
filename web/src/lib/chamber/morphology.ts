@@ -72,6 +72,10 @@ export interface Morphology {
   sat: number;
   lit: number;
   leafW: number;
+  /** Serration depth of each leaflet edge: 0 = smooth/rounded blade, 1 = toothy. */
+  leafSerr: number;
+  /** Fan angular splay multiplier: <1 compact (indica), >1 splayed (sativa). */
+  leafSpread: number;
   leafletMax: number;
   heightMul: number;
   internode: number;
@@ -88,13 +92,19 @@ export interface Morphology {
 
 // Archetypes lifted verbatim from the mockup STRAINS table.
 // INDICA = Northern Lights (indica_ratio -> 1), SATIVA = Durban Poison (-> 0).
+// Leaf morphology differs by lineage: indica = fewer, broad, rounded blades with
+// shallow serration held compact; sativa = more, narrow, sharply-toothed fingers
+// splayed wide. Width (leafW) + count (leafletMax) + serration (leafSerr) + splay
+// (leafSpread) together make the fan leaf recognisable per strain.
 const INDICA: Omit<Morphology, "pattern"> = {
-  hue: 122, sat: 44, lit: 31, leafW: 1.3, leafletMax: 9, heightMul: 0.74,
+  hue: 122, sat: 44, lit: 31, leafW: 1.3, leafSerr: 0.42, leafSpread: 0.84,
+  leafletMax: 7, heightMul: 0.74,
   internode: 0.08, branchMul: 1.26, stretch: 1.12, bracts: 11, clusterLen: 0.85,
   clusterFat: 1.3, flowerFrom: 0.18, nodeBudFrac: 0.55, foxtail: 0.0,
 };
 const SATIVA: Omit<Morphology, "pattern"> = {
-  hue: 95, sat: 53, lit: 41, leafW: 0.62, leafletMax: 9, heightMul: 1.22,
+  hue: 95, sat: 53, lit: 41, leafW: 0.62, leafSerr: 1.0, leafSpread: 1.18,
+  leafletMax: 11, heightMul: 1.22,
   internode: 0.112, branchMul: 0.8, stretch: 1.58, bracts: 9, clusterLen: 1.45,
   clusterFat: 0.74, flowerFrom: 0.3, nodeBudFrac: 0.3, foxtail: 0.6,
 };
@@ -116,6 +126,8 @@ export function morphologyFor(indicaRatio: number): Morphology {
     sat: mix("sat"),
     lit: mix("lit"),
     leafW: mix("leafW"),
+    leafSerr: mix("leafSerr"),
+    leafSpread: mix("leafSpread"),
     leafletMax: Math.round(mix("leafletMax")),
     heightMul: mix("heightMul"),
     internode: mix("internode"),
