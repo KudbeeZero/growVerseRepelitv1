@@ -27,7 +27,7 @@ import {
   previewDev,
   cycleDays,
 } from "@/lib/chamber/morphology";
-import { budColorForStrain } from "@/lib/chamber/strainVisuals";
+import { budColorForStrain, silhouetteFor } from "@/lib/chamber/strainVisuals";
 import { budDnaFor, applyEnvironmentToBudDNA } from "@/lib/chamber/budDna";
 import { titleCase } from "@/lib/format";
 
@@ -156,6 +156,7 @@ function ChamberScreen({ plantId }: { plantId: string }) {
   const strain = map.get(plant.strain_id);
   const indicaRatio = strain?.indica_ratio ?? 0.5;
   const morphology = morphologyFor(indicaRatio);
+  const silhouette = silhouetteFor(strain?.slug ?? strain?.name, indicaRatio);
   const flMid = strain ? (strain.flowering_days[0] + strain.flowering_days[1]) / 2 : 60;
   // Per-strain calyx/pistil colour: authored for curated strains (G13, PDP,
   // Animal Mints…), deterministic roll otherwise.
@@ -202,6 +203,7 @@ function ChamberScreen({ plantId }: { plantId: string }) {
           day={day}
           stage={renderStage}
           morphology={morphology}
+          silhouette={silhouette}
           dev={dev}
           budColor={budColor}
           budDna={budDna}
