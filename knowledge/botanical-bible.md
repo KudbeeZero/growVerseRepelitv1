@@ -50,6 +50,7 @@
 | `genetics-system.md` | backend genome/breeding ↔ bud visuals |
 | `grow-tent-rules.md` | chamber/grow-tent scene + climate bands |
 | `procedural-generation.md` | end-to-end pipeline + determinism |
+| `whole-plant-architecture.md` | **next phase** — DNA-driven whole-plant view, silhouette, motion, launch loop |
 
 ## Code map (where the spec lives in the repo)
 - Macro generator + renderer: `web/src/components/viz/GrowChamber.tsx` (`buildMacro`, `drawMacro`, `calyxPath`).
