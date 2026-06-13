@@ -52,7 +52,7 @@ jobs:
         run: python -m pytest -q --cov --cov-report=term-missing
 
   web:
-    name: web (typecheck · lint · build)
+    name: web (typecheck · lint · build · test)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -77,3 +77,6 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Test (vitest)
+        run: npm run test
