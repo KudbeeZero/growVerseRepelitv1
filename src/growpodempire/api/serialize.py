@@ -90,6 +90,14 @@ def pod_dict(pod) -> dict:
         "active": pod.active,
         "auto_water": pod.auto_water,
         "auto_feed": pod.auto_feed,
+        # Current environment setpoints (nullable until the player sets them).
+        # Exposed so the web client can seed the climate controls with the pod's
+        # real values instead of guessing defaults.
+        "temperature": pod.temperature,
+        "humidity": pod.humidity,
+        "co2_level": pod.co2_level,
+        "light_intensity": pod.light_intensity,
+        "ph_level": pod.ph_level,
     }
 
 

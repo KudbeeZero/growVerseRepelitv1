@@ -62,3 +62,10 @@ htmlcov/
 # Local dev database (SQLite)
 *.db
 growpod.db
+
+# Environment files (may hold secrets: API keys, treasury mnemonic, etc.).
+# Keep .env.example tracked as the template.
+.env
+.env.*
+!.env.example
+!.env.local.example

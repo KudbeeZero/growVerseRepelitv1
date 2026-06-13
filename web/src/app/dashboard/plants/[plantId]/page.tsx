@@ -46,9 +46,17 @@ function PlantDetail({ plantId }: { plantId: string }) {
 
   return (
     <div className="space-y-4">
-      <Link href="/dashboard" className="text-sm text-grow-300 hover:underline">
-        ← Back to dashboard
-      </Link>
+      <div className="flex items-center justify-between">
+        <Link href="/dashboard" className="text-sm text-grow-300 hover:underline">
+          ← Back to dashboard
+        </Link>
+        <Link
+          href={`/dashboard/plants/${plantId}/chamber`}
+          className="rounded-md border border-grow-500 bg-grow-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-grow-500"
+        >
+          🌿 Open Grow Chamber
+        </Link>
+      </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-1">
