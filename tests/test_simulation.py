@@ -46,6 +46,12 @@ def _conditions(plant):
 
 def test_catch_up_advances_growth_stage(session):
     _, _, plant = _plant(session)
+    # Healthy + fed so the seed stage advances deterministically (the per-plant
+    # RNG can otherwise stretch it on some ids over an uncared-for catch-up).
+    plant.health = 100.0
+    plant.water_level = 95.0
+    plant.nutrient_level = 95.0
+    session.flush()
     assert plant.growth_stage == "seed"
     engine.catch_up(session, plant, BASE + timedelta(days=5), CFG)
     assert plant.growth_stage != "seed"      # progressed out of seed stage
