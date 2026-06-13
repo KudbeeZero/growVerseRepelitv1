@@ -251,6 +251,10 @@ export interface BudColor {
   calyxSat: number;
   /** 0 = warm amber pistils, 1 = magenta/pink pistils (vivid purple phenos). */
   pistilMagenta: number;
+  /** Optional accent hue for a fraction of calyxes (e.g. purple accents on a green bud). */
+  accentHue?: number;
+  /** Fraction of calyxes (0..1) rendered in accentHue instead of calyxHue. */
+  accentFrac?: number;
 }
 
 export function budColorFor(strainSeed: number, baseGreenHue: number): BudColor {

@@ -183,3 +183,27 @@ strains:
     terpenes: [limonene, terpinolene, caryophyllene]
     traits: {indica_ratio: 0.25, thc: 22, cbd: 0.5, flowering_time: 70, yield: 520, difficulty: 3, disease_resistance: 0.5, pest_resistance: 0.6, vigor: 0.85}
     dominant: [thc]
+
+  - name: G13
+    lineage_type: hybrid
+    rarity: epic
+    stability: 0.9
+    terpenes: [myrcene, caryophyllene, pinene]
+    traits: {indica_ratio: 0.7, thc: 24, cbd: 0.5, flowering_time: 60, yield: 520, difficulty: 3, disease_resistance: 0.6, pest_resistance: 0.6, vigor: 0.8}
+    dominant: [thc, indica_ratio]
+
+  - name: Purple Diddy Punch
+    lineage_type: hybrid
+    rarity: rare
+    stability: 0.8
+    terpenes: [caryophyllene, myrcene, limonene]
+    traits: {indica_ratio: 0.8, thc: 23, cbd: 0.5, flowering_time: 60, yield: 520, difficulty: 2, disease_resistance: 0.6, pest_resistance: 0.6, vigor: 0.7}
+    dominant: [indica_ratio, thc]
+
+  - name: Animal Mints
+    lineage_type: hybrid
+    rarity: rare
+    stability: 0.8
+    terpenes: [caryophyllene, limonene, linalool]
+    traits: {indica_ratio: 0.75, thc: 23, cbd: 0.5, flowering_time: 60, yield: 520, difficulty: 2, disease_resistance: 0.6, pest_resistance: 0.6, vigor: 0.75}
+    dominant: [indica_ratio, thc]

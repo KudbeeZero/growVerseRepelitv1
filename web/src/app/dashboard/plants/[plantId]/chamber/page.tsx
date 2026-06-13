@@ -22,12 +22,12 @@ import {
   daysToHarvest,
   climateModel,
   clamp,
-  budColorFor,
   seedForPlant,
   stageForDay,
   devParams,
   cycleDays,
 } from "@/lib/chamber/morphology";
+import { budColorForStrain } from "@/lib/chamber/strainVisuals";
 import { titleCase } from "@/lib/format";
 
 // Local climate state: the five persisted fields + a visual-only FAN.
@@ -156,8 +156,9 @@ function ChamberScreen({ plantId }: { plantId: string }) {
   const indicaRatio = strain?.indica_ratio ?? 0.5;
   const morphology = morphologyFor(indicaRatio);
   const flMid = strain ? (strain.flowering_days[0] + strain.flowering_days[1]) / 2 : 60;
-  // Per-strain calyx/pistil colour (green→amber ↔ anthocyanin purple), stable per strain.
-  const budColor = budColorFor(seedForPlant(plant.strain_id), morphology.hue);
+  // Per-strain calyx/pistil colour: authored for curated strains (G13, PDP,
+  // Animal Mints…), deterministic roll otherwise.
+  const budColor = budColorForStrain(strain?.slug ?? strain?.name, morphology.hue, seedForPlant(plant.strain_id));
   const liveDay = ageDays(plant.planted_at);
   const previewing = previewDay !== null;
   const day = previewing ? previewDay : liveDay;

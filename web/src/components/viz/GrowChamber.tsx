@@ -310,7 +310,11 @@ export function GrowChamber({
           const g = 0.5 + 0.5 * d;
           const px = cx + Math.cos(p.a) * p.rad * cw * 0.55;
           const py = cy + Math.sin(p.a) * p.rad * cw * 0.35 + p.ring * podH * 0.18;
-          const hueP = calyxHue + p.dh + (p.blushK < P.blush ? 18 : 0);
+          // Some calyxes can render in an accent hue (e.g. purple accents on a
+          // green bud) — chosen deterministically per pod via its blushK roll.
+          const accent = bc.accentFrac != null && bc.accentHue != null && p.blushK < bc.accentFrac;
+          const baseHueP = accent ? bc.accentHue! : calyxHue;
+          const hueP = baseHueP + p.dh + (p.blushK < P.blush ? 18 : 0);
           drawPod(px, py, Math.cos(p.a) * 0.4, podW * p.sz * g, podH * p.sz * g, hueP, calyxSat, baseLit + p.dl + (2 - p.ring) * 2, 0.42);
           drawn++;
         }
