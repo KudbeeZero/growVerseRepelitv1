@@ -255,3 +255,23 @@ fixes, not a state rewrite. A global 401/403 handler (`AuthErrorListener`) now t
 on a rejected key (RISK #9); `usePods` refreshes on an interval + focus so the chamber bud phenotype
 reflects committed pod environment. The knowledge doc's `GameState/EnvironmentState/UIState` section
 is documentation aspiration, not a build target, until a future PR proves a need.
+
+### 2026-06-14 — Higgsfield = AI Art Department; canonical visual language adopted (concept-only)
+**Decision:** Adopt Higgsfield (CLI, image + video) as the **Plant Reference & Asset Generation
+Department** that feeds the Plant Engine + Asset teams, and adopt the visual-language proposal in
+`docs/research/visual-reference/2026-06-14-growpod-visual-reference-catalog.md` as canonical:
+(1) **two registers, one universe** — warm photoreal-leaning plants (the hero) inside the cool
+sci-fi **neon-on-charcoal** pod/UI (bg `#060a14`, blue LED ring `#34a8ff` motif); (2) **frost is the
+signature** (highest-priority engine target); (3) **color = rarity** (fade palette → plant ripeness,
+premium accessory tiers, UI rarity states); (4) **health reads through leaf posture** (pray=healthy,
+droop=neglect); (5) **asset split** — recreate accessory icons + stage silhouettes + fade ramps as
+SVG/code (cheap, deterministic, shippable, per the fan A/B test); keep frost/harvest **hero shots as
+AI key-art** for marketing/loading screens. **Why:** a flowering-clip reference validated that AI art
+can set a concrete, studyable target so procedural plants chase **70–80% of its emotional impact**;
+the fan A/B proved AI-for-keyart / code-for-UI is the right division of labor. **Consequences:**
+16 reference boards (8 plant stages + 8 accessories) live in `docs/research/visual-reference/`;
+this is a **study target + house style, not a renderer change** — no engine/sim code was touched.
+The Plant Engine 70–80% target is ranked (frost density+sparkle → per-strain fade ramp →
+bud-stacking fusion → leaf-posture health → node-spacing vigor) in BACKLOG. Higgsfield credits are
+real money (owner-funded); generation spends stay logged per chat. Supersede this if the house style
+or the AI/code split changes.

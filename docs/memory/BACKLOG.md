@@ -33,6 +33,21 @@ once they appear here. Last reconciled: **2026-06-10**.
 - 🎨 ⬜ **Macro Bud Polish II** (future; *not launch-blocking*) — sharper calyx ridges, denser calyx
   nesting, reduce the smooth-oval appearance on the Purple Diddy Punch *macro* bud, improve chunky
   calyx definition. Macro ("Detailed Bud View") only — the whole-plant chamber is signed off.
+- 🎨 ⬜ **Plant Engine: chase the AI frost/fade target (70–80% emotional impact)** (owner-approved
+  2026-06-14; ADR same date) — tune the procedural plant against the reference boards in
+  `docs/research/visual-reference/` (study notes in the catalog). Ranked by impact-per-effort:
+  **(1) frost density + specular sparkle** (Frost Explosion — the signature; biggest awe per unit
+  work, texture/particle problem not geometry) → **(2) per-strain fade color ramp** (green→yellow→
+  purple/red anthocyanin; cheap "premium" win) → **(3) bud-stacking fusion + mass-over-foliage
+  tipping** (extends De-Grape) → **(4) leaf-posture health signal** (pray vs droop) → **(5) node-
+  spacing vigor curve**. Hit 1–3 to likely clear the bar. Visual-only; reference is a study target,
+  botany/sim still win on conflict.
+- 🎨 ⬜ **Accessory art track (SVG/code per the AI/code split)** (owner-approved 2026-06-14) — recreate
+  the 8 grow-pod accessory concepts (`docs/research/visual-reference/accessories/`: fan, CO₂, water
+  canister, nutrient injector, UV module, dry rack, genetic scanner, premium set) as deterministic
+  SVG/code UI assets in the neon-on-charcoal house style; map 1:1 to existing sim systems (climate /
+  feeding / post-harvest / genetics). The HyperFrames fan (`my-video/index.html`) is the proven
+  pattern. Keep frost/harvest hero shots as AI key-art (marketing/loading), not traced to code.
 
 ## 🔴 Immediate (do now — correctness, truth, or unblocks others)
 - 🔴 🔨 **Concurrency + idempotency hardening** (RISK #6) — *core landed 2026-06-10*: wallet
