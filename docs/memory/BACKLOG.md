@@ -175,6 +175,15 @@ once they appear here. Last reconciled: **2026-06-10**.
   a title + XP), taught by an AI Professor (mock for CI, Claude in prod). Public `/university/catalog`
   + authed enroll/complete/claim/lecture; +13 tests. Grounded in a cited curriculum research report.
   *Next (⬜): quizzes, more departments, Doctorate tier, diploma NFTs.* Per `docs/memory/design/06-university.md`.
+- 🟡 ⬜ **GrowPod University v2 — research foundation** (2026-06-14, Directive UNI-001) — a 10-agent
+  Think-Tank campaign (research-only) produced the complete research foundation in
+  `docs/research/university/` (start at `UNI-A10-records-consolidation.md`): curriculum architecture,
+  cannabis-science KB, master-grower craft, learning psychology, gamification, community, production
+  pipeline, AI tutor, and a **parked** monetization survey. *First build (🟢 shovel-ready, CI-safe):*
+  the **deterministic quiz engine** — merge the A01/A08/A09 `curriculum.yaml` schema proposals into one
+  (R1), then authored quiz banks + pure-Python grader (closes the ⬜ quiz gap at `06-university.md:53`).
+  **Six Owner decisions** await in UNI-A10 §4 (all reward stays non-GROW; Doctorate=Cup-placement;
+  quizzes advisory→required; structured-only social first; monetization stays parked).
 - 🟡 ✅ **Web client — full UI build** (2026-06-08, branch `claude/growv2-web-ui-build-MZWZE`) — the
   Next 15 client now covers all seven screen groups (onboarding hero · grow dashboard with VPD/DLI/PPFD
   · strain lab + encyclopedia + DNA/lineage constellations + Verify provenance · GenBank galaxy ·

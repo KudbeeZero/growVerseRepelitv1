@@ -18,7 +18,7 @@
 | **Directive ID** | UNI-001 |
 | **Title** | GrowPod University — Complete Research Foundation |
 | **Lead Agent** | UNI-A00 |
-| **Status** | APPROVED · executing |
+| **Status** | ✅ COMPLETE — all 10 streams landed; synthesis in `UNI-A10-records-consolidation.md` |
 | **Executive Summary** | Build the complete research foundation for GrowPod University across 10 specialized streams. |
 | **Director Decision** | ✅ Launch 10 University Research Agents (A01–A09 workers, A10 Records). |
 | **Scope guardrails** | Research only — no code mutations. Off-chain MVP first. No faucet-without-sink. Monetization = backlog/Owner-only. CI-safe AI. |

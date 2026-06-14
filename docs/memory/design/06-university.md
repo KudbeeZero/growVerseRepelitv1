@@ -61,7 +61,13 @@ Public: `GET /university/catalog`. Authed: `GET /players/<id>/university` (trans
 - **CI-safe AI** (mock when no key); **DB authoritative**; **deterministic** practical checks +
   time gate; degree perks reuse the research `_EFFECT_KEYS`; tuition is a sink with **no GROW faucet**.
 
+> **Build-out research (Directive UNI-001, 2026-06-14):** the *how* for every ⬜ above — quizzes,
+> persona depth, more departments, Doctorate, community, diploma NFTs — is researched in
+> `docs/research/university/` (10-agent Think-Tank campaign; start at `UNI-A10-records-consolidation.md`).
+> Research only — no tags flip here until the work ships.
+
 ## Cross-links
 - The spend-based companion: `03-grower-skills.md` (research tree) · the genetics/agronomy taught:
   `01-simulation-horticulture.md`, `02-genetics.md` · curriculum grounding:
-  `docs/research/2026-06-08-cannabis-education-curriculum.md`.
+  `docs/research/2026-06-08-cannabis-education-curriculum.md` · build-out research foundation:
+  `docs/research/university/` (Directive UNI-001).
