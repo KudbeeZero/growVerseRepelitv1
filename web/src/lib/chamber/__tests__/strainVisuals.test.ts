@@ -44,3 +44,30 @@ describe("budColorForStrain (regression — unchanged by silhouette work)", () =
     expect(c.calyxHue).toBeGreaterThan(255);
   });
 });
+
+describe("Launch Strain Integration Pack (PR #32) — authored visuals + identity", () => {
+  const LAUNCH = ["white-rhino", "white-fire-og", "gelato", "wedding-cake"] as const;
+
+  it("gives each launch strain an authored silhouette (not the indica-derived default)", () => {
+    // Use a mid ratio so the derived fallback is well-defined; authored must differ.
+    for (const slug of LAUNCH) {
+      expect(silhouetteFor(slug, 0.6), `${slug} silhouette authored`).not.toEqual(silhouetteFor(undefined, 0.6));
+    }
+  });
+
+  it("frosty-WHITE strains carry no anthocyanin (frost, not purple)", () => {
+    // The 'white' is trichome frost — driven by budDna, kept out of the calyx hue.
+    expect(budColorForStrain("white-rhino", 110, 1).anthocyanin).toBe(0);
+    expect(budColorForStrain("white-fire-og", 110, 1).anthocyanin).toBe(0);
+  });
+
+  it("purple-dessert strains carry high anthocyanin + a purple accent", () => {
+    const gelato = budColorForStrain("gelato", 110, 1);
+    expect(gelato.anthocyanin).toBeGreaterThan(0.5);
+    expect(gelato.accentHue).toBeGreaterThan(255);
+
+    const weddingCake = budColorForStrain("wedding-cake", 110, 1);
+    expect(weddingCake.anthocyanin).toBeGreaterThan(0.4);
+    expect(weddingCake.accentHue).toBeGreaterThan(255);
+  });
+});

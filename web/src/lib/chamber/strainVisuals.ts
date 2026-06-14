@@ -26,10 +26,11 @@ const AUTHORED: Record<string, BudColor> = {
   "white-rhino": { anthocyanin: 0, calyxHue: 100, calyxSat: 40, pistilMagenta: 0 },
   // Bright, very frosty green; orange pistils — the "white" expression is all frost.
   "white-fire-og": { anthocyanin: 0, calyxHue: 96, calyxSat: 46, pistilMagenta: 0 },
-  // Balanced + colourful — green base with ~45% purple-accent calyxes, orange pistils.
-  gelato: { anthocyanin: 0.35, calyxHue: 115, calyxSat: 50, pistilMagenta: 0, accentHue: 290, accentFrac: 0.45 },
-  // Dense, frosty green with a faint purple accent; orange pistils.
-  "wedding-cake": { anthocyanin: 0.2, calyxHue: 108, calyxSat: 44, pistilMagenta: 0, accentHue: 285, accentFrac: 0.2 },
+  // Purple dessert — high anthocyanin, colourful: green base with heavy purple
+  // accents and a touch of magenta in the pistils.
+  gelato: { anthocyanin: 0.6, calyxHue: 128, calyxSat: 56, pistilMagenta: 0.2, accentHue: 292, accentFrac: 0.5 },
+  // Creamy purple dessert — high anthocyanin, frosty; strong purple accents.
+  "wedding-cake": { anthocyanin: 0.5, calyxHue: 122, calyxSat: 50, pistilMagenta: 0.1, accentHue: 288, accentFrac: 0.42 },
 };
 
 /**

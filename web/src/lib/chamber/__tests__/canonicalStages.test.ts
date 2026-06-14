@@ -103,9 +103,19 @@ describe("authored visual presets (every launch strain is curated, not derived)"
     expect(colorOf("purple-diddy-punch").anthocyanin).toBeGreaterThan(0.5);
     expect(colorOf("purple-diddy-punch").calyxHue).toBeGreaterThan(255);
 
-    // Gelato — balanced + colourful: carries a purple accent on a green base.
+    // Gelato — purple-dessert: high anthocyanin + a purple accent on a green base.
     const gelato = colorOf("gelato");
     expect(gelato.accentHue).toBeGreaterThan(255);
     expect(gelato.calyxHue).toBeLessThan(150);
+    expect(gelato.anthocyanin).toBeGreaterThan(0.5);
+
+    // Wedding Cake — creamy purple dessert: high anthocyanin + purple accent.
+    const weddingCake = colorOf("wedding-cake");
+    expect(weddingCake.anthocyanin).toBeGreaterThan(0.4);
+    expect(weddingCake.accentHue).toBeGreaterThan(255);
+
+    // White Rhino & White Fire OG — frosty WHITE: low anthocyanin (frost, not purple).
+    expect(colorOf("white-rhino").anthocyanin).toBe(0);
+    expect(colorOf("white-fire-og").anthocyanin).toBe(0);
   });
 });

@@ -96,17 +96,19 @@ const AUTHORED: Record<string, BudDNA> = {
     calyxSizeMin: 7, calyxSizeMax: 14, overlap: 0.69, pistilChance: 0.32,
     sugarLeafChance: 0.1, trichomeDensity: 0.97, palette: pal([["lime", 3], ["green", 2], ["deepGreen", 1]]),
   },
-  // Balanced + colourful — green with strong purple/magenta accents, good frost.
+  // Purple dessert — high anthocyanin, colourful: purple/magenta-led with a green
+  // base, good frost. Photogenic green-and-purple phenotype.
   gelato: {
     budHeight: 160, maxBudWidth: 86, rows: 17, calyxPerRowMin: 3, calyxPerRowMax: 7,
     calyxSizeMin: 7, calyxSizeMax: 15, overlap: 0.7, pistilChance: 0.33,
-    sugarLeafChance: 0.12, trichomeDensity: 0.82, palette: pal([["green", 2], ["lime", 1.5], ["purple", 2], ["magenta", 1.5]]),
+    sugarLeafChance: 0.12, trichomeDensity: 0.85, palette: pal([["green", 1.5], ["lime", 1], ["purple", 3], ["magenta", 2], ["deepPurple", 1]]),
   },
-  // Dense, frosty — tightest calyx packing, green with a faint purple, heavy frost.
+  // Creamy purple dessert — high anthocyanin, tightest calyx packing, heavy frost;
+  // green base with strong purple/deep-purple.
   "wedding-cake": {
     budHeight: 158, maxBudWidth: 88, rows: 18, calyxPerRowMin: 4, calyxPerRowMax: 8,
     calyxSizeMin: 7, calyxSizeMax: 15, overlap: 0.74, pistilChance: 0.33,
-    sugarLeafChance: 0.13, trichomeDensity: 0.93, palette: pal([["green", 3], ["lime", 1.5], ["deepGreen", 1.5], ["purple", 1]]),
+    sugarLeafChance: 0.13, trichomeDensity: 0.93, palette: pal([["green", 2], ["lime", 1], ["purple", 2.5], ["deepPurple", 1.5], ["magenta", 1]]),
   },
 };
 

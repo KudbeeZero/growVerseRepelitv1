@@ -709,3 +709,117 @@ animal-mints:
     height: "medium (0.9-1.3 m)"
     resilience: "hardy; watch mold in dense flower; moderate-to-heavy feeder"
   notes: "A minty, gassy dessert hybrid — Animal Cookies crossed with Kush Mints. Frosty, resinous and relaxing, with green-and-purple flowers and a creamy mint-diesel nose."
+
+# --- Launch Strain Integration Pack (PR #32) ---
+
+white-rhino:
+  aka: ["White Rhino", "Rhino"]
+  lineage: "White Widow × North American/Brazilian/Afghani indica"
+  origin: "Netherlands (Green House Seed Co.)"
+  type: photoperiod
+  genotype: "~85% Indica"
+  aroma: [earthy, woody, sweet, pungent]
+  flavor: [earthy, woody, sweet, hash]
+  effects: [deeply relaxing, sedating, body-heavy, happy, sleepy]
+  medical: [pain, stress, insomnia, appetite-loss, nausea]
+  terpenes:
+    myrcene: "earthy, musky — sedative, the classic 'couch-lock' terpene"
+    caryophyllene: "peppery, spicy — binds CB2, anti-inflammatory"
+    pinene: "fresh pine — alerting, may temper memory effects"
+  cannabinoids: {thc: "18-24%", cbd: "0-1%", cbg: "low", thcv: "trace"}
+  morphology: "short, stocky, heavy-indica frame; fat dense colas under a thick white blanket of resin — frosty pale-green flowers with low anthocyanin"
+  grow:
+    difficulty: easy
+    environment: [indoor, greenhouse, outdoor]
+    flowering_weeks: "7-8"
+    photoperiod: "flip to 12/12 to flower"
+    optimal: {temp_c: "20-26", rh_veg_pct: "55-65", rh_flower_pct: "40-50", vpd_kpa: "0.8-1.3", dli: "30-40"}
+    yield_indoor_g_m2: "550-650"
+    yield_outdoor_g_plant: "550-700"
+    height: "short (0.8-1.3 m)"
+    resilience: "very hardy; mold/pest resistant; forgiving for beginners"
+  notes: "A White Widow descendant prized for huge resin production and big indica yields. The 'white' is pure trichome frost, not anthocyanin — a heavy, sedating hashplant."
+
+white-fire-og:
+  aka: ["White Fire OG", "WiFi OG", "WFOG"]
+  lineage: "Fire OG × The White"
+  origin: "United States (California)"
+  type: photoperiod
+  genotype: "~55% Indica (balanced hybrid)"
+  aroma: [diesel, earthy, pine, citrus, pungent]
+  flavor: [earthy, diesel, pine, lemon]
+  effects: [uplifted, euphoric, creative, relaxed, focused]
+  medical: [stress, depression, anxiety, pain, fatigue]
+  terpenes:
+    caryophyllene: "peppery, spicy — binds CB2, anti-inflammatory"
+    limonene: "bright citrus — mood-lifting"
+    myrcene: "earthy, musky — relaxing, the classic indica note"
+  cannabinoids: {thc: "20-26%", cbd: "0-1%", cbg: "low-moderate", thcv: "trace"}
+  morphology: "medium, balanced frame; spear-shaped colas caked in trichomes — extremely frosty bright-green flowers with low anthocyanin and bright orange pistils"
+  grow:
+    difficulty: moderate
+    environment: [indoor, greenhouse, outdoor]
+    flowering_weeks: "9"
+    photoperiod: "flip to 12/12 to flower"
+    optimal: {temp_c: "20-27", rh_veg_pct: "50-60", rh_flower_pct: "40-50", vpd_kpa: "0.9-1.3", dli: "35-45"}
+    yield_indoor_g_m2: "400-500"
+    yield_outdoor_g_plant: "450-550"
+    height: "medium (1.0-1.5 m)"
+    resilience: "moderate; rewards dialed-in environment; watch humidity on dense, resinous tops"
+  notes: "From 'The White', WiFi OG is one of the frostiest cuts around — a diesel-citrus OG whose trichome density is its signature. Bright, white-frosted, low-purple."
+
+gelato:
+  aka: ["Gelato", "Larry Bird", "Gelato #33"]
+  lineage: "Sunset Sherbet × Thin Mint GSC"
+  origin: "United States (San Francisco — Cookie Fam / Sherbinskis)"
+  type: photoperiod
+  genotype: "~55% Indica (balanced hybrid)"
+  aroma: [sweet, dessert, citrus, berry, creamy]
+  flavor: [sweet, creamy, citrus, berry, dough]
+  effects: [euphoric, relaxed, happy, creative, uplifted]
+  medical: [stress, depression, pain, anxiety, fatigue]
+  terpenes:
+    caryophyllene: "peppery, spicy — calming, CB2-active"
+    limonene: "bright citrus — mood-lifting"
+    myrcene: "earthy, musky — relaxing, the classic indica note"
+  cannabinoids: {thc: "20-26%", cbd: "0-1%", cbg: "low", thcv: "trace"}
+  morphology: "medium, colourful dessert hybrid; chunky buds in green-to-deep-purple with vivid orange pistils and a thick frosty coat — strong anthocyanin expression"
+  grow:
+    difficulty: moderate
+    environment: [indoor, greenhouse, outdoor]
+    flowering_weeks: "8-9"
+    photoperiod: "flip to 12/12; cool late-flower nights deepen the purple"
+    optimal: {temp_c: "20-26", rh_veg_pct: "50-60", rh_flower_pct: "40-50", vpd_kpa: "0.9-1.3", dli: "30-45"}
+    yield_indoor_g_m2: "450-550"
+    yield_outdoor_g_plant: "500-600"
+    height: "medium (0.9-1.4 m)"
+    resilience: "moderate; feeds heavy; colours up best with a cool finish"
+  notes: "The flagship of the dessert era — sweet, creamy and famously photogenic, throwing colourful green-and-purple phenotypes. High anthocyanin; a collector's screenshot strain."
+
+wedding-cake:
+  aka: ["Wedding Cake", "Triangle Mints", "Pink Cookies"]
+  lineage: "Triangle Kush × Animal Mints"
+  origin: "United States"
+  type: photoperiod
+  genotype: "~60% Indica"
+  aroma: [sweet, vanilla, earthy, pepper, dough]
+  flavor: [sweet, creamy, vanilla, earthy, tangy]
+  effects: [relaxed, euphoric, happy, calming, sleepy]
+  medical: [stress, anxiety, pain, insomnia, appetite-loss]
+  terpenes:
+    caryophyllene: "peppery, spicy — calming, CB2-active"
+    limonene: "bright citrus — mood-lifting"
+    myrcene: "earthy, musky — relaxing, the classic indica note"
+  cannabinoids: {thc: "22-27%", cbd: "0-1%", cbg: "low", thcv: "trace"}
+  morphology: "medium, dense indica-leaning frame; tight chunky colas, creamy green with purple accents under a heavy sugar-frost of trichomes — strong anthocyanin"
+  grow:
+    difficulty: moderate
+    environment: [indoor, greenhouse, outdoor]
+    flowering_weeks: "8-9"
+    photoperiod: "flip to 12/12; cool late-flower nights bring out the purple"
+    optimal: {temp_c: "20-26", rh_veg_pct: "50-60", rh_flower_pct: "40-50", vpd_kpa: "0.9-1.3", dli: "30-45"}
+    yield_indoor_g_m2: "450-550"
+    yield_outdoor_g_plant: "500-600"
+    height: "medium (0.9-1.4 m)"
+    resilience: "moderate; very dense buds — keep airflow up to avoid mold in late flower"
+  notes: "An Animal Mints descendant and one of the most popular dessert strains — a creamy, tangy, vanilla profile with frosty green-and-purple flowers. High anthocyanin, very resinous."
