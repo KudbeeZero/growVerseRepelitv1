@@ -18,6 +18,15 @@ body {
   font-family: var(--font-sans), system-ui, sans-serif;
 }
 
+/* Keyboard-only focus ring. `:focus-visible` keeps mouse/touch taps clean while
+   giving keyboard and screen-reader users a clearly visible target on every
+   interactive element (links, buttons, inputs, the mobile tab bar). */
+:focus-visible {
+  outline: 2px solid theme("colors.grow.400");
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
 /* ---- Plant body animations (intensity scaled via --stress 0..1) ---- */
 @keyframes gpe-sway {
   0%,
