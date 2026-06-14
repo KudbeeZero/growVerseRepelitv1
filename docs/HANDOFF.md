@@ -50,13 +50,12 @@ gate routes/components.
   `main` first (this chat's collision — BE-004 built on #47's branch while a separate branch was
   planned — is exactly what the registry exists to prevent).
 
-> **Known deferred follow-up (owner-approved, not the immediate NEXT):** **STEP 4.5 —
-> `GameService` on `active_clock()` + cure/auction e2e.** STEP 4 surfaced that `GameService`
-> (harvest/**cure**/sell + market/auction expiry) defaults to `SystemClock`, not `active_clock()`
-> (`services/game_service.py:82`), so the dev clock does NOT fast-forward cure/auction over HTTP. The
-> fix is one line (`self.clock = clock or active_clock()`, mirroring `simulation_service.py:38`),
-> production-behaviour identical, but it edits a production-path file — deferred out of the test-only
-> STEP 4. See RISK #1.
+> **In flight (owner-approved):** **STEP 4.5 — `GameService` on `active_clock()` + cure e2e**
+> (directive BE-004.5) is an **open PR** on `claude/be-step45-active-clock`: the one-line
+> `GameService` → `active_clock()` change (mirroring `simulation_service.py`) so cure + auction expiry
+> fast-forward under the dev clock, plus `test_cure_advances_under_dev_clock`. Production-behaviour
+> identical (`active_clock()` → `SystemClock` when the test clock is off). Awaiting review/merge; clears
+> RISK #1. After it lands, the path is Playtesting → Retention Validation → MVP Launch Candidate.
 
 ---
 
@@ -107,7 +106,7 @@ Shipped by PR #47 (authored across the BE-002 + BE-004 sessions):
 
 | # | Sev | Risk | Evidence | Status |
 |---|-----|------|----------|--------|
-| 1 | MED | **Cure/auction not dev-clock-drivable.** `GameService` defaults to `SystemClock`, not `active_clock()`, so the dev clock can't fast-forward cure/auction over HTTP. | `services/game_service.py:82` | OPEN — NEW (STEP 4). One-line fix = STEP 4.5 (owner-approved follow-up). |
+| 1 | MED | **Cure/auction not dev-clock-drivable.** `GameService` defaulted to `SystemClock`, so the dev clock couldn't fast-forward cure/auction over HTTP. | `services/game_service.py:82` | **FIXED in the open STEP 4.5 PR** (`GameService` → `active_clock()`, + cure e2e). Clears on merge. |
 | 3 | HIGH | Idempotency on mutations — general `Idempotency-Key` header (duplicate → original response, not a 409). | `api/game_api.py` | PARTIAL — concurrency core + one-shot grants shipped (`grant_claims`, harvest-once index); FTUE `advance` replay-guarded. General header absent (WIP PR #16 closed unmerged). |
 | 4/7 | HIGH | **Chain settlement not real** — deposit trusts no on-chain proof; treasury-drain path; no txid replay protection / reconciliation / address validation. | `services/settlement_service.py`, `db/models.py` | OPEN — blocks any real value moving (Sprint 4 gate). |
 | 8 | HIGH | **Safety net** — **backend HTTP boundary now covered (PR #47: withdraw/deposit/mint/nft, `tests/test_http_boundary.py`)**; **web** Playwright real e2e still a stub; treasury-cap + chain-failure-rollback UI tests absent. | `web/package.json`, `.github/workflows/ci.yml`, `tests/test_http_boundary.py` | PARTIAL (backend ↑; relates to open PR #32). |

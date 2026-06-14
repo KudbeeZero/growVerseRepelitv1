@@ -31,7 +31,7 @@ from ..enums import (
 from ..genetics.breeding import cross, derive_strain_fields, assign_rarity
 from ..genetics.traits import express_terpenes, normalize_genome
 from ..simulation import engine, curing
-from ..simulation.clock import Clock, SystemClock
+from ..simulation.clock import Clock, active_clock
 from . import leveling_service
 from ..db.models import (
     Player,
@@ -79,7 +79,11 @@ class GameService:
     ):
         self.session = session
         self.cfg = config or get_economy_config()
-        self.clock = clock or SystemClock()
+        # Default to the active clock: plain wall time, or the shared dev/test
+        # clock when enabled (dev/test only, force-disabled in prod). Mirrors
+        # SimulationService so harvest/cure/sell + market/auction expiry advance
+        # under the dev clock too. Explicit injection (tests) always wins.
+        self.clock = clock or active_clock()
 
     def _research(self, player_id: str) -> dict:
         """Aggregated player perks = research-tree effects + earned-degree effects

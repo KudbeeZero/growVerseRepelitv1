@@ -364,3 +364,16 @@ and boundaries prevent scope creep and duplicate work. **Consequences:** the cha
 merges / no repository mutations without approval" rule aligns with the existing delegation charter in
 `CLAUDE.md`; the Records-Department reconciliation function (this sweep, REC-004) and
 `docs/memory/CANONICAL_STATE.md` are governance artifacts under the Operations department.
+
+### 2026-06-14 — GameService reads the active clock too (BE-004.5 / STEP 4.5)
+**Decision:** `GameService` now defaults its clock to `active_clock()` (was `SystemClock()`),
+mirroring the STEP 3 change in `SimulationService`. **Why:** STEP 4 surfaced RISK #1 — harvest/**cure**/
+sell and market/auction expiry all live in `GameService`, which used wall time, so the dev/test clock
+(`/api/dev/clock/advance`) could fast-forward *growth* but not *cure or auction* timing over HTTP. A
+committed cure could never be exercised end-to-end without waiting real days. **Consequences:**
+production behaviour is byte-identical — `active_clock()` returns `SystemClock` whenever the test clock
+is disabled (always in prod; default in tests where no clock is injected), so the full suite is
+unaffected. The dev-clock path now drives cure + auction expiry. New e2e
+`test_e2e_grow_loop.py::test_cure_advances_under_dev_clock` proves a cure can't finish before the dev
+clock passes its window and that finishing then raises quality. Test-only otherwise; one-line source
+change. Suite 273 green, coverage 84.46% ≥ 79%. RISK #1 cleared.
