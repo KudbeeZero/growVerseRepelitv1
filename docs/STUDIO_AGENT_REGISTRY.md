@@ -6,7 +6,7 @@
 > the same surface. It governs **coordination**; `CLAUDE.md` + `docs/memory/` govern the **code**.
 >
 > **Maintainer:** Records Department · **Authority:** Studio Director (Mission Control)
-> **Last updated:** 2026-06-14 (FF-RECON-001 EXECUTED via PR #63 — `balance.yaml` canonical; #61 closed)
+> **Last updated:** 2026-06-14 (REC-004 — Orchestration & Work Order Coordination added; `AGENT_ORCHESTRATION_LEDGER.md` is now a protected surface)
 
 ---
 
@@ -59,6 +59,7 @@ build on the same protected surface concurrently without explicit Director appro
 | Simulation engine | `simulation/**` (server-authoritative; backend WO required) |
 | Ledger / economy | `services/**`, `db/models.py` (backend WO required) |
 | **Feature-flag infra** | `feature_flags.py`, `data/balance.yaml` (`feature_flags:`), `GET /api/game/flags`, `feature_required` route gates, web `features.ts`/`RequireFeature`. **Single-writer** — canonical = `balance.yaml`/`feature_flags.py` (PR #63, CEO-ratified). There must be exactly ONE flag system; do not add a second source of truth or resurrect `feature_gates.py`/config `FEATURE_*`. |
+| **Orchestration ledger** | `docs/AGENT_ORCHESTRATION_LEDGER.md` (REC-004) — the canonical employee/sub-agent roster + Work Order log. Single-writer; coordinate before editing. |
 
 ---
 
@@ -160,5 +161,23 @@ Last Update:
 - **Registry-first:** no implementation directive begins until its surfaces are claimed here.
 - **Closeout:** when a PR merges or closes, move its row to Merged/Retired and clear its surface
   claim so the next agent can take it.
+
+---
+
+## Orchestration & Work Order Coordination (REC-004)
+
+This registry governs *file-surface* ownership; the **[Agent Orchestration Ledger](AGENT_ORCHESTRATION_LEDGER.md)**
+governs *agent* orchestration — how persistent employee chats deploy ephemeral sub-agents, the
+`SA-XXX` audit numbering, and the Work Orders that hand work between chats.
+
+- **Ledger link:** [`AGENT_ORCHESTRATION_LEDGER.md`](AGENT_ORCHESTRATION_LEDGER.md) is the canonical
+  roster for employees, sub-agents, and Work Orders.
+- **Mandatory WO format:** every handoff uses the 5-field Work Order format defined in the ledger
+  (Name/Role · What's Needed · Problem · What Needs to Happen · Prompt for Employee Chat).
+- **Protected surface:** the ledger is a single-writer [Protected Surface](#protected-surfaces) —
+  coordinate before editing, same as the other shared surfaces.
+- **Pre-work tie-in:** spawning sub-agents or opening a Work Order does not exempt an agent from the
+  [Pre-work checklist](#pre-work-checklist-every-agent-before-writing-code); claim your file
+  surfaces here first, then log the orchestration in the ledger.
 
 > See also: [OMNI Charter](OMNI_CHARTER.md) (org constitution) and `docs/memory/MAP.md` (code↔doc map).
