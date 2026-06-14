@@ -13,9 +13,24 @@ import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
+# Feature flags resolve from balance.yaml `feature_flags:` (default ON), so the
+# gated subsystems (marketplace, chain, cup_competitions, university, contracts)
+# are reachable in tests with no setup. A test flips one OFF for its scope with
+# `monkeypatch.setenv("FEATURE_<NAME>", "false")` to assert the gate 404s.
+
+from growpodempire.config import get_settings  # noqa: E402
 from growpodempire.db.session import reset_engine_for_tests, init_db, session_scope  # noqa: E402
 from growpodempire.db.seed import seed_strains  # noqa: E402
 from growpodempire.services.game_service import GameService  # noqa: E402
+
+
+@pytest.fixture(autouse=True)
+def _fresh_settings():
+    """Rebuild cached Settings from the current env for every test so that
+    monkeypatched feature flags take effect and never leak between tests."""
+    get_settings.cache_clear()
+    yield
+    get_settings.cache_clear()
 
 
 @pytest.fixture()

@@ -17,6 +17,7 @@ import { useApiMutation } from "@/hooks/useApiMutation";
 import { useMarket, useContracts } from "@/hooks/queries";
 import { api } from "@/lib/api";
 import { useSession } from "@/lib/session";
+import { FEATURES } from "@/lib/features";
 import { queryKeys } from "@/lib/queryKeys";
 import { grow, dateTime, titleCase } from "@/lib/format";
 
@@ -41,7 +42,7 @@ function MarketInner() {
         tabs={[
           { key: "fixed", label: "Fixed price", badge: fixed.length },
           { key: "auctions", label: "Auctions", badge: auctions.length },
-          { key: "contracts", label: "Contracts" },
+          ...(FEATURES.contracts ? [{ key: "contracts", label: "Contracts" }] : []),
         ]}
       />
 

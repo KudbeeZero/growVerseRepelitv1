@@ -8,13 +8,23 @@ import { PlantVisual } from "./PlantVisual";
 import { StatBars } from "./StatBars";
 import { ConditionBadges } from "./ConditionBadges";
 import { CareButtons } from "./CareButtons";
+import { PlantActionCTA } from "./PlantActionCTA";
 import { PlantMetrics } from "./PlantMetrics";
 import { StageTimelineCompact } from "./StageTimeline";
 import { usePlantState } from "@/hooks/usePlantState";
 import { useStrainMap } from "@/hooks/queries";
 import { titleCase, num } from "@/lib/format";
+import type { Pod } from "@/lib/types";
 
-export function PlantCard({ playerId, plantId }: { playerId: string; plantId: string }) {
+export function PlantCard({
+  playerId,
+  plantId,
+  pod,
+}: {
+  playerId: string;
+  plantId: string;
+  pod?: Pod | null;
+}) {
   const { data: plant, isLoading, isError, error } = usePlantState(playerId, plantId);
   const { map } = useStrainMap();
 
@@ -82,6 +92,7 @@ export function PlantCard({ playerId, plantId }: { playerId: string; plantId: st
         </div>
       )}
       <StatBars plant={plant} />
+      <PlantActionCTA plant={plant} pod={pod} compact />
       <CareButtons plant={plant} />
     </Card>
   );
