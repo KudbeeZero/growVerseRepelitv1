@@ -15,8 +15,9 @@ import { EventLog } from "@/components/plant/EventLog";
 import { PlantMetrics } from "@/components/plant/PlantMetrics";
 import { StageTimeline } from "@/components/plant/StageTimeline";
 import { AdvisorPanel } from "@/components/plant/AdvisorPanel";
+import { PlantActionCTA } from "@/components/plant/PlantActionCTA";
 import { usePlantState } from "@/hooks/usePlantState";
-import { useStrainMap } from "@/hooks/queries";
+import { useStrainMap, usePods } from "@/hooks/queries";
 import { useSession } from "@/lib/session";
 import { api } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
@@ -26,6 +27,7 @@ function PlantDetail({ plantId }: { plantId: string }) {
   const { playerId } = useSession();
   const { data: plant, isLoading, isError, error, refetch } = usePlantState(playerId!, plantId);
   const { map } = useStrainMap();
+  const { data: pods } = usePods();
   // The dedicated events query is the source of truth for the full log; the
   // embedded plant.recent_events is only a first-paint fallback (below). Stop
   // polling once the plant can no longer produce events — a harvested/dead plant
@@ -49,6 +51,7 @@ function PlantDetail({ plantId }: { plantId: string }) {
     );
 
   const strain = map.get(plant.strain_id);
+  const pod = pods?.find((p) => p.id === plant.pod_id) ?? null;
 
   return (
     <div className="space-y-4">
@@ -63,6 +66,9 @@ function PlantDetail({ plantId }: { plantId: string }) {
           🌿 Open Grow Chamber
         </Link>
       </div>
+
+      {/* Primary CTA — the one thing to do next, always obvious. */}
+      <PlantActionCTA plant={plant} pod={pod} />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-1">
