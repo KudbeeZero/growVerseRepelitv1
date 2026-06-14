@@ -4,85 +4,84 @@
 > the end of every chat; read by `/handoff-audit` at the start of the next. If this file and
 > the code disagree, the code wins — fix the baton. See `docs/SESSION_PROTOCOL.md`.
 
-**Last rewritten:** 2026-06-14 · **By:** simulation-test-clock chat (BE-002, STEP 3)
-**Active branch:** `claude/simulation-test-clock-u4ounm` (**PR #47**, base `main`) — awaiting review.
-**Just shipped (this chat):** **PR #47** — the dev/test-only Simulation Test Clock (STEP 3 of the
-Builder Dept Launch-Readiness path). Backend-only, off by default, force-disabled in production.
-**Recent main (per git log, NOT the old baton):** FTUE work landed — #34 starter-grant rail, #35/#39
-guided tutorial, #36 mobile-first responsive, #38 OMNI Charter. The graphics-phase PRs (#25/#26/#29)
-referenced by the previous baton are in history; **the code is the truth — git log won.**
+**Last rewritten:** 2026-06-14 · **By:** e2e-grow-loop chat (BE-004, STEP 4)
+**Active branch:** `claude/simulation-test-clock-u4ounm` (**PR #47**, base `main`) — now carries STEP 3 **+** STEP 4.
+**Just shipped (this chat):** **STEP 4 e2e grow loop** — the full core loop driven over the HTTP API
+and fast-forwarded with the STEP 3 dev clock, plus HTTP-boundary coverage for the value-bearing
+routes (RISK #8, backend side). **Test-only, no source changes.** Pushed onto PR #47's branch (the
+STEP 3 clock is not yet in `main`, so STEP 4 can only stack on the same branch — see below).
+**STEP 3 audited:** `/handoff-audit` this chat → **PASS** (`docs/audits/PR-47-simulation-test-clock.md`);
+every claim confirmed with file:line, gates green, no scope creep.
 
-> **Launch-Readiness path (Builder Dept):** Feature Flags → **STEP 3 Simulation Test Clock ✅ (this
-> chat, PR #47)** → **STEP 4 e2e Grow Loop (NEXT)** → Launch Readiness. The backend OPEN RISKS below
-> are still **inherited and NOT re-audited** — they predate both the graphics and FTUE phases. A chat
-> touching chain/economy/web-safety must re-verify them against current code before acting.
+> **Launch-Readiness path (Builder Dept):** Feature Flags → STEP 3 Simulation Test Clock ✅ → **STEP 4
+> e2e Grow Loop ✅ (this chat)** → **STEP 4.5 GameService clock + cure/auction e2e (NEXT)** → Launch
+> Readiness. The backend OPEN RISKS below are still **inherited and NOT fully re-audited** — re-verify
+> against current code before acting.
 
 ---
 
 ## NEXT ACTION (the one scoped item the next chat does)
 
-**STEP 4 — e2e Grow Loop.** Drive the full core loop end-to-end — grow → care → harvest → cure →
-sell — as an automated test/flow, using the **STEP 3 test clock** (`POST /api/dev/clock/advance`,
-enabled via `GROW_TEST_CLOCK=true APP_ENV=development`) to fast-forward through stages in seconds.
-- **Reuse the clock, don't rebuild it.** The seam is `OffsetClock`/`active_clock()` in
-  `simulation/clock.py` and the `/api/dev/clock/*` endpoints (`api/dev_api.py`). See
-  `docs/SIMULATION_TEST_CLOCK.md`.
-- **Backend/test track.** Add the HTTP-boundary coverage RISK #8 calls for (withdraw/deposit/mint
-  and the grow-loop happy path); `game_api.py` is thinly covered at the HTTP layer.
-- **Honour the invariants:** server-authoritative sim, ledger double-entry, money is `Decimal`.
-  Do NOT change economy balance/prices to make a test pass — tune `balance.yaml` data, not rules.
-- **Do NOT** modify any parked graphics PRs if still open; this is not a visual-track chat.
+**STEP 4.5 — `GameService` on `active_clock()` + cure/auction e2e** (owner-approved 2026-06-14).
+STEP 4 surfaced that `GameService` (harvest/**cure**/sell + market/auction expiry) defaults to
+`SystemClock`, **not** `active_clock()` (`services/game_service.py:82`), so the dev clock does NOT
+fast-forward cure or auction settlement over HTTP.
+- **The fix is one line:** `self.clock = clock or active_clock()` — exactly mirroring the STEP 3
+  change in `services/simulation_service.py:38`. It is **production-behaviour identical**
+  (`active_clock()` returns `SystemClock` whenever the test clock is disabled, i.e. always in prod and
+  by default in tests), so existing tests are unaffected.
+- **Then extend the e2e** (`tests/test_e2e_grow_loop.py`): add the **cure** step (start_cure →
+  advance clock past `cure_target_hours` → finish_cure raises quality) and optionally an **auction**
+  settle-after-expiry case, all fast-forwarded via `POST /api/dev/clock/advance`.
+- **Honour the invariants:** server-authoritative sim, ledger double-entry, money is `Decimal`. Tune
+  `balance.yaml` data, never rules, to make a test pass.
+- This is the production-path edit deliberately deferred out of the test-only STEP 4 chat.
 
 ---
 
 ## What THIS chat did
 
-**PR #47 — Simulation Test Clock (BE-002, STEP 3).** A dev/test-only clock that fast-forwards grow
-time so the grow loop can be tested in seconds, without touching the economy or real players. The
-engine is already **compute-on-read** (state = pure function of stored state + `clock.now()`), so the
-clock is just an `OffsetClock` (wall time + a mutable, **forward-only** offset) on the existing
-`Clock` seam — **zero new simulation logic**.
-- `simulation/clock.py`: `OffsetClock` + process singleton (`get_test_clock`/`reset_test_clock`) +
-  `active_clock()` selector. `config.py`: `APP_ENV`/`is_production` + `test_clock_enabled =
-  GROW_TEST_CLOCK AND not production` (**force-disabled in prod**).
-- `services/simulation_service.py` default clock now resolves through `active_clock()` (explicit
-  injection still wins) → reads pick up the shift centrally.
-- `api/dev_api.py`: `/api/dev/clock` {GET, `/advance`, `/reset`}, registered only when enabled
-  (`flask_api.py`) and re-guarded per request (404 otherwise). Advance is >0, ≤8760h, syncs living
-  plants.
-- Advancing time posts **NO ledger entries** (economy untouched) — proven by
-  `test_advance_does_not_touch_the_economy`. Docs: ADR (`DECISIONS.md`),
-  `docs/SIMULATION_TEST_CLOCK.md`, BACKLOG Launch-Readiness path, standup `2026-06-14-lut-report-be002.md`.
+**STEP 4 e2e grow loop (BE-004) — test-only, on PR #47's branch.**
+- **`tests/test_e2e_grow_loop.py` (3)** — seed → plant → grow → flower → harvest → sell over the HTTP
+  API, fast-forwarded with the dev clock (care-loop: set climate, water+feed, advance, repeat until
+  flowering). Asserts balance rises by exactly the `harvest_sale` ledger entry; no double-sell; and
+  **ledger integrity** (advancing the clock posts zero ledger entries — BE-A08).
+- **`tests/test_http_boundary.py` (13)** — RISK #8 HTTP-layer coverage for the value-bearing routes:
+  withdraw/deposit (happy + validation + auth + insufficient), mint harvest (happy/idempotent/
+  not-found), mint strain non-breeder, ARC-3 metadata + unknown-kind 404. Offline `MockChainProvider`.
+- **Docs:** `docs/STEP4_E2E_GROW_LOOP_VALIDATION.md` (report + risks + recommendations);
+  `docs/audits/PR-47-simulation-test-clock.md` (STEP 3 handoff-audit, PASS); ADR in `DECISIONS.md`;
+  BACKLOG (STEP 4 ✅, STEP 4.5 queued); standup `2026-06-14-lut-report-be004.md`.
 
 ## Verification split (this chat)
 
 **Agent-verifiable (proven):**
-- Backend: `make test` **246 passed, 81.92% ≥ 79** ✅ · `make lint` ✅ · `make check-memory` ✅ (22 files).
-- New `tests/test_test_clock.py` (15): OffsetClock primitive, config gating (off by default / on in
-  dev / **force-off in prod**), `active_clock()` selector, endpoints (absent when disabled, advance
-  progresses a plant, **no economy mutation**, reset). Web untouched (no web gates run).
+- Backend: `make test` **262 passed, 83.63% ≥ 79** ✅ · `make lint` ✅ · `make check-memory` ✅ (22 files).
+- The e2e loop and the withdraw/deposit/mint/nft HTTP routes are exercised end-to-end; settlement
+  87% / minting 73% coverage; advancing the clock proven to post no ledger entries.
 
 **Device/human-verifiable (owner):**
-- Run `GROW_TEST_CLOCK=true APP_ENV=development make serve`; `POST /api/dev/clock/advance {"days":40}`
-  and confirm a seed reaches flowering on the next `/state` read; confirm the `/api/dev/clock` routes
-  **404 when the flag is unset**.
+- `GROW_TEST_CLOCK=true APP_ENV=development make serve`; `POST /api/dev/clock/advance {"days":40}` →
+  plant flowers on next `/state`; harvest + sell succeed; `/api/dev/clock/*` 404 with flags unset.
 
 ---
 
-## OPEN RISKS (carried) — INHERITED from the pre-graphics-phase baton, NOT re-audited this chat
+## OPEN RISKS (carried) — re-verify against current code before acting
 
-> These predate the Graphics Phase and were not re-verified here. Re-audit against current code
-> before acting on any of them. A risk clears only when VERIFIED FIXED (test-backed).
+> A risk clears only when VERIFIED FIXED (test-backed). Risk #1 is new this chat.
 
-| # | Sev | Risk | Evidence | Status (as last recorded 2026-06-10/11) |
+| # | Sev | Risk | Evidence | Status |
 |---|-----|------|----------|--------|
-| 3 | HIGH | Idempotency on mutations. | `api/game_api.py` | PARTIAL — concurrency core fixed; general `Idempotency-Key` header + one-shot grants appear shipped in **open PR #16** (confirm/merge-audit). |
-| 4/7 | HIGH | **Chain settlement not real** — deposit trusts no on-chain proof; treasury drain path; no txid replay protection / reconciliation / address validation. | `services/settlement_service.py`, `db/models.py`, `game_service.py` | OPEN — blocks any real value moving (Sprint 4 gate). |
-| 8 | HIGH | **Web safety net** — vitest now runs in CI (PR #22), but Playwright e2e is still an `echo` stub; treasury-cap + chain-failure-rollback tests absent. | `web/package.json`, `.github/workflows/ci.yml` | PARTIAL. |
+| 1 | MED | **Cure/auction not dev-clock-drivable.** `GameService` defaults to `SystemClock`, not `active_clock()`, so the dev clock can't fast-forward cure/auction over HTTP. | `services/game_service.py:82` | OPEN — NEW (STEP 4). One-line fix = NEXT ACTION (owner-approved). |
+| 3 | HIGH | Idempotency on mutations. | `api/game_api.py` | PARTIAL — concurrency core fixed; general `Idempotency-Key` + one-shot grants in PR #16 (confirm/merge-audit). |
+| 4/7 | HIGH | **Chain settlement not real** — deposit trusts no on-chain proof; treasury drain path; no txid replay protection / reconciliation / address validation. | `services/settlement_service.py`, `db/models.py`, `game_service.py` | OPEN — blocks real value moving. |
+| 8 | HIGH | **Safety net** — **backend HTTP boundary now covered (this chat: withdraw/deposit/mint/nft)**; **web** Playwright real e2e still a stub; treasury-cap + chain-failure-rollback UI tests absent. | `web/package.json`, `.github/workflows/ci.yml`, `tests/test_http_boundary.py` | PARTIAL (backend ↑). |
 | 9 | MED | **Sim dormancy semantics** — can delay an earned harvest if `max_catchup_hours` lowered below a stage; skips lethal decay. Masked at default cap. | `simulation/engine.py` | OPEN — needs a design decision + knob guard. |
-| 10 | MED | **Web: no global 401/403 handler** — stale key reads as "logged in" to a broken dashboard. | `web/src/lib/api/client.ts`, `RequireAuth.tsx` | OPEN. |
-| 11 | LOW | Rate-limiter `memory://` per-worker (set Redis); `get_level` public oracle. | see fleet-sweep | PARTIAL — validation 500s→400 fixed earlier. |
+| 10 | MED | **Web: no global 401/403 handler** (per earlier baton; an `AuthErrorListener` may have landed — confirm). | `web/src/lib/api/client.ts`, `RequireAuth.tsx` | RE-VERIFY. |
+| 11 | LOW | Rate-limiter `memory://` per-worker (set Redis); `get_level` public oracle. | see fleet-sweep | PARTIAL. |
 
-> Reassuring (verified solid earlier, not re-checked here): no IDOR; auth/authz server-authoritative;
-> AI SpendGuard unescapable + CI never hits a live key; ledger correct single-threaded; no
-> model↔migration drift.
+> **Process note:** PR #47 had **no GitHub CI run on head `d83b9b6`** (verified via the Actions API).
+> Gates were re-verified locally by the STEP 3 audit; CI runs on this STEP 4 push. Confirm green
+> before merge.
+> Reassuring (verified earlier, not re-checked here): no IDOR; auth/authz server-authoritative; AI
+> SpendGuard unescapable + CI never hits a live key; ledger correct single-threaded; no model↔migration drift.

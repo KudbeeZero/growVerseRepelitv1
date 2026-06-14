@@ -281,3 +281,22 @@ desync `last_tick_at`); a single advance is capped at one catch-up window (`MAX_
 `docs/SIMULATION_TEST_CLOCK.md`. No production behaviour changes when disabled (`active_clock()` →
 `SystemClock`, identical to before). New tests in `tests/test_test_clock.py` (15) cover the primitive,
 the config gating, the selector, and the endpoints; full suite 246 green, coverage 81.9% ≥ 79%.
+
+### 2026-06-14 — e2e grow loop is test-only; the cure-clock fix is deferred (BE-004, STEP 4)
+**Decision:** STEP 4 validates the core loop **seed → plant → grow → flower → harvest → sell**
+end-to-end through the public HTTP API, fast-forwarded with the STEP 3 dev clock, as **test-only
+additions** (`tests/test_e2e_grow_loop.py`, `tests/test_http_boundary.py`) with **no source
+changes** — honouring the directive's "test-only / no production behaviour changes" rule. The
+HTTP-boundary coverage for the value-bearing routes (withdraw/deposit/mint/nft) was added here,
+partially closing RISK #8 on the backend side. **Finding surfaced:** `GameService` (harvest/cure/sell
+and market/auction expiry) defaults to `SystemClock`, **not** `active_clock()`
+(`services/game_service.py:82`), so the dev clock does **not** fast-forward cure or auction timing at
+the HTTP boundary — the directive's loop (no cure) didn't need it, so cure was excluded from the e2e.
+**Why deferred:** closing it is a one-line change mirroring STEP 3 (`self.clock = clock or
+active_clock()`), production-behaviour identical (`active_clock()` → `SystemClock` whenever the clock
+is disabled, i.e. always in prod), but it edits a production-path file — so under a "test-only"
+directive the owner explicitly chose (2026-06-14) to **defer it to the next chat** rather than slip it
+in here. **Consequence:** STEP 4 ships on the **same branch as PR #47** (the STEP 3 clock is not yet
+in `main`, so a STEP 4 PR based on `main` is impossible without first merging #47); PR #47 therefore
+carries clock **+** its first real consumer. NEXT ACTION (owner-approved): STEP 4.5 — the
+`active_clock()` one-liner + cure/auction e2e. Suite 262 green, coverage 83.6% ≥ 79%.
