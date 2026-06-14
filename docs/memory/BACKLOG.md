@@ -147,6 +147,16 @@ once they appear here. Last reconciled: **2026-06-10**.
   whole pedigree (`/strains/<id>/lineage`, the GenBank's verifiable family tree). Remaining: generalize
   replay to sim/weather/discovery, a genome fingerprint, a public faucet-vs-sink economy view, advisor
   confidence/uncertainty surfacing, and a no-dark-patterns charter. Per `docs/memory/design/04-honesty-and-trust.md`.
+- 🟡 ⬜ **Merchandise & brand expansion (owner idea, 2026-06-14 — IDEA BACKLOG, NO DEV COMMITMENT)** —
+  bring the Grow Chamber into real life so fans stay attached to the universe between sessions
+  (decorate desks/rooms with GrowPod-branded items). Business/brand track, not a software feature;
+  needs a print-on-demand/fulfillment partner + brand-asset kit (logo, neon palette, pod renders —
+  the cinematics tooling tested 2026-06-14 can feed this) before any commitment. Three tiers:
+  **T1 accessories** — stickers, tees, hoodies, posters, mugs, phone cases, wallpapers;
+  **T2 desk/gaming** — branded spray bottles/misters, ring-light-inspired LED desk lamps, acrylic
+  grow-chamber displays, mousepads, keychains, strain collector cards;
+  **T3 premium collectibles** — mini GrowPod replicas, limited-edition strain boxes, collector pins,
+  display frames, numbered drops. Keep digital wallpapers/sticker packs as the zero-inventory pilot.
 
 - 🟡 ✅ **Strain knowledge base** (2026-06-08) — catalog grown 16→22 (iconic landraces/classics) +
   `data/strain_knowledge.yaml`, a scientist-grade encyclopedia (lineage, origin, cannabinoid/terpene
