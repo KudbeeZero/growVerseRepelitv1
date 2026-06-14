@@ -69,3 +69,6 @@ growpod.db
 .env.*
 !.env.example
 !.env.local.example
+
+# Transient agent worktree scratch space (Claude Code isolation mode)
+.claude/worktrees/
