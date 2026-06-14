@@ -30,4 +30,6 @@ export const queryKeys = {
   transcript: (id: string) => ["university", "transcript", id] as const,
   lecture: (id: string, courseKey: string, level: string) =>
     ["university", "lecture", id, courseKey, level] as const,
+  ftueStatus: (id: string) => ["ftue", "status", id] as const,
+  ftueCoaching: (id: string, step: string) => ["ftue", "coaching", id, step] as const,
 };
