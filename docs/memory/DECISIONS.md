@@ -389,3 +389,16 @@ flags govern *exposure* only. Per-player/cohort targeting is deferred until a re
 additive table, not a rewrite). **Consequences:** Backend core ships first (this PR); web route/nav
 gating is a separate surface-claimed PR. Defaults are ON, so adding a flag changes no behaviour until
 a surface is explicitly gated.
+
+### 2026-06-14 — Single feature-flag system: PR #42 canonical, BE-003/#55 retired (supersedes the #55 ADR)
+**Decision:** GrowPod Empire has **one** feature-flag system: **PR #42's** env-driven gate
+(`FEATURE_*` → `current_app.config` via `Settings`, web mirror `NEXT_PUBLIC_ENABLE_*` in
+`web/src/lib/features.ts`, `api/feature_gates.require_feature` → 404, `RequireFeature.tsx` + nav/route
+gating, **defaults OFF**). The earlier BE-003 entry (#55: `feature_flags.py`, `balance.yaml
+feature_flags:`, `GET /api/game/flags`, defaults ON) is **superseded and removed** — it collided with
+#42 (both merged in the same window) and created a second source of truth with the opposite default.
+**Why:** #42 is already wired into routes + nav and ships launch-safe (non-MVP OFF); retiring the
+unused #55 layer is the fastest, lowest-risk convergence. **Consequences:** Feature-flag
+infrastructure is now a **single-writer protected surface** (see `STUDIO_AGENT_REGISTRY.md`) so two
+systems can't co-exist again. The data-driven-`balance.yaml` approach is noted as a possible future
+refinement, but not now — no second system.

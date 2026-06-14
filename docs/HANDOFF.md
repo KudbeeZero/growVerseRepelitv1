@@ -33,21 +33,21 @@ overlapping*. **PR #42** *MVP Feature Flag Layer* (the NEXT ACTION).
 
 ## NEXT ACTION (the one scoped item the next chat does)
 
-**Feature Flags — web gating (PR #2).** The **backend flag core shipped** (BE-003, PR pending review):
-`balance.yaml` `feature_flags:` defaults + `feature_flags.py` (env-overridable `FEATURE_<NAME>`,
-fail-closed) + `GET /api/game/flags` + `require_feature`/`feature_required` guard. Defaults are ON, so
-nothing is gated yet. **Next chat:** the web-gating PR — a `useFlag`/`RequireFeature` hook reading
-`GET /api/game/flags`, then gate routes + nav visibility. This touches the **protected Navigation +
-Layout surfaces**, so claim them in `STUDIO_AGENT_REGISTRY.md` and get Director sign-off first.
+**Feature Flags are DONE — `main` has ONE canonical system (PR #42).** Env-driven `FEATURE_*`
+(`Settings`/`create_app` → `current_app.config`) + `api/feature_gates.require_feature` (404 when off),
+web mirror `NEXT_PUBLIC_ENABLE_*` (`web/src/lib/features.ts`) + `RequireFeature.tsx` + nav gating
+(`navLinks.ts`) + route-layout gating (`app/{cup,university,market}/layout.tsx`), **defaults OFF**.
+A duplicate backend layer (BE-003 / #55: `balance.yaml feature_flags:` + `/api/game/flags`, defaults
+ON) collided with #42 and was **retired** (this PR — `claude/be-retire-duplicate-flags`). Feature-flag
+infra is now a **single-writer protected surface** in the registry.
+- **Do NOT build another flag system.** To toggle a launch surface, flip its `FEATURE_*` /
+  `NEXT_PUBLIC_ENABLE_*` env (per-environment, no deploy). To add a flag, extend PR #42's set.
+- **Next launch-path item:** Playtesting → Retention Validation → MVP Launch Candidate.
 - **Off-limits:** no economy / chain / breeding / factions / combat / new crop families. No new
-  Phase-2 systems. No per-player flag table (deferred). Do NOT modify the parked PRs (#27, #28).
-- **Reuse, don't rebuild:** the chamber renders through `web/src/lib/chamber/chamberCore.ts`
-  (single source for the live component + the headless `npm run gen:stages` generator) — keep it
-  intact. The flat `GET …/plants/<id>/state` wire is canonical (see DECISIONS 2026-06-14); do not
-  build the aspirational `GameState/EnvironmentState/UIState` aggregate.
+  Phase-2 systems. Do NOT modify the parked PRs (#27, #28).
 - **Follow the registry:** claim file surfaces in `docs/STUDIO_AGENT_REGISTRY.md` and rebase onto
-  `main` first (this chat's collision — BE-004 built on #47's branch while a separate branch was
-  planned — is exactly what the registry exists to prevent).
+  `main` first — the #55-vs-#42 collision (two flag systems merged in one window, neither claimed) is
+  exactly what the registry exists to prevent.
 
 > **In flight (owner-approved):** **STEP 4.5 — `GameService` on `active_clock()` + cure e2e**
 > (directive BE-004.5) is an **open PR** on `claude/be-step45-active-clock`: the one-line
