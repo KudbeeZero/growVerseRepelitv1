@@ -12,6 +12,8 @@ import { CreatePodForm } from "@/components/pod/CreatePodForm";
 import { PodCard } from "@/components/pod/PodCard";
 import { PlantCard } from "@/components/plant/PlantCard";
 import { ImportEntityForm } from "@/components/onboarding/ImportEntityForm";
+import { CoachMarks } from "@/components/onboarding/CoachMarks";
+import { DASHBOARD_COACH_MARKS } from "@/lib/coachMarks";
 import { usePods, usePlantsList } from "@/hooks/queries";
 import { useSession } from "@/lib/session";
 import { useIdStore } from "@/lib/localStore";
@@ -51,11 +53,11 @@ function DashboardInner() {
         action={
           <div className="flex items-center gap-2">
             <Link href="/lab">
-              <Button variant="secondary" size="sm">
+              <Button variant="secondary" size="sm" data-coach="buy-seeds">
                 Buy seeds
               </Button>
             </Link>
-            <Button size="sm" onClick={() => setShowCreate((s) => !s)}>
+            <Button size="sm" data-coach="new-pod" onClick={() => setShowCreate((s) => !s)}>
               + New Pod
             </Button>
           </div>
@@ -81,7 +83,7 @@ function DashboardInner() {
           }
         />
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-6" data-coach="your-grows">
           {podList.map((pod) => (
             <PodCard key={pod.id} pod={pod} plantIds={byPod.get(pod.id) ?? []} />
           ))}
@@ -109,6 +111,9 @@ function DashboardInner() {
         />
         <ImportEntityForm />
       </Card>
+
+      {/* First-session guidance — points at the real UI, once per player. */}
+      <CoachMarks marks={DASHBOARD_COACH_MARKS} />
     </div>
   );
 }
