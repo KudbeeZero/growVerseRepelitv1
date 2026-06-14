@@ -41,6 +41,11 @@ export function MobileTabBar() {
 
   if (!isAuthed) return null;
 
+  // Immersive full-screen routes (the Grow Chamber takeover) own the whole
+  // viewport and supply their own back affordance — the app tab bar must step
+  // aside so it never paints over their bottom controls.
+  if (pathname.includes("/chamber")) return null;
+
   const moreActive = SECONDARY_LINKS.some((l) => isActiveLink(pathname, l.href));
 
   return (

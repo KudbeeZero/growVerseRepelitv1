@@ -61,14 +61,14 @@ const COMMIT_DEBOUNCE_MS = 700;
 function ReadoutCard({ k, v, unit, alert }: { k: string; v: string | number; unit?: string; alert?: boolean }) {
   return (
     <div
-      className={`flex min-w-[96px] items-center gap-2 rounded-xl border px-2.5 py-1.5 font-mono backdrop-blur ${
+      className={`flex min-w-[92px] items-center gap-2 rounded-xl border px-2.5 py-1.5 font-mono backdrop-blur sm:min-w-[104px] ${
         alert ? "border-orange-500/60 bg-orange-500/10" : "border-cyan-400/30 bg-cyan-400/[0.06]"
       }`}
     >
-      <span className="text-[8px] tracking-[0.16em] text-cyan-200/70">{k}</span>
+      <span className="text-[10px] tracking-[0.14em] text-cyan-200/70">{k}</span>
       <span className={`ml-auto text-sm font-bold ${alert ? "text-orange-300" : "text-white"}`}>
         {v}
-        {unit && <span className="text-[9px] text-cyan-200/60">{unit}</span>}
+        {unit && <span className="text-[10px] text-cyan-200/60">{unit}</span>}
       </span>
     </div>
   );
@@ -185,17 +185,26 @@ function ChamberScreen({ plantId }: { plantId: string }) {
 
   return (
     <div className="fixed inset-0 z-30 flex flex-col bg-[#050b12] text-[#cfeeff]">
-      {/* header */}
-      <header className="flex flex-none items-center gap-3 px-4 pb-1 pt-3">
-        <Link href={`/dashboard/plants/${plantId}`} className="text-cyan-200/70 hover:text-cyan-100" aria-label="Back">
+      {/* header — clears the status-bar / notch on top and the landscape side notch */}
+      <header className="flex flex-none items-center gap-3 px-4 pb-1 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] pt-[max(0.75rem,env(safe-area-inset-top))]">
+        <Link
+          href={`/dashboard/plants/${plantId}`}
+          className="-m-1 flex h-9 w-9 items-center justify-center rounded-lg text-lg text-cyan-200/70 hover:bg-white/5 hover:text-cyan-100"
+          aria-label="Back to plant"
+        >
           ←
         </Link>
         <h1 className="text-[20px] font-extrabold tracking-[0.16em] text-[#f2f9ff]">
           GR<span className="text-grow-400">🌿</span>VERS
         </h1>
-        <span className="text-[9px] font-bold tracking-[0.26em] text-cyan-300">GROW CHAMBER</span>
+        <span className="hidden text-[9px] font-bold tracking-[0.26em] text-cyan-300 sm:inline">
+          GROW CHAMBER
+        </span>
       </header>
 
+      {/* body — stacks portrait (stage over controls); splits to a stage + side
+          rail in landscape so the plant stays tall on short/foldable screens */}
+      <div className="flex min-h-0 flex-1 flex-col landscape:flex-row">
       {/* stage */}
       <div className="relative min-h-0 flex-1">
         <GrowChamber
@@ -242,14 +251,15 @@ function ChamberScreen({ plantId }: { plantId: string }) {
         )}
       </div>
 
-      {/* dashboard */}
-      <div className="max-h-[44dvh] flex-none overflow-y-auto bg-gradient-to-b from-transparent to-[#0a1622] px-3 pb-[calc(10px+env(safe-area-inset-bottom))] pt-2">
+      {/* dashboard — bottom sheet in portrait, side rail in landscape */}
+      <div className="max-h-[48dvh] flex-none overflow-y-auto bg-gradient-to-b from-transparent to-[#0a1622] px-3 pb-[calc(12px+env(safe-area-inset-bottom))] pt-2 landscape:h-full landscape:max-h-none landscape:w-[clamp(260px,38vw,360px)] landscape:border-l landscape:border-[#11212e] landscape:bg-gradient-to-l landscape:pr-[max(0.75rem,env(safe-area-inset-right))]">
         <div className="mb-2 flex gap-1.5">
           {(["grow", "climate", "time", "view"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`flex-1 rounded-lg border px-1 py-2 text-[11px] font-bold tracking-[0.08em] ${
+              aria-pressed={tab === t}
+              className={`flex min-h-[44px] flex-1 items-center justify-center rounded-lg border px-1 text-xs font-bold tracking-[0.08em] transition-colors ${
                 tab === t ? "border-[#3a6a86] bg-[#16364c] text-[#eaf7ff]" : "border-[#1c3447] bg-[#0d1d2b] text-[#7fa9bf]"
               }`}
             >
@@ -275,10 +285,10 @@ function ChamberScreen({ plantId }: { plantId: string }) {
               const val = climate[s.key as keyof ChamberClimate];
               const outOfBand = val < s.optimal[0] || val > s.optimal[1];
               return (
-                <div key={s.key} className="flex items-center gap-2.5 rounded-lg border border-[#1c3447] bg-[#0d1d2b] px-2.5 py-1.5">
-                  <span className="w-[66px] flex-none font-mono text-[10px] tracking-[0.08em] text-[#7fa9bf]">
+                <div key={s.key} className="flex min-h-[44px] items-center gap-2.5 rounded-lg border border-[#1c3447] bg-[#0d1d2b] px-2.5 py-2">
+                  <span className="w-[66px] flex-none font-mono text-[11px] tracking-[0.06em] text-[#7fa9bf]">
                     {s.label}
-                    {"local" in s && s.local && <span className="ml-1 text-[8px] text-[#3a6a86]">(local)</span>}
+                    {"local" in s && s.local && <span className="ml-1 text-[9px] text-[#3a6a86]">(local)</span>}
                   </span>
                   <input
                     type="range"
@@ -288,11 +298,12 @@ function ChamberScreen({ plantId }: { plantId: string }) {
                     value={val}
                     onChange={(e) => onSlide(s.key as keyof ChamberClimate, Number(e.target.value))}
                     disabled={ended}
-                    className="h-1.5 flex-1 accent-cyan-400"
+                    aria-label={s.label}
+                    className="h-2 flex-1 cursor-pointer accent-cyan-400"
                   />
-                  <span className={`w-[52px] flex-none text-right font-mono text-[11px] font-bold ${outOfBand ? "text-orange-300" : "text-white"}`}>
+                  <span className={`w-[52px] flex-none text-right font-mono text-xs font-bold ${outOfBand ? "text-orange-300" : "text-white"}`}>
                     {val}
-                    {s.unit && <span className="text-[8px] text-[#7fa9bf]">{s.unit}</span>}
+                    {s.unit && <span className="text-[10px] text-[#7fa9bf]">{s.unit}</span>}
                   </span>
                 </div>
               );
@@ -308,8 +319,8 @@ function ChamberScreen({ plantId }: { plantId: string }) {
 
         {tab === "time" && (
           <div className="space-y-2">
-            <div className="flex items-center gap-2.5 rounded-lg border border-[#1c3447] bg-[#0d1d2b] px-2.5 py-1.5">
-              <span className="w-[66px] flex-none font-mono text-[10px] tracking-[0.08em] text-[#7fa9bf]">GROW DAY</span>
+            <div className="flex min-h-[44px] items-center gap-2.5 rounded-lg border border-[#1c3447] bg-[#0d1d2b] px-2.5 py-2">
+              <span className="w-[66px] flex-none font-mono text-[11px] tracking-[0.06em] text-[#7fa9bf]">GROW DAY</span>
               <input
                 type="range"
                 min={0}
@@ -317,7 +328,7 @@ function ChamberScreen({ plantId }: { plantId: string }) {
                 step={0.5}
                 value={Math.min(day, maxPreviewDay)}
                 onChange={(e) => setPreviewDay(Number(e.target.value))}
-                className="h-1.5 flex-1 accent-grow-400"
+                className="h-2 flex-1 cursor-pointer accent-grow-400"
                 aria-label="Preview growth day"
               />
               <span className="w-[52px] flex-none text-right font-mono text-[11px] font-bold text-white">
@@ -353,7 +364,8 @@ function ChamberScreen({ plantId }: { plantId: string }) {
                 <button
                   key={v}
                   onClick={() => setView(v)}
-                  className={`flex-1 rounded-lg border px-1 py-2 text-[11px] font-semibold ${
+                  aria-pressed={view === v}
+                  className={`flex min-h-[44px] flex-1 items-center justify-center rounded-lg border px-1 text-xs font-semibold transition-colors ${
                     view === v ? "border-[#3a6a86] bg-[#16364c] text-[#eaf7ff]" : "border-[#1c3447] bg-[#0d1d2b] text-[#7fa9bf]"
                   }`}
                 >
@@ -366,6 +378,7 @@ function ChamberScreen({ plantId }: { plantId: string }) {
             </p>
           </div>
         )}
+      </div>
       </div>
     </div>
   );
