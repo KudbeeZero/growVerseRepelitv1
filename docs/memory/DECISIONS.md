@@ -364,3 +364,15 @@ and boundaries prevent scope creep and duplicate work. **Consequences:** the cha
 merges / no repository mutations without approval" rule aligns with the existing delegation charter in
 `CLAUDE.md`; the Records-Department reconciliation function (this sweep, REC-004) and
 `docs/memory/CANONICAL_STATE.md` are governance artifacts under the Operations department.
+
+### 2026-06-14 — Feature flags are data-driven (balance.yaml), config-authoritative for exposure
+**Decision:** Player-facing surfaces are gated by a feature-flag layer whose definitions/defaults
+live in `balance.yaml` (`feature_flags:`), resolved by `feature_flags.py` with per-environment
+`FEATURE_<NAME>` env overrides, served read-only at `GET /api/game/flags`, and guarded server-side
+via `require_feature`/`feature_required`. Flags fail closed (unknown → off); no per-player table.
+**Why:** Mirrors the existing "tuning surface" convention (data over code) so launch surfaces (FTUE,
+chamber, marketplace, …) can be kill-switched without a deploy. DB stays authoritative for gameplay;
+flags govern *exposure* only. Per-player/cohort targeting is deferred until a real need (would be an
+additive table, not a rewrite). **Consequences:** Backend core ships first (this PR); web route/nav
+gating is a separate surface-claimed PR. Defaults are ON, so adding a flag changes no behaviour until
+a surface is explicitly gated.

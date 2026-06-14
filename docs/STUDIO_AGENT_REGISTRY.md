@@ -67,6 +67,8 @@ Open / in-flight directives. One row per directive; update **Status** as it move
 
 | Directive | Dept | Lead | Workers | Branch | PR | Owned file surfaces | Deps | Status |
 |---|---|---|---|---|---|---|---|---|
+| BE-003 (Feature Flags — backend core) | Builder | BE-A00 | BE-A01–A10 | `claude/be-feature-flags-core` | (this PR) | Backend flag layer: `feature_flags.py`, `api/game_api.py` (+`/flags`), `data/balance.yaml` (`feature_flags:`), `.env.example` (+ docs) | — | 🟢 Open |
+| BE-003 (Feature Flags — **web gating**) | Builder / DX | — | — | (next chat) | (PR #2) | **Protected: Navigation + Layout** — route/nav/feature gating via a `useFlag` hook | backend core (this PR) | ⛔ Not started — claim protected surfaces + Director sign-off first |
 | DX-007 (P2 FTUE Coach-Marks) | Design & Experience | DX-A00 | DX-A01–A10 | `claude/dx-ftue-coach-marks` | (this PR) | FTUE/Onboarding (coach-mark layer): `components/onboarding/CoachMarks.tsx` (new), `lib/coachMarks.ts` (new), `lib/coachMarkStore.ts` (new), + `data-coach` tags & mount in `app/dashboard/page.tsx` | Builds **on top of** canonical FTUE (#35/#39) — does not modify the `/ftue` route. New layer; no overlap with the merged plant-care work. | 🟢 Open |
 
 ### Recently merged to `main` (for collision awareness)

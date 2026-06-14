@@ -33,18 +33,17 @@ overlapping*. **PR #42** *MVP Feature Flag Layer* (the NEXT ACTION).
 
 ## NEXT ACTION (the one scoped item the next chat does)
 
-**Audit & land Feature Flags (open PR #42 — "MVP Feature Flag Layer")** — the head of the launch
-critical path, per the Director's post-merge path. A PR already exists, so **audit and finish #42**
-rather than building from scratch. Goal: a minimal, data-driven launch gate / kill-switch surface so
-player-facing surfaces (the `/ftue` tutorial, chamber polish, future systems) can be toggled
-per-environment **without a deploy**, mirroring the `balance.yaml` "tuning surface" convention.
-Confirm the shape is additive: a `flags` section in config (or a small `feature_flags` table only if
-per-player/cohort targeting is needed), a server-authoritative read endpoint, and a tiny web hook to
-gate routes/components.
-- **Off-limits:** no economy / chain / breeding / factions / combat / new crop families; no new
-  Phase-2 systems. Do **not** modify the parked PRs (#27, #28).
-- **Reuse, don't rebuild:** the chamber renders through `web/src/lib/chamber/chamberCore.ts` (single
-  source); the flat `GET …/plants/<id>/state` wire is canonical (DECISIONS 2026-06-14) — do **not**
+**Feature Flags — web gating (PR #2).** The **backend flag core shipped** (BE-003, PR pending review):
+`balance.yaml` `feature_flags:` defaults + `feature_flags.py` (env-overridable `FEATURE_<NAME>`,
+fail-closed) + `GET /api/game/flags` + `require_feature`/`feature_required` guard. Defaults are ON, so
+nothing is gated yet. **Next chat:** the web-gating PR — a `useFlag`/`RequireFeature` hook reading
+`GET /api/game/flags`, then gate routes + nav visibility. This touches the **protected Navigation +
+Layout surfaces**, so claim them in `STUDIO_AGENT_REGISTRY.md` and get Director sign-off first.
+- **Off-limits:** no economy / chain / breeding / factions / combat / new crop families. No new
+  Phase-2 systems. No per-player flag table (deferred). Do NOT modify the parked PRs (#27, #28).
+- **Reuse, don't rebuild:** the chamber renders through `web/src/lib/chamber/chamberCore.ts`
+  (single source for the live component + the headless `npm run gen:stages` generator) — keep it
+  intact. The flat `GET …/plants/<id>/state` wire is canonical (see DECISIONS 2026-06-14); do not
   build the aspirational `GameState/EnvironmentState/UIState` aggregate.
 - **Follow the registry:** claim file surfaces in `docs/STUDIO_AGENT_REGISTRY.md` and rebase onto
   `main` first (this chat's collision — BE-004 built on #47's branch while a separate branch was
