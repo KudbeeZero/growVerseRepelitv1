@@ -48,6 +48,13 @@ jobs:
       - name: Apply migrations
         run: alembic upgrade head
 
+      - name: Core grow-loop E2E (deterministic smoke)
+        # The full MVP loop — create → buy → plant → care → advance (FrozenClock)
+        # → harvest → sell → assert ledger — driven without wall-clock waiting.
+        # Run it first as a fast, named gate so a broken core loop fails loudly
+        # before the full suite. It also runs (and counts toward coverage) below.
+        run: python -m pytest tests/test_e2e_grow_loop.py -q
+
       - name: Tests + coverage gate
         run: python -m pytest -q --cov --cov-report=term-missing
 

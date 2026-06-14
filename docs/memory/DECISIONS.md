@@ -255,3 +255,21 @@ fixes, not a state rewrite. A global 401/403 handler (`AuthErrorListener`) now t
 on a rejected key (RISK #9); `usePods` refreshes on an interval + focus so the chamber bud phenotype
 reflects committed pod environment. The knowledge doc's `GameState/EnvironmentState/UIState` section
 is documentation aspiration, not a build target, until a future PR proves a need.
+
+### 2026-06-14 — Deterministic end-to-end grow-loop smoke test (PR #31 / STEP 4)
+**Decision:** Add a service-layer E2E test (`tests/test_e2e_grow_loop.py`) that walks the whole MVP
+loop — create account → buy seed → create/charge pod → set environment → plant → care → advance
+stages → harvest → sell to NPC → assert the ledger — entirely under an injected `FrozenClock` (no
+wall-clock waiting), plus a reusable harness (`tests/helpers/grow.py`: `make_services`,
+`plant_and_anchor`, `grow_to_harvest`). Wired as a named, fast-failing CI step before the full suite.
+**Why:** STEP 3's `Clock`/`FrozenClock` seam already existed and is injected through every service, but
+nothing exercised the *full* loop end-to-end deterministically; this is the MVP regression guard for
+sim timing, the care economy, the harvest faucet, and ledger integrity. **Consequences:** the harness
+funds the multi-month grow via the **daily-stipend faucet** (a player logging in each day) — realistic
+and keeps the starter balance from underflowing. Two ORM/clock seams surfaced and are handled in the
+*test* (not product) to avoid risk: (1) `Plant` time fields default to wall-clock `utcnow`, so the
+harness re-anchors `planted_at`/`last_tick_at`/`stage_entered_at` to the frozen clock after planting;
+(2) the session runs `autoflush=False`, so the test flushes after harvest before asserting the ledger
+(mirroring a request's commit boundary). Making `plant_seed` clock-aware in product code is a follow-up
+(BACKLOG) — deferred here because it would change the "catch-up advances 0 hours" assumption several
+existing tests rely on. The reusable harness is the seam STEP 5 (FTUE guided grow) will build on.
