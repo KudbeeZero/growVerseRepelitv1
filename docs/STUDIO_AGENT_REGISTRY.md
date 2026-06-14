@@ -67,12 +67,14 @@ Open / in-flight directives. One row per directive; update **Status** as it move
 
 | Directive | Dept | Lead | Workers | Branch | PR | Owned file surfaces | Deps | Status |
 |---|---|---|---|---|---|---|---|---|
-| DX-005 (FP-5 completion) | Design & Experience | DX-A00 | DX-A01–A10 | `claude/dx-fp5-care-feedback` | (this PR) | Plant-care only: `components/plant/PlantActionCTA.tsx` (+ docs registry) | — | 🟢 Open |
+| BE-003 (Feature Flags — backend core) | Builder | BE-A00 | BE-A01–A10 | `claude/be-feature-flags-core` | (this PR) | Backend flag layer: `feature_flags.py`, `api/game_api.py` (+`/flags`), `data/balance.yaml` (`feature_flags:`), `.env.example` (+ docs) | — | 🟢 Open |
+| BE-003 (Feature Flags — **web gating**) | Builder / DX | — | — | (next chat) | (PR #2) | **Protected: Navigation + Layout** — route/nav/feature gating via a `useFlag` hook | backend core (this PR) | ⛔ Not started — claim protected surfaces + Director sign-off first |
 
 ### Recently merged to `main` (for collision awareness)
 
 | PR | Title | Surfaces touched |
 |---|---|---|
+| #49 | FP-5 completion — CTA celebration + registry reconcile (DX-005) | Plant-care |
 | #46 | Studio Agent Registry (REC-003) | docs (governance) |
 | #45 | Primary Plant CTA (FP-3, re-cut) | Plant-care |
 | #41 | Care Feedback & Celebration (DX-001 = **FP-5**) | Plant-care (`careFeedback`, `CareFeedback`, `haptics`, wired into `CareButtons`) |

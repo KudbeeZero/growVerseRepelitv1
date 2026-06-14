@@ -24,14 +24,14 @@ Pack), **PR #36** (mobile-first responsive nav + Grow Chamber), **PR #38** (OMNI
 
 ## NEXT ACTION (the one scoped item the next chat does)
 
-**Feature Flags — a launch gate/kill-switch surface.** First item on the launch critical path
-below. Add a minimal, data-driven flag layer so player-facing surfaces (the new `/ftue` tutorial,
-chamber polish, future systems) can be toggled per-environment without a deploy — mirroring the
-`balance.yaml` "tuning surface" convention (data-driven over code). Suggested shape: a `flags`
-section in config (or a small `feature_flags` table if per-player/cohort targeting is needed), a
-server-authoritative read endpoint, and a tiny web hook to gate routes/components. Keep it additive.
+**Feature Flags — web gating (PR #2).** The **backend flag core shipped** (BE-003, PR pending review):
+`balance.yaml` `feature_flags:` defaults + `feature_flags.py` (env-overridable `FEATURE_<NAME>`,
+fail-closed) + `GET /api/game/flags` + `require_feature`/`feature_required` guard. Defaults are ON, so
+nothing is gated yet. **Next chat:** the web-gating PR — a `useFlag`/`RequireFeature` hook reading
+`GET /api/game/flags`, then gate routes + nav visibility. This touches the **protected Navigation +
+Layout surfaces**, so claim them in `STUDIO_AGENT_REGISTRY.md` and get Director sign-off first.
 - **Off-limits:** no economy / chain / breeding / factions / combat / new crop families. No new
-  Phase-2 systems. Do NOT modify the parked PRs (#27, #28).
+  Phase-2 systems. No per-player flag table (deferred). Do NOT modify the parked PRs (#27, #28).
 - **Reuse, don't rebuild:** the chamber renders through `web/src/lib/chamber/chamberCore.ts`
   (single source for the live component + the headless `npm run gen:stages` generator) — keep it
   intact. The flat `GET …/plants/<id>/state` wire is canonical (see DECISIONS 2026-06-14); do not

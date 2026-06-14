@@ -22,6 +22,7 @@ from ..services.university_service import UniversityService
 from ..services.research_service import ResearchService
 from ..services import leveling_service
 from ..economy.ledger import InsufficientFundsError
+from ..feature_flags import all_flags, FeatureDisabledError
 from .auth import require_player
 from .ratelimit import limiter
 from .validation import positive_int, bounded_int, positive_money, number
@@ -37,6 +38,22 @@ def _error(message: str, status: int = 400):
 @game_bp.errorhandler(GameError)
 def _handle_game_error(exc):  # pragma: no cover - registered per blueprint
     return _error(str(exc), 400)
+
+
+@game_bp.errorhandler(FeatureDisabledError)
+def _handle_feature_disabled(exc):  # pragma: no cover - registered per blueprint
+    # A gated-off surface reads as "not available" rather than a hard error.
+    return _error(str(exc), 404)
+
+
+# ----- Feature flags -----------------------------------------------------
+@game_bp.get("/flags")
+def feature_flags():
+    """Public, read-only view of the resolved feature-flag map (balance.yaml
+    defaults with FEATURE_<NAME> env overrides applied). Lets the web client gate
+    routes/components and acts as a launch kill-switch surface — no deploy needed
+    to flip one."""
+    return jsonify({"flags": all_flags()})
 
 
 # ----- Players -----------------------------------------------------------
