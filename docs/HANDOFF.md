@@ -6,8 +6,8 @@
 
 **Last rewritten:** 2026-06-14 · **By:** FTUE Epic closeout chat (DX-003)
 **Active branch:** `claude/closeout-ftue-epic` (docs-only PR — see "Open PR" below)
-**Open PR (awaiting audit):** docs closeout — retires the graphics-phase baton, records the FTUE
-epic as completed history. No code; gates green.
+**Open PR (awaiting audit):** **PR #43** — docs closeout; retires the graphics-phase baton, records
+the FTUE epic as completed history. No code; gates green.
 **Just merged to main (head `15f9699`):** the **FTUE epic** — **PR #34** (starter-grant rail),
 **PR #35** (FTUE tutorial backend), **PR #39** (web `/ftue` guided route). Also live since the last
 baton: **PR #29/#30** (Dashboard / GameState wiring polish), **PR #33** (Launch Strain Integration
