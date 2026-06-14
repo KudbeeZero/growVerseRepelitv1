@@ -65,4 +65,5 @@ Public: `GET /university/catalog`. Authed: `GET /players/<id>/university` (trans
 - The spend-based companion: `03-grower-skills.md` (research tree) · the genetics/agronomy taught:
   `01-simulation-horticulture.md`, `02-genetics.md` · curriculum grounding (academic/theory):
   `docs/research/2026-06-08-cannabis-education-curriculum.md` · practical master-grower pedagogy
-  (habits/drills/diagnosis): `docs/research/2026-06-14-master-grower-methods.md`.
+  (habits/drills/diagnosis): `docs/research/2026-06-14-master-grower-methods.md` · canonical
+  consolidation of both tracks: `docs/research/GROWPOD_UNIVERSITY_MASTER_BIBLE.md`.
