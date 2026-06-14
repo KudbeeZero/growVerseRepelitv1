@@ -213,3 +213,15 @@ Wave 2 depth (search, leaderboards, auctions, weather, automation, stabilization
 contracts); Wave 3 property tests; Sprint 3 web client; security audit (#4); game expansion (#6:
 auction-exploit fix, legacy removal, curing/terpenes, research tree/shop/seasons, AI advisor +
 agentic auto-care); manual/docs suite (#5).
+
+## 🧭 Design & Experience — salvaged ideas (REC-003, 2026-06-14)
+> Archived from the retired Grow Guide PR #37 (superseded by the canonical FTUE in #35/#39). Kept
+> because the *behaviors* are reusable for any future onboarding/coaching surface. Tracked in
+> `docs/STUDIO_AGENT_REGISTRY.md`.
+- 🟡 ⬜ **Persistent per-player tutorial state** — remember tutorial progress/dismissal per player
+  (localStorage keyed by player id) so it never re-nags a returning grower.
+- 🟡 ⬜ **Non-nagging dismissal** — "skip"/"done" suppresses the coach for good; collapse-to-pill
+  instead of a modal takeover.
+- 🟡 ⬜ **Game-state-driven (auto-advancing) progression** — derive the current coaching step from
+  authoritative state (pods/seeds/plants/harvests) via a pure resolver so it can't drift from the
+  dashboard and advances on its own as the player acts.

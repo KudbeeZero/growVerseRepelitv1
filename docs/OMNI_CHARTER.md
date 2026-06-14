@@ -96,6 +96,16 @@ The **Director Chat**:
 
 ---
 
+## Studio Agent Registry
+
+Live coordination — branch/PR ownership, file-surface claims, collision alerts, and the
+rebase/serialization rules that keep parallel agents from colliding — is tracked in
+[`docs/STUDIO_AGENT_REGISTRY.md`](STUDIO_AGENT_REGISTRY.md) (REC-003). **Every agent checks the
+registry and claims its file surfaces before building.** Protected surfaces (navigation, FTUE, app
+shell, layout, global state) are single-writer and require Director approval to share.
+
+---
+
 ## Work Order System
 
 If a department requires changes outside its authority:
