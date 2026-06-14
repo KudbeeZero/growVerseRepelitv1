@@ -239,3 +239,19 @@ branch (single-branch dev rule) and merged together with it, so #25's de-grape `
 was ported into `chamberCore` on merge to avoid regressing it. Output dir `web/canonical-stages/` is
 gitignored (regenerable artifact; the generator is the committed deliverable). Future card/NFT image
 pipelines (ROADMAP Sprint 4) can build on this headless renderer.
+
+### 2026-06-14 — Flat `/state` wire is canonical; no `GameState` wire object (PR #30)
+**Decision:** The dashboard/PDP/encyclopedia keep reading the **flat** `GET …/plants/<id>/state`
+payload (`PlantState` = `Plant` + server-computed `metrics` + `forecast` + `recent_events`) as the
+single source of truth. We do **not** build the aggregate `GameState · EnvironmentState · UIState`
+wire objects that `knowledge/whole-plant-architecture.md` sketches. Server stays authoritative for
+forecast/metrics; web's `STAGE_DAYS`/`climateModel` remain **preview/visual-only** and must defer to
+`plant.forecast`/`plant.metrics`. Bud phenotype stays a pure client derivation
+(`morphologyFor`/`silhouetteFor`/`budColorForStrain`/`budDnaFor`/`applyEnvironmentToBudDNA`) seeded by
+strain — never persisted, never wired. **Why:** the flat wire already carries everything the UI needs;
+the audit (PR #30 planning) found the "5-layer state" doc to be aspirational, and a real unification
+would be a large refactor with no MVP payoff. **Consequences:** PR #30 is consumption polish + bug
+fixes, not a state rewrite. A global 401/403 handler (`AuthErrorListener`) now tears down the session
+on a rejected key (RISK #9); `usePods` refreshes on an interval + focus so the chamber bud phenotype
+reflects committed pod environment. The knowledge doc's `GameState/EnvironmentState/UIState` section
+is documentation aspiration, not a build target, until a future PR proves a need.

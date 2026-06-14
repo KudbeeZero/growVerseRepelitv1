@@ -26,10 +26,15 @@ function PlantDetail({ plantId }: { plantId: string }) {
   const { playerId } = useSession();
   const { data: plant, isLoading, isError, error, refetch } = usePlantState(playerId!, plantId);
   const { map } = useStrainMap();
+  // The dedicated events query is the source of truth for the full log; the
+  // embedded plant.recent_events is only a first-paint fallback (below). Stop
+  // polling once the plant can no longer produce events — a harvested/dead plant
+  // is static, so a 10s poll would just be dead weight (mirrors usePlantState).
+  const plantSettled = Boolean(plant && (!plant.is_alive || plant.harvested));
   const events = useQuery({
     queryKey: queryKeys.events(plantId),
     queryFn: () => api.plants.events(plantId, 50),
-    refetchInterval: 10_000,
+    refetchInterval: plantSettled ? false : 10_000,
   });
 
   if (isLoading) return <LoadingBlock label="Loading plant…" />;
