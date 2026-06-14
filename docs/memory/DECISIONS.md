@@ -218,3 +218,24 @@ systems — one linear gradient + one fill per site per frame, placement precomp
 with the texture pass for lock-step sway; pure logic (`morphology`/`budDna`/`strainVisuals`)
 untouched, so all 100 vitest tests (incl. Constellation sacred hashes) stay green. The pixels are
 owner-device-verifiable (no headless browser in CI to screenshot the chamber).
+
+### 2026-06-14 — Chamber renderer extracted into a shared, headless-capable core (PR #29)
+**Decision:** The grow-chamber Canvas 2D renderer (build + draw + physics) was moved **verbatim**
+out of `GrowChamber.tsx`'s React `useEffect` closure into a framework-agnostic factory
+`web/src/lib/chamber/chamberCore.ts` (`createChamberCore(opts)`); the component is now thin DOM glue
+(canvas/ctx, DPR transform, ResizeObserver, RAF loop, IntersectionObserver gating, pointer mapping)
+that delegates to the core. A Node script `web/scripts/gen-stage-pngs.ts` (`npm run gen:stages`)
+drives the same core through `@napi-rs/canvas` to render the curated strains × growth-stage matrix
+to PNG, fully off-browser. **Why:** the brief ("Canonical Stage PNG Generation") needed deterministic
+per-strain/per-stage plant images renderable without a desktop/browser, but the draw code was trapped
+in the component closure. Extracting it to a single source means the live component and the headless
+generator render through **identical code** — no drift — and the generated PNGs double as proof the
+extraction preserved the live render. Chosen over Playwright screenshots (heavy Chromium dep, needs a
+running server, may not install under the network policy) and over a parallel reimplementation (would
+drift). `@napi-rs/canvas` (prebuilt Skia, zero system libs) was chosen over `node-canvas` (needs
+Cairo/Pango/jpeg at build time; Pango/jpeg absent here). **Consequences:** the live render is
+unchanged (byte-for-byte relocation; all web gates green, 112 vitest); PR #29 was carried on PR #26's
+branch (single-branch dev rule) and merged together with it, so #25's de-grape `drawFlowerSite` change
+was ported into `chamberCore` on merge to avoid regressing it. Output dir `web/canonical-stages/` is
+gitignored (regenerable artifact; the generator is the committed deliverable). Future card/NFT image
+pipelines (ROADMAP Sprint 4) can build on this headless renderer.

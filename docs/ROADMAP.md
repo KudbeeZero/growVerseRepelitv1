@@ -79,6 +79,9 @@ criteria. "Roles" are functional hats, not headcount.
 **Goal:** assets are really on-chain.
 - ⬜ Fund a TestNet treasury; run `reset_asa`; wire `ASA_ID`
 - ⬜ Move NFT metadata to **IPFS** (Pinata/web3.storage); image pipeline for cards
+  - 🟩 *Foundation landed (PR #29, 2026-06-14):* a headless, deterministic chamber renderer
+    (`web/src/lib/chamber/chamberCore.ts` + `npm run gen:stages` via `@napi-rs/canvas`) renders
+    plants to PNG off-browser — the basis for a per-strain/per-stage card-image pipeline.
 - ⬜ DB ↔ chain **reconciliation** job; `onchain_txid` audit
 - ⬜ Non-custodial **Pera/WalletConnect** path (transfer NFT to player's own opted-in account)
 - **Exit:** mint a real TestNet NFT end-to-end; balances reconcile; metadata resolves on IPFS.

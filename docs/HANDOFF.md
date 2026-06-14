@@ -4,10 +4,13 @@
 > the end of every chat; read by `/handoff-audit` at the start of the next. If this file and
 > the code disagree, the code wins — fix the baton. See `docs/SESSION_PROTOCOL.md`.
 
-**Last rewritten:** 2026-06-13 · **By:** de-grape-whole-plant-buds chat
-**Active branch:** `claude/de-grape-whole-plant-buds-8zrsnb`
-**Open PR awaiting audit:** **PR #25 — De-Grape Whole Plant Buds** (base `main`). All gates green.
-**Prev audit:** PR #25 kickoff audit = **PASS** (foundation green; `docs/audits/PR-25-de-grape-kickoff.md`).
+**Last rewritten:** 2026-06-14 · **By:** bud-weight-physics + canonical-PNG chat
+**Active branch:** `claude/bud-weight-physics-polish-7daxpa` (PR #26, base `main`)
+**Just merged to main:** **PR #25** (De-Grape, 2026-06-14). **Merging now:** **PR #26** (Bud Weight
+Physics) — which carries **PR #29** (Canonical Stage PNG Generation) on the same branch; both land
+together. Owner gave visual sign-off on #25/#26 via the canonical stage stills (2026-06-14).
+**Parked (open PRs, green — do NOT modify):** **PR #27** Phenotype Generator Foundation, **PR #28**
+Circadian Leaf Motion.
 
 > **⚠️ Baton was stale before this chat.** This file had been frozen at the 2026-06-10 *backend*
 > phase (idempotency/concurrency) while the entire **Graphics Phase** (PRs ~#13–#25: grow-chamber
@@ -22,20 +25,18 @@
 
 ## NEXT ACTION (the one scoped item the next chat does)
 
-**PR #26 — Bud Weight Physics Polish.** Refine the bud-weight droop so heavy colas and branches
-bend believably as flowering fills in — the plant should feel like it carries weight, not like
-rigid sticks with buds glued on.
-- **Scope:** `web/src/components/viz/GrowChamber.tsx` only. Reuse the existing droop model:
-  `nd.weight` (accumulated per node from tip/node/branchlet buds × `clusterFat`), `branchFlex`
-  (`clamp(1.25 - S.branchMul*0.5, …)`), `droopRot`/`sag` in `drawPlant`, and `phys.cola`/`phys.nodes`
-  spring state. Make the heaviest top colas lean/sag most, branches bow under load, and the motion
-  read as mass + delayed physics (top leads, lower lags) per `knowledge/whole-plant-architecture.md`
-  § Motion.
-- **Strain feel:** PDP (heavy wide top) should bow more than slim-spear G13; Animal Mints golf-ball
-  nodes add nodal weight.
-- **Risks:** keep it deterministic and cheap (no new systems — Graphics Phase II is visual polish
-  only). Don't let droop fight the airflow sway into jitter. Pixels are owner-device-verifiable.
-- **Off-limits:** economy, chain, breeding, sim logic, new crop families, new systems.
+**PR #30 — Dashboard / GameState Wiring Polish.** With the whole-plant chamber visuals signed off
+(#25/#26) and the canonical-stage generator landed (#29), the next build PR unifies the
+chamber/dashboard game-state wiring (`GameState · PlantState · EnvironmentState · UIState · BudState`
+per `knowledge/whole-plant-architecture.md` § State). Then **PR #31 — MVP Launch Candidate**.
+- **Visual/UX-only track.** No economy / chain / breeding / factions / combat / tomato / crop
+  families. Do NOT start organic-geometry / mutation rendering yet.
+- **Do NOT modify PR #27 (Phenotype) or PR #28 (Circadian)** — both parked and green.
+- **Reuse, don't rebuild:** the chamber now renders through `web/src/lib/chamber/chamberCore.ts`
+  (shared by the live component and the headless `npm run gen:stages` generator). Keep that single
+  source intact.
+- **Macro Bud Polish II** (BACKLOG, *not launch-blocking*): sharper calyx ridges / denser nesting /
+  reduce the smooth-oval look on the PDP *macro* bud — macro view only; whole-plant is signed off.
 
 ---
 
