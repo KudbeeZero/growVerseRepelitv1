@@ -34,6 +34,7 @@ flowchart TD
 | — | `docs/memory/MAP.md` | This master index: layer map + code↔doc + build state | Low |
 | — | `docs/memory/CANONICAL_STATE.md` | Records-Department source of truth: PR / Branch / Directive ledgers + launch Critical Path + Department Status (refreshed per reconciliation sweep) | Snapshot |
 | — | `docs/STUDIO_AGENT_REGISTRY.md` | Live cross-agent coordination (REC-003): branch/PR ownership, file-surface claims, collision log, rebase/serialization rules | Live |
+| — | `docs/AGENT_ORCHESTRATION_LEDGER.md` | Agent orchestration (REC-004): employee/sub-agent roster, `SA-XXX` audit numbering, max-10 self-deployment cap, Work Order log | Live |
 | 1 | `docs/memory/ARCHITECTURE.md` | System map + the "don't break" list (where we are) | Low |
 | 1+ | `docs/memory/design/` | **Design Codex** — vision/intent (where we're going) | Low |
 | 2 | `docs/memory/DECISIONS.md` | Append-only "why" log (ADRs) | Append-only |
