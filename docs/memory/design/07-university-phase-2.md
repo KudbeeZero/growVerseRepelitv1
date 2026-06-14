@@ -66,11 +66,14 @@ labs (Cell ID · Photosynthesis Sim · Environmental Variables · Stress Diagnos
 Where physics is needed, labs **call the pure engine** (`simulation/engine.py`) in a read-only teaching
 sandbox — **no new logic in the pure engine** (CLAUDE.md invariant). Master Report §8.
 
-### 7. Professor persona extension 🔨
-Extend the shipped Professor (`ai/provider.py`, `services/lecturer_service.py`) with named faculty
-personas, lab-instruction / quiz-feedback / certification-message generation — all through the existing
-`LectureReport` shape and CI-safe mock. No ABC change for the lecture path; persona can live in
-`curriculum.yaml`. Master Report §4.
+### 7. Professor persona extension 🔨 (CEO-approved 2026-06-14)
+Extend the shipped Professor (`ai/provider.py`, `services/lecturer_service.py`) with **named faculty
+personas** — distinct personalities, teaching styles, visual identities, and a persistent narration voice
+(lessons, labs, exams, office hours). Approved roster (names may evolve): **Professor Flora** (Plant
+Biology — teaches `bio-101`) · **Verdant** (Environmental Systems) · **Mycelia** (Microbiology & Soil
+Ecology) · **Atlas** (Commercial Cultivation) · **Nova** (Genetics & Breeding). All generation
+(lab-instruction / quiz-feedback / certification-message) flows through the existing `LectureReport` shape
+and CI-safe mock; no ABC change for the lecture path; persona lives in `curriculum.yaml`. Master Report §4.
 
 ### 8. Unified progression ⬜ (settled defaults)
 One **Academic Level** driven by non-economic **KXP** (reuses the `services/leveling_service.py` curve
@@ -89,24 +92,30 @@ Captions + full transcripts (the narration script *is* the transcript) · keyboa
 semantics · contrast ≥ 4.5:1 · reduced-motion · dyslexia-friendly type · **no audio-only information**.
 Master Report §10.
 
-### 11. ElevenLabs audio pipeline ⬜ (greenfield — no audio code exists today)
+### 11. ElevenLabs audio pipeline ⬜ (greenfield — CEO-approved 2026-06-14 as its own slice)
 Generate→review→save→cache→reuse. Audio is generated **once**, only when a lesson's script changes
 (per-lesson `script_hash` trigger), and **only the changed lesson** regenerates; the runtime path is a pure
 cache lookup. CI-safe via a `NarrationProvider` ABC with a mock backend (no key in CI), mirroring
 `ai/factory.py`. **Manifest record required fields:** `Course ID · Lesson ID · Voice ID · Language ·
-Version Number · File Path` (companions: `script_hash`, `duration_sec`, `checksum`, `status`). Master
-Report §15.
+Version Number · File Path` (companions: `script_hash`, `duration_sec`, `checksum`, `status`). Approved
+phase order: **A** generation · **B** persistent storage · **C** caching & versioning · **D** voice
+assignments · **E** playback integration · **F** accessibility/transcript-sync. Locked requirements:
+generate once · cache permanently · regenerate only on content change · versioned · transcript parity ·
+reusable across courses. Master Report §15.
 
 ### 12. Capstones & the dissertation ⬜
 Per-degree capstones proven in the live sim (extend the existing practical hooks). The **Doctorate
 dissertation** ties the apex credential to generative genetics — stabilize an original line / win a Cup
 (`services/cup_service.py`, `02-genetics.md`): the highest honor is earned, never bought. Master Report §13.
 
-## The canonical exemplar (the template) ⬜
-**"Foundations of Plant Biology"** (proposed key `bio-101`, Core, 4.0 h, faculty Dr. Vera Lindqvist) is
-authored end-to-end in Master Report §17 — orientation, 4 modules, 5 labs, midterm, capstone, mastery exam,
-certification, full narration scripts, rubrics, and a 240-min component budget. Every future course is
-cloned from it. Build the framework + this one course first, prove the honest-hour rule, then scale.
+## The canonical exemplar (the template) ⬜ (CEO-approved 2026-06-14)
+**"Foundations of Plant Biology"** (key **`bio-101`**, Core, 4.0 h, faculty **Professor Flora**) is the
+**required no-prerequisite introductory course** (path `bio-101 → cult-101 → Intermediate → Advanced →
+Capstone`), authored end-to-end in Master Report §17 — orientation, 4 modules, 5 labs, midterm, capstone,
+mastery exam, certification, full narration scripts, rubrics, and a 240-min component budget. Every future
+course is cloned from it. Build the framework + this one course first, prove the honest-hour rule, then
+scale. **CEO-approved implementation order:** Framework → `bio-101` → Professor System → ElevenLabs →
+Labs → Assessments → Certifications → Transcripts → Advanced Courses → Degree Programs.
 
 ## Invariants honored
 - **Earned, never bought** — KXP/streaks/leagues are non-economic; the credential gate stays time + live-

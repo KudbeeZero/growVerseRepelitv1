@@ -255,3 +255,22 @@ fixes, not a state rewrite. A global 401/403 handler (`AuthErrorListener`) now t
 on a rejected key (RISK #9); `usePods` refreshes on an interval + focus so the chamber bud phenotype
 reflects committed pod environment. The knowledge doc's `GameState/EnvironmentState/UIState` section
 is documentation aspiration, not a build target, until a future PR proves a need.
+
+### 2026-06-14 — GrowPod University Phase 2 (UNI-001 v2) research APPROVED
+**Decision:** The CEO accepted the Phase-2 "long-form academy" research
+(`docs/research/UNI-001-v2-Master-Report.md` + Codex spec
+`docs/memory/design/07-university-phase-2.md`, registered in `MAP.md`) and settled three open
+decisions: (1) **`bio-101` "Foundations of Plant Biology"** is approved as the **no-prerequisite,
+required introductory course** before `cult-101` (path `bio-101 → cult-101 → Intermediate → Advanced →
+Capstone`) — plant science precedes cultivation systems; (2) the **named-faculty persona system** is
+approved (roster Flora · Verdant · Mycelia · Atlas · Nova; Professor Flora teaches `bio-101`; names may
+evolve, the system is locked); (3) the **ElevenLabs audio pipeline** is green-lit as its **own
+greenfield implementation slice**, phases A–F (generation → storage → caching/versioning → voice
+assignments → playback → accessibility/transcript-sync), with the locked rules generate-once /
+cache-permanently / regenerate-only-on-change / versioned / transcript-parity / reusable.
+**Why:** isolate the largest technical unknown (audio) from curriculum-implementation risk; lock
+content ordering before any code. **Consequences:** research/architecture only — **no code, no
+monetization, no tokenomics** introduced; the earned-mastery moat is unchanged (KXP/streaks/leagues
+stay non-economic). Approved future build order: Framework → `bio-101` → Professor System → ElevenLabs →
+Labs → Assessments → Certifications → Transcripts → Advanced Courses → Degree Programs. No
+implementation is scheduled yet; these docs are the authoritative reference when it is.

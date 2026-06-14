@@ -88,10 +88,11 @@ The 6 live departments (`data/curriculum.yaml`) plus the 3 the design doc alread
 | 8 | Business, Law & Compliance | ⬜ planned | *How does this become a real operation?* |
 | 9 | Pharmacology & Medical | ⬜ planned | *How does it act on the body, responsibly?* |
 
-> **Foundations note.** Phase 2 adds one cross-department **foundational course** at the very front of
-> the map — **"Foundations of Plant Biology"** (the exemplar, §17). It has *no department prerequisite*
-> and feeds every spine; it is the "how a plant works at all" course that the current catalog assumes but
-> never teaches. It slots before `cult-101`.
+> **Foundations note (CEO-approved 2026-06-14).** Phase 2 adds one cross-department **foundational
+> course** at the very front of the map — **"Foundations of Plant Biology"**, key **`bio-101`** (the
+> exemplar, §17). It has **no prerequisites** and is a **required introductory course** feeding every
+> spine; it is the "how a plant works at all" course the current catalog assumes but never teaches.
+> Approved path: **`bio-101` → `cult-101` → Intermediate → Advanced → Capstone**.
 
 ### 1.2 The three tracks (difficulty bands, already implicit in `level_req`)
 The catalog's `level_req` (1→7) already encodes a difficulty gradient; Phase 2 names the bands so the UI
@@ -214,15 +215,21 @@ mock/real split stay exactly as they are.
 
 ### 4.2 Named faculty (persona layer ⬜)
 Today the Professor is anonymous. Phase 2 introduces a small **faculty roster** — each a system-prompt
-persona keyed to a department, so lectures have a voice and a point of view:
+persona keyed to a department, so lectures have a voice and a point of view. **CEO-approved (2026-06-14):**
+memorable, on-brand, named personas with distinct personalities, teaching styles, recognizable visual
+identities, and a persistent narration voice (used in lessons, labs, exams, and office hours). The
+approved naming scheme (names may evolve during implementation; the *persona system* is locked):
 
-| Faculty | Department | Voice / stance |
-|---------|-----------|----------------|
-| **Dr. Vera Lindqvist** | Foundations / Cultivation | Patient first-principles teacher; "let's start with the cell." |
-| **Prof. Marcus Okoye** | Genetics & Breeding | Rigorous, Punnett-square precise, loves a selection scheme. |
-| **Dr. Priya Anand** | Chemistry / Lab Analytics | Skeptical analyst; "the name on the jar means nothing, read the COA." |
-| **Sensei Ray Calderón** | Cultivation / IPM | Grizzled practical grower; scouting routines and action thresholds. |
-| **Dr. Hana Müller** | Post-Harvest | Detail-obsessed; "you can lose 20% in the last 20%." |
+| Faculty | Domain | Voice / stance |
+|---------|--------|----------------|
+| **Professor Flora** | Plant Biology (Foundations) | Patient first-principles teacher; "let's start with the cell." → **teaches the `bio-101` exemplar.** |
+| **Professor Verdant** | Environmental Systems | Calm systems-thinker; VPD/DLI, the canopy as a climate. |
+| **Professor Mycelia** | Microbiology & Soil Ecology | Curious, soil-food-web evangelist; life beneath the roots. |
+| **Professor Atlas** | Commercial Cultivation | Pragmatic operator; scale, yield, action thresholds, "what survives a real grow." |
+| **Professor Nova** | Genetics & Breeding | Rigorous, Punnett-square precise, loves a selection scheme. |
+
+Additional faculty are named per department as content is authored (Chemistry/Lab Analytics,
+Post-Harvest, IPM, Business/Compliance, Pharmacology) following the same persona discipline.
 
 Implementation note (design only): a persona is just an extra field in the context dict
 `LecturerService` already builds (`services/lecturer_service.py` builds course/topic/objectives/level);
@@ -448,7 +455,7 @@ Components: `PageHeader`, `Card`, `ProgressRing`, `Pills` (departments), `Bar`/`
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
 │ PageHeader: "Foundations of Plant Biology"   Badge: Core · ~4 h        │
-│ Faculty: Dr. Vera Lindqvist          [▶ Start / Resume]                │
+│ Faculty: Professor Flora          [▶ Start / Resume]                │
 ├──────────────────────────────────────────────────────────────────────┤
 │ Tabs: [Syllabus] [Modules] [Labs] [Exams] [Reviews]                    │
 │ SYLLABUS                                                               │
@@ -468,7 +475,7 @@ Components: `PageHeader`, `Tabs`, `Card`, `ProgressRing` (per-module mastery), `
 │ ◀ Module 2 · Lesson 2 of 5            Mastery ▰▰▰▱▱   ✕ Exit           │
 ├────────────────────────────────────────┬─────────────────────────────┤
 │  STAGE (video / interactive / diagram)  │  TRANSCRIPT (scrolls w/ audio)│
-│  ┌────────────────────────────────────┐ │  Dr. Lindqvist:               │
+│  ┌────────────────────────────────────┐ │  Professor Flora:               │
 │  │  [clickable chloroplast diagram]   │ │  "Light hits the thylakoid…"  │
 │  │   ● hotspot  ● hotspot             │ │  ▸ highlighted current line   │
 │  └────────────────────────────────────┘ │                               │
@@ -680,6 +687,22 @@ config. The lesson player (§11.3) resolves audio by manifest lookup; the build/
 request path) is the only place generation can happen. **No code is written in this phase** — this is the
 blueprint for when audio is scheduled.
 
+### 15.5 Approved phased rollout (CEO-approved 2026-06-14 — its own implementation slice)
+The audio pipeline is **green-lit as a separate greenfield slice**, isolated from curriculum-
+implementation risk (it is the largest technical unknown). Approved phase order:
+
+| Phase | Scope |
+|-------|-------|
+| **A** | Narration generation (provider + ElevenLabs call, prod-only) |
+| **B** | Persistent audio storage (asset store / CDN) |
+| **C** | Caching & versioning (the manifest §15.2 + `script_hash` change-detection) |
+| **D** | Professor voice assignments (§4.2 persona → Voice ID) |
+| **E** | Course playback integration (lesson player §11.3) |
+| **F** | Accessibility & transcript-sync (caption/transcript parity §10) |
+
+Locked requirements (directive): **generate once · cache permanently · regenerate only on content change
+· versioned assets · transcript parity · reusable across courses.**
+
 ---
 
 ## 16. The ten contributing lenses (how this report was built)
@@ -704,9 +727,11 @@ viewpoints so the Bible is complete and self-consistent:
 
 ## 17. THE CANONICAL EXEMPLAR COURSE (authored end-to-end)
 
-> **"Foundations of Plant Biology"** — proposed key `bio-101` · Type: **Foundational Core** · Faculty:
-> **Dr. Vera Lindqvist** · Band: **Core** · **Active content: 240 min = 4.0 h** · Department:
-> Foundations (feeds all spines; no department prereq) · `level_req: 1` · slots before `cult-101`.
+> **"Foundations of Plant Biology"** — key `bio-101` (**CEO-approved 2026-06-14**) · Type: **Foundational
+> Core** · Faculty: **Professor Flora** · Band: **Core** · **Active content: 240 min = 4.0 h** ·
+> Department: Foundations (feeds all spines; **no prerequisites — required introductory course**) ·
+> `level_req: 1`. Approved learning path: **`bio-101` → `cult-101` → Intermediate → Advanced
+> specializations → Capstone programs** (plant science before cultivation systems).
 >
 > This is the **gold-standard template**. Every future course is cloned from it. It instantiates every box
 > in §3.1, uses the §3.2 primitives, ships the 5 labs (§8.2), and its component durations **sum to exactly
@@ -758,7 +783,7 @@ Per-module internal budgets (each sums to its row above):
 - **Slide structure:** (1) Welcome title; (2) "Why a grower starts with biology"; (3) the 5 objectives;
   (4) course map (4 modules → midterm → capstone → final); (5) "what you'll prove in your grow";
   (6) pre-assessment intro.
-- **Narration script — Dr. Lindqvist (excerpt, = transcript):** *"Welcome. I'm Dr. Vera Lindqvist, and
+- **Narration script — Professor Flora (excerpt, = transcript):** *"Welcome. I'm Professor Flora, and
   before you ever touch a nutrient bottle or a pair of scissors, we're going to understand the thing you're
   actually growing. A cannabis plant is not a machine with inputs and outputs — it's a living chemistry set
   that's been solving the problem of turning light into matter for four hundred million years. For the next
@@ -794,7 +819,7 @@ why more light isn't always more growth; relate respiration to night-time energy
 - **Video lesson (8 min):** light → thylakoid → sugar; the CO₂/light/temperature trio. Captioned.
 - **Narrated interactive lesson (12 min):** **before/after slider** (primitive #8) showing a leaf under
   low vs. saturating light; Professor narrates the assimilation curve.
-  - **Narration excerpt — Dr. Lindqvist:** *"There's a point — we call it light saturation — where
+  - **Narration excerpt — Professor Flora:** *"There's a point — we call it light saturation — where
     cramming more photons at the leaf stops buying you sugar and starts buying you problems. Your job as a
     grower isn't 'more light.' It's 'enough light, then fix the next limiting thing.' That's Liebig's
     barrel, and we'll meet it again in nutrients."*
@@ -870,7 +895,7 @@ end; assemble the whole-plant model.
   why?"* (Mg deficiency, mobile-nutrient logic — auto-graded MCQ + an explained-feedback reveal.)
 
 ### 17.10 Certification (2 min)
-- Narrated **congratulations** in Dr. Lindqvist's voice (§4.3 #4); diploma artifact added to the transcript
+- Narrated **congratulations** in Professor Flora's voice (§4.3 #4); diploma artifact added to the transcript
   / credential wall (§11.6); KXP + Academic-Level update; Badge issued (§6). If `bio-101` is wired into a
   degree's `required_courses`, degree progress advances automatically (existing `claim_degree` path).
 
@@ -909,13 +934,18 @@ file** (§15.1) — every other row is a cache hit.
   gate) and the new active-content budget (§9.3) are different axes and the UI must show both honestly;
   (3) authoring the remaining ~15 course types to this depth is a large *content* effort (the framework
   makes it tractable, but it is the real cost).
-- **Needs you (owner decisions, not blockers):** confirm the exemplar's proposed key/placement (`bio-101`
-  as a no-prereq Foundations course before `cult-101`); confirm the faculty-persona naming is on-brand;
-  green-light scheduling the audio pipeline as its own implementation slice.
-- **Next:** when implementation is scheduled — (a) wire `bio-101` into `curriculum.yaml` + a degree's
-  `required_courses`; (b) build the lesson-player + lab-shell components on the existing UI library;
-  (c) stand up the `NarrationProvider` ABC (mock + ElevenLabs) per §15; (d) clone the exemplar to author
-  the next courses.
+- **CEO review (2026-06-14): APPROVED.** All three decisions settled — (1) **`bio-101`** approved as the
+  no-prerequisite **required introductory course** before `cult-101` (path `bio-101 → cult-101 →
+  Intermediate → Advanced → Capstone`); (2) **faculty persona system approved** (Flora · Verdant ·
+  Mycelia · Atlas · Nova; names may evolve, §4.2); (3) **ElevenLabs pipeline green-lit as its own
+  greenfield slice**, phases A–F (§15.5).
+- **CEO-approved implementation order (future scheduling):** 1) University Framework · 2) `bio-101`
+  exemplar · 3) Professor System · 4) ElevenLabs Pipeline · 5) Interactive Labs · 6) Assessments & Exams ·
+  7) Certifications · 8) Transcripts · 9) Advanced Courses · 10) Degree Programs.
+- **Risks / honesty notes (carried):** (1) the ElevenLabs pipeline (§15) is **fully greenfield** — most
+  implementation unknowns (mitigated by isolating it as slice #4); (2) the catalog's `duration_hours`
+  (study-clock gate) and the new active-content budget (§9.3) are different axes — the UI must show both
+  honestly; (3) authoring the remaining course types to this depth is a large *content* effort.
 - **Recommendation:** Build the **framework and the one exemplar first** (player, lab shell, exam,
   manifest, narration mock), prove the honest-hour rule end-to-end on `bio-101`, *then* scale content. Do
   not author 30 shallow courses; author one deep one and clone it.
