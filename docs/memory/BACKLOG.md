@@ -37,10 +37,15 @@ once they appear here. Last reconciled: **2026-06-14** (REC-004 full repository 
   gate discrete Water/Feed/Check steps without guessing from decaying levels); **WO-2** a lightweight
   "session delta / welcome-back" endpoint (what changed since last seen — stage advances, new buds,
   frost) to power a return-moment. Both are backend (WO-gated); design only until approved.
-- 🚀 ⬜ **Feature Flags** (NEXT — open **PR #42**, audit & land, don't rebuild) — data-driven launch
-  gate / kill-switch surface (config `flags` section, or a `feature_flags` table only if
-  per-player/cohort targeting is needed) + a server-authoritative read endpoint + a web hook to gate
-  routes/components. Mirror the `balance.yaml` tuning-surface convention.
+- 🚀 ✅ **Feature Flags** (PR #42, landed 2026-06-14) — data-driven MVP launch gate: non-MVP systems
+  (marketplace, on-chain `chain`, Cup, University, contracts) gated **OFF by default**. Backend
+  `config.Settings` `ENABLE_*` → `app.config["FEATURE_*"]` enforced by a `require_feature` decorator
+  (`api/feature_gates.py`) applied **above** `require_player` (gated route → **404 before auth**). Web
+  mirrors via `NEXT_PUBLIC_ENABLE_*` (`web/src/lib/features.ts`): feature-gating lives in the shared
+  `web/src/components/layout/navLinks.ts` so **both** the desktop `NavBar` and the mobile `MobileTabBar`
+  hide gated entries, plus `RequireFeature` route guards and in-page hides. Tests:
+  `tests/test_feature_gates.py`, `web/src/lib/__tests__/features.test.ts`. ADR in `DECISIONS.md`
+  (2026-06-14).
 - 🚀 ⬜ **Playtesting → Retention Validation → MVP Launch Candidate** — the launch critical-path tail.
 - 🚀 ❄️ **OMNI Charter v1.0** (PR #38, merged 2026-06-14) — organizational constitution
   (`docs/OMNI_CHARTER.md`): chain of command, departments, work-order system, canonical principles.

@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "@/lib/session";
-import { PlayerBadge } from "./PlayerBadge";
 import { NAV_LINKS, isActiveLink } from "./navLinks";
+import { PlayerBadge } from "./PlayerBadge";
 
 export function NavBar() {
   const pathname = usePathname();

@@ -240,6 +240,23 @@ was ported into `chamberCore` on merge to avoid regressing it. Output dir `web/c
 gitignored (regenerable artifact; the generator is the committed deliverable). Future card/NFT image
 pipelines (ROADMAP Sprint 4) can build on this headless renderer.
 
+### 2026-06-14 — MVP feature-flag layer (gate non-MVP systems off)
+**Decision:** Five non-MVP systems — marketplace, on-chain wallet/minting (`chain`), the Cup,
+the University, and NPC contracts — are gated behind boolean flags that default **OFF**. Backend
+flags live in `config.Settings` (env `ENABLE_*`), are copied into `app.config["FEATURE_*"]` at
+`create_app`, and are enforced per-route by a `require_feature` decorator (`api/feature_gates.py`)
+applied above `require_player` so a gated route returns **404** before auth — a hidden system is
+indistinguishable from an absent one. The web client mirrors them via `NEXT_PUBLIC_ENABLE_*`
+(`web/src/lib/features.ts`): the nav filters gated entries, a `RequireFeature` guard wraps the
+`/market`, `/cup`, `/university` route segments, and in-page bits (Market→Contracts tab, Profile
+wallet section) hide too. **Why:** the MVP launch ships only the core grow loop; fail-closed
+defaults mean a system can never leak by forgetting to set an env var. **Consequences:** the test
+harness enables all five flags (`tests/conftest.py`) so the subsystem suites keep exercising real
+behavior, with a dedicated `tests/test_feature_gates.py` proving OFF→404 / ON→reachable, gate-
+before-auth, and core-loop-unaffected. The services and routes are untouched (hidden, not removed),
+so flipping a flag on at deploy time restores the full system. First slice of PR #31 (MVP Launch
+Candidate).
+
 ### 2026-06-14 — Flat `/state` wire is canonical; no `GameState` wire object (PR #30)
 **Decision:** The dashboard/PDP/encyclopedia keep reading the **flat** `GET …/plants/<id>/state`
 payload (`PlantState` = `Plant` + server-computed `metrics` + `forecast` + `recent_events`) as the
