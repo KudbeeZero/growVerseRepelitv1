@@ -58,6 +58,7 @@ build on the same protected surface concurrently without explicit Director appro
 | Global State | session/store providers (`web/src/lib/session.tsx`, `lib/localStore.ts`, providers) |
 | Simulation engine | `simulation/**` (server-authoritative; backend WO required) |
 | Ledger / economy | `services/**`, `db/models.py` (backend WO required) |
+| **Feature-flag infra** | `api/feature_gates.py`, `Settings`/`create_app` `FEATURE_*`, `web/src/lib/features.ts`, `web/src/components/layout/RequireFeature.tsx`, the route `layout.tsx` gates. **Single-writer** — canonical system is PR #42; there must be exactly ONE flag system (a duplicate, BE-003/#55, was retired 2026-06-14). |
 
 ---
 
@@ -67,8 +68,7 @@ Open / in-flight directives. One row per directive; update **Status** as it move
 
 | Directive | Dept | Lead | Workers | Branch | PR | Owned file surfaces | Deps | Status |
 |---|---|---|---|---|---|---|---|---|
-| BE-003 (Feature Flags — backend core) | Builder | BE-A00 | BE-A01–A10 | `claude/be-feature-flags-core` | (this PR) | Backend flag layer: `feature_flags.py`, `api/game_api.py` (+`/flags`), `data/balance.yaml` (`feature_flags:`), `.env.example` (+ docs) | — | 🟢 Open |
-| BE-003 (Feature Flags — **web gating**) | Builder / DX | — | — | (next chat) | (PR #2) | **Protected: Navigation + Layout** — route/nav/feature gating via a `useFlag` hook | backend core (this PR) | ⛔ Not started — claim protected surfaces + Director sign-off first |
+| BE-003 (retire duplicate flag layer) | Builder | BE-A00 | BE-A00, QA-A00 | `claude/be-retire-duplicate-flags` | (this PR) | Remove #55 only: `feature_flags.py`, `tests/test_feature_flags.py`, `api/game_api.py` (`/flags`+handler), `data/balance.yaml` (`feature_flags:`), `.env.example`. **Preserves #42.** | PR #42 (canonical) | 🟢 Open |
 | DX-007 (P2 FTUE Coach-Marks) | Design & Experience | DX-A00 | DX-A01–A10 | `claude/dx-ftue-coach-marks` | (this PR) | FTUE/Onboarding (coach-mark layer): `components/onboarding/CoachMarks.tsx` (new), `lib/coachMarks.ts` (new), `lib/coachMarkStore.ts` (new), + `data-coach` tags & mount in `app/dashboard/page.tsx` | Builds **on top of** canonical FTUE (#35/#39) — does not modify the `/ftue` route. New layer; no overlap with the merged plant-care work. | 🟢 Open |
 
 ### Recently merged to `main` (for collision awareness)
@@ -109,6 +109,7 @@ Open / in-flight directives. One row per directive; update **Status** as it move
 | 2026-06-14 | Two mobile bottom-nav implementations (PR #40 `BottomNav` vs merged #36 `MobileTabBar`) on the **Navigation** surface | DIR-004: retire #40's FP-1; keep #36. |
 | 2026-06-14 | Two FTUE systems (PR #37 `GrowGuide` vs merged #35/#39 guided tutorial) on the **FTUE** surface | DIR-004: close #37; salvage ideas to backlog (below). |
 | 2026-06-14 | DX-005 set out to build FP-5 (Care Feedback & Celebration) — but the pre-work registry/flight-plan check found **#41 already shipped it**. | **Registry working as designed**: no duplicate built. DX-005 scoped down to wiring the new primary CTA (#45) into the existing #41 feedback system — the one surface #41 couldn't have known about. |
+| 2026-06-14 | **Two feature-flag systems** merged in the same window — BE-003 #55 (`balance.yaml` + `/api/game/flags`, defaults ON) vs **PR #42** (env `FEATURE_*` + web gating, defaults OFF). The BE-003 audit was clean at 11:58 because #42 merged later. | Director: **adopt #42 as canonical**, retire #55 (this PR). Root cause: neither flag effort was claimed in the registry while in flight → feature-flag infra is now a **single-writer protected surface** (above). |
 
 **Salvaged from #37 (archived to `docs/memory/BACKLOG.md`):** persistent per-player tutorial state,
 non-nagging dismissal, and game-state-driven (auto-advancing) progression.
