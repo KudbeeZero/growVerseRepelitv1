@@ -4,105 +4,125 @@
 > the end of every chat; read by `/handoff-audit` at the start of the next. If this file and
 > the code disagree, the code wins — fix the baton. See `docs/SESSION_PROTOCOL.md`.
 
-**Last rewritten:** 2026-06-14 · **By:** FTUE Epic closeout chat (DX-003)
-**Active branch:** `claude/closeout-ftue-epic` (docs-only PR — see "Open PR" below)
-**Open PR (awaiting audit):** **PR #43** — docs closeout; retires the graphics-phase baton, records
-the FTUE epic as completed history. No code; gates green.
-**Just merged to main (head `15f9699`):** the **FTUE epic** — **PR #34** (starter-grant rail),
-**PR #35** (FTUE tutorial backend), **PR #39** (web `/ftue` guided route). Also live since the last
-baton: **PR #29/#30** (Dashboard / GameState wiring polish), **PR #33** (Launch Strain Integration
-Pack), **PR #36** (mobile-first responsive nav + Grow Chamber), **PR #38** (OMNI Charter v1.0).
+**Last rewritten:** 2026-06-14 · **By:** REC-004 — Full Repository Memory Reconciliation Sweep
+**Active branch:** `claude/repo-memory-reconciliation-frcgap` (docs/memory-only — see "Open PRs" below)
+**Just merged to main (head moved `15f9699` → post-#46 during this sweep):** the **FTUE epic** —
+**PR #34** (starter-grant rail), **PR #35** (FTUE tutorial backend + Master Grower coaching),
+**PR #39** (web `/ftue` guided route). Also live: **PR #29** (Dashboard / GameState wiring, titled
+"PR #30"), **PR #33** (Launch Strain Integration Pack → 29-strain catalog), **PR #36** (mobile-first
+responsive nav + Grow Chamber), **PR #38** (OMNI Charter v1.0), **PR #41** (DX-001 Care Feedback &
+Celebration), **PR #43** (FTUE-closeout docs — owner merged it 10:09 UTC), **PR #45** (DIR-004 / FP-3
+Primary Plant CTA), **PR #46** (REC-003 Studio Agent Registry — `docs/STUDIO_AGENT_REGISTRY.md`, the
+live coordination roster).
 **Parked (open PRs, green — do NOT modify):** **PR #27** Phenotype Generator Foundation,
 **PR #28** Circadian Leaf Motion.
+**Other open PRs:** **PR #32** E2E grow-loop CI, **PR #42** *MVP Feature Flag Layer* (the NEXT ACTION).
+**Retired (closed without merge):** **PR #37** Grow Guide (superseded by the FTUE epic; backend ideas
+salvaged to BACKLOG), **PR #40** mobile bottom nav (FP-1 superseded by #36; FP-3 re-cut as #45).
 
-> **Phase change.** The Graphics Phase (whole-plant chamber, macro buds, canonical stage PNGs) and
-> the Dashboard wiring polish are **done and signed off**. The studio has moved to the **New-Player
-> / Launch-Readiness** track. The FTUE epic (sign up → guided first grow → harvest → sell → come
-> back tomorrow) is the headline deliverable of this phase and is fully merged.
+> **⚠️ This was a reconciliation sweep, not a feature chat — and `main` moved under it.** Before
+> REC-004 the baton was frozen at the Graphics Phase (PR #26) while the entire **New-Player /
+> Launch-Readiness** track landed on `main`; during the sweep the owner also merged the FTUE-closeout
+> docs (#43), DX-001 (#41), FP-3 (#45) and the REC-003 Studio Agent Registry (#46). This sweep was
+> rebased onto current `main` and reconciles the baton, BACKLOG, ROADMAP, DECISIONS, and MAP, and
+> produces the **authoritative** consolidated Records ledger `docs/memory/CANONICAL_STATE.md` (PR /
+> Branch / Directive ledgers + Critical Path + Department Status — *the source of truth for records,
+> per the Director's REC-004 decision*). Live cross-agent coordination lives in
+> `docs/STUDIO_AGENT_REGISTRY.md` (REC-003); CANONICAL_STATE is the point-in-time snapshot. **No
+> production code was changed by REC-004.** The backend OPEN RISKS below were **not** re-audited.
 
 ---
 
 ## NEXT ACTION (the one scoped item the next chat does)
 
-**Feature Flags — a launch gate/kill-switch surface.** First item on the launch critical path
-below. Add a minimal, data-driven flag layer so player-facing surfaces (the new `/ftue` tutorial,
-chamber polish, future systems) can be toggled per-environment without a deploy — mirroring the
-`balance.yaml` "tuning surface" convention (data-driven over code). Suggested shape: a `flags`
-section in config (or a small `feature_flags` table if per-player/cohort targeting is needed), a
-server-authoritative read endpoint, and a tiny web hook to gate routes/components. Keep it additive.
-- **Off-limits:** no economy / chain / breeding / factions / combat / new crop families. No new
-  Phase-2 systems. Do NOT modify the parked PRs (#27, #28).
-- **Reuse, don't rebuild:** the chamber renders through `web/src/lib/chamber/chamberCore.ts`
-  (single source for the live component + the headless `npm run gen:stages` generator) — keep it
-  intact. The flat `GET …/plants/<id>/state` wire is canonical (see DECISIONS 2026-06-14); do not
-  build the aspirational `GameState/EnvironmentState/UIState` aggregate.
-- **Critical path:** **Feature Flags → Mobile Polish → Playtesting → Retention Validation → MVP
-  Launch Candidate.** (Mobile Polish is partly underway: PR #36 shipped responsive nav + chamber.)
+**Audit & land Feature Flags (open PR #42 — "MVP Feature Flag Layer").** Feature Flags are the head
+of the launch critical path, and a PR already exists — so the next chat **audits and finishes #42**
+rather than building from scratch. Goal: a minimal, data-driven launch gate / kill-switch surface so
+player-facing surfaces (the new `/ftue` tutorial, chamber polish, future systems) can be toggled
+per-environment **without a deploy**, mirroring the `balance.yaml` "tuning surface" convention
+(data-driven over code). Confirm the shape is additive: a `flags` section in config (or a small
+`feature_flags` table only if per-player/cohort targeting is needed), a server-authoritative read
+endpoint, and a tiny web hook to gate routes/components.
+- **Off-limits:** no economy / chain / breeding / factions / combat / new crop families; no new
+  Phase-2 systems. Do **not** modify the parked PRs (#27, #28).
+- **Reuse, don't rebuild:** the chamber renders through `web/src/lib/chamber/chamberCore.ts` (single
+  source for the live component + the headless `npm run gen:stages` generator) — keep it intact. The
+  flat `GET …/plants/<id>/state` wire is canonical (DECISIONS 2026-06-14); do **not** build the
+  aspirational `GameState/EnvironmentState/UIState` aggregate.
+- **Critical path:** **Feature Flags (#42) → Mobile Polish (#36 ✅; #40/#41/#37 open) → Playtesting
+  → Retention Validation → MVP Launch Candidate.** Off-chain MVP first; Sprint 4 (real TestNet/IPFS)
+  is post-MVP and still gated by RISK #4/7.
 
 ---
 
-## What THIS chat did
+## What THIS chat did (REC-004 reconciliation)
 
-Shipped and merged the **FTUE epic** — the player-facing onboarding that turns a fresh signup into a
-completed first grow, on **existing rails** (no new economy, no Phase-2):
-
-- **PR #34 — starter-grant rail.** Signup grants a free Starter Pod + starter seed, one-shot and
-  idempotent via a `grant_claims` unique index (`GameService.grant_starter_items`). Migration
-  `c7ecd7523cc8`.
-- **PR #35 — FTUE tutorial backend.** A guarded deterministic step machine on `Player.ftue_step`
-  (`welcome → plant → water → environment → grow → harvest → completed`); each `advance` performs
-  the **real** game action (`plant_seed`, `water`, `set_environment`, `harvest_plant`+sell) and is
-  refused if out-of-sync or already completed (no replay). **Per-step AI Master Grower coaching**
-  (`ai/ftue_coach.py`) returns deterministic scripted `AdvisorReport`s through the real advisor
-  schema — works in CI with no live key. **Tutorial-only time-compression** (the `grow` step):
-  backdates the tutorial plant's `planted_at` so the chamber renders a mature flowering plant and
-  sets `last_tick_at = now` so the authoritative catch-up does **not** retro-decay it — scoped to
-  the single tutorial plant, global sim/time untouched, no auto-care/economy change. Endpoints:
-  `GET /ftue/status`, `GET /ftue/coaching/<step>`, `POST /ftue/advance`. Migration `9d669edf48a8`
-  (`Player.ftue_step`/`ftue_plant_id`/`ftue_completed_at`, `server_default` backfills the NOT NULL
-  step).
-- **PR #39 — web `/ftue` guided route.** RequireAuth-gated; renders the Master Grower coaching +
-  one primary action per step driving `POST /ftue/advance`, the live tutorial plant via the existing
-  `PlantVisual`/`StatBars` (reuse), a "Skip tutorial" escape, and a completion panel pointing to
-  tomorrow's daily stipend. Fresh signups route to `/ftue`; returning sign-ins and existing players
-  are unchanged (no auto-divert despite the `welcome` backfill default).
+A one-time, read-only audit of `main` (10 worker assignments: PR/branch ledgers, baton, charter,
+Phase-1 + feature flags, FTUE, plant engine, DX/mobile, backlog/ADRs, consolidation), then a
+documentation/memory sweep — **no production code touched**:
+- **Rewrote this baton** off the stale Graphics Phase onto the New-Player / Launch-Readiness track.
+- **Reconciled `BACKLOG.md`** — marked the Graphics Phase + Dashboard wiring (#29/#30) ✅ COMPLETE,
+  recorded the FTUE epic (#34/#35/#39), the launch strain pack (#33 → 29 strains), mobile-first nav
+  (#36), and the OMNI Charter (#38); added the 🚀 New-Player / Launch-Readiness track with the
+  critical path; noted the open PRs (#32/#37/#40/#41/#42/#43).
+- **Reconciled `ROADMAP.md`** — recorded FTUE + mobile-first DX + OMNI Charter as shipped; catalog 29.
+- **Appended `DECISIONS.md`** — ADRs for the FTUE epic, mobile-first navigation (#36), and adopting
+  the OMNI Charter (#38).
+- **Fixed `MAP.md`** — strain catalog/KB **22 → 29**; registered the new Records ledger.
+- **Created `docs/memory/CANONICAL_STATE.md`** — the Records-Department single source of truth.
+- Standup: `docs/memory/standups/2026-06-14-REC-004-reconciliation.md`.
 
 ## Verification split (this chat)
 
-**Agent-verifiable (proven, per-PR before merge):**
-- Backend (#34/#35): `make test` **231 passed** (5 new FTUE E2E: signup → walk every step →
-  completed with harvest credited; scripted coaching; out-of-sync / past-completed / auth guards) ·
-  `make lint` ✅ · `make check-migrations` single head `9d669edf48a8` ✅ · `make check-memory` ✅.
-  Each migration verified to apply cleanly on a fresh DB.
-- Web (#39): `tsc --noEmit` ✅ · `next lint` ✅ · `next build` ✅ (`/ftue` in the route manifest) ·
-  `vitest` **119/119** ✅.
-- This docs closeout: `make check-memory` ✅ (+ `make test` / `make lint` re-run; no code changed).
+**Agent-verifiable (proven):**
+- No code changed. Gates re-run on the docs branch: `make check-memory` ✅ · `make test` ✅ ·
+  `make lint` ✅ (results recorded in the REC-004 standup).
+- PR/branch ledgers cross-checked against the live GitHub PR list + `git log origin/main`; strain
+  counts confirmed by parsing `data/strains.yaml` + `data/strain_knowledge.yaml` (29 each).
 
-**Device/human-verifiable (owner — the actual deliverable):**
-- Sign up a **fresh** account → confirm you land on `/ftue` → step through plant → water → climate →
-  grow → harvest and confirm: the Master Grower coaching reads correctly per step, the plant appears
-  and matures (flowering after "grow"), the harvest credits GROW, and the completion panel routes to
-  the dashboard. (No headless browser in CI screenshots the flow — the pixels/UX are owner-verified.)
+**Device/human-verifiable (owner):**
+- The reconciliation **decisions**: whether to close PR #43 in favour of this sweep (or merge #43
+  first), how to reconcile open PR #37 against the already-merged FTUE epic, and whether to prune the
+  merged/abandoned branches in the Branch Ledger (destructive git = stop-and-ask).
 
 ---
 
 ## OPEN RISKS (carried) — NOT re-audited this chat
 
-> These predate this chat and were not re-verified here (the FTUE epic was additive web + service
-> orchestration on existing rails; it did not touch chain/limiter/settlement). Re-audit against
+> These predate this sweep and were not re-verified here (REC-004 changed no code). Re-audit against
 > current code before acting. A risk clears only when VERIFIED FIXED (test-backed).
 
 | # | Sev | Risk | Evidence | Status |
 |---|-----|------|----------|--------|
-| 3 | HIGH | Idempotency on mutations — general `Idempotency-Key` header (duplicate → original response, not a 409). | `api/game_api.py` | PARTIAL — concurrency core + one-shot grants shipped (`grant_claims`, harvest-once index); FTUE `advance` is replay-guarded. General header still absent. |
+| 3 | HIGH | Idempotency on mutations — general `Idempotency-Key` header (duplicate → original response, not a 409). | `api/game_api.py` | PARTIAL — concurrency core + one-shot grants shipped (`grant_claims`, harvest-once index); FTUE `advance` is replay-guarded. General header still absent (WIP PR #16 closed unmerged). |
 | 4/7 | HIGH | **Chain settlement not real** — deposit trusts no on-chain proof; treasury-drain path; no txid replay protection / reconciliation / address validation. | `services/settlement_service.py`, `db/models.py` | OPEN — blocks any real value moving (Sprint 4 gate). |
-| 8 | HIGH | **Web safety net** — vitest runs in CI; Playwright e2e is still an `echo` stub; treasury-cap + chain-failure-rollback tests absent. | `web/package.json`, `.github/workflows/ci.yml` | PARTIAL. |
+| 8 | HIGH | **Web safety net** — vitest runs in CI; Playwright e2e is still an `echo` stub; treasury-cap + chain-failure-rollback tests absent. | `web/package.json`, `.github/workflows/ci.yml` | PARTIAL (relates to open PR #32). |
 | 9 | MED | **Sim dormancy semantics** — large `max_catchup_hours` gaps can delay an earned harvest / skip lethal decay; needs a design decision + knob guard. (FTUE sidesteps it for the tutorial plant via `last_tick_at = now`; the general knob is unchanged.) | `simulation/engine.py` | OPEN. |
 | 11 | LOW | Rate-limiter `memory://` per-worker (set Redis for multi-worker); `get_level` public oracle. | fleet-sweep audit | PARTIAL. |
 
-**Cleared since last baton:** *Web global 401/403 handler* (prev RISK #10) — an `AuthErrorListener`
-tears down the session on a rejected key, shipped in **PR #30** (see `DECISIONS.md` 2026-06-14).
+**Cleared since the graphics-phase baton:** *Web global 401/403 handler* (prev RISK #10) — an
+`AuthErrorListener` tears down the session on a rejected key, shipped in **PR #29/#30** (see
+`DECISIONS.md` 2026-06-14).
 
 > Reassuring (verified solid earlier, not re-checked here): no IDOR; auth/authz server-authoritative;
 > AI SpendGuard unescapable + CI never hits a live key; ledger correct single-threaded; no
-> model↔migration drift (single head `9d669edf48a8`).
+> model↔migration drift (single Alembic head `9d669edf48a8`).
+
+---
+
+## DIRECTOR DECISIONS (REC-004, resolved 2026-06-14)
+
+1. **PR #43** — owner **merged** it (10:09 UTC) before the Director's decision; its content is now on
+   `main` and is fully folded into / superseded by REC-004. ✅ resolved (no action; not closeable).
+2. **PR #37 (Grow Guide)** — **closed** (unmerged) as superseded by the FTUE epic. Unique ideas
+   preserved: the REC-003 registry salvaged its game-state-driven / non-nagging progression; this
+   sweep additionally logged its backend work orders **WO-1** (per-action "last cared at" signals) and
+   **WO-2** (a "session delta / welcome-back" endpoint) to BACKLOG. ✅ resolved.
+3. **Branch pruning** — **approved**; the verified stale-branch report is in
+   `docs/memory/CANONICAL_STATE.md` §3. Per the Director's "stop after reports and cleanup
+   recommendations," REC-004 **recommends** the prune list but does **not** delete (destructive git is
+   denied to agents by `.claude/settings.json` and is the owner's to execute). ⬜ owner executes.
+
+> **Remaining for the next chat:** the NEXT ACTION above — audit & land Feature Flags (open PR #42).
+> Before building, follow the REC-003 registry: claim file surfaces in `docs/STUDIO_AGENT_REGISTRY.md`
+> and rebase onto `main` first.

@@ -262,20 +262,43 @@ actions** — no new economy, no Phase-2 systems. A guarded deterministic step m
 `Player.ftue_step` (`welcome → plant → water → environment → grow → harvest → completed`) drives the
 **real** services (`grant_starter_items`, `plant_seed`, `water`, `set_environment`,
 `harvest_plant`+sell); each `advance` is rejected if out-of-sync or already completed (no replay).
-The AI Master Grower's tutorial voice is **deterministic and scripted** (`ai/ftue_coach.py`,
-per-step static `AdvisorReport`s through the real advisor schema) rather than a live AI call, so it
-works in CI with no key and reads identically every time. **Why two choices matter:**
-(1) *Time-compression* — a real first grow is days long; the `grow` step backdates the tutorial
-plant's `planted_at` (so the chamber renders a mature flowering plant) and sets `last_tick_at = now`
-so the authoritative catch-up does **not** retro-decay it. This was chosen over (a) running the full
-hour-by-hour sim across the gap — which would have drought-killed the un-watered plant and spammed
-event rows — and over (b) giving the starter pod auto-water/auto-feed, which is a paid-tier
-**economy** change. The fiction is scoped to the single tutorial plant; global sim/time and the
-`max_catchup_hours` knob are untouched (the general dormancy risk #9 is unchanged).
-(2) *No auto-divert of existing players* — the migration backfills `ftue_step='welcome'`
+The AI Master Grower's tutorial voice is **deterministic and scripted** (`ai/ftue_coach.py`, per-step
+static `AdvisorReport`s through the real advisor schema) rather than a live AI call, so it works in CI
+with no key and reads identically every time. **Why two sub-choices matter:** (1) *Time-compression* —
+a real first grow is days long; the `grow` step backdates the tutorial plant's `planted_at` (so the
+chamber renders a mature flowering plant) and sets `last_tick_at = now` so the authoritative catch-up
+does **not** retro-decay it. Chosen over (a) running the full hour-by-hour sim across the gap — which
+would drought-kill the un-watered plant and spam event rows — and (b) giving the starter pod
+auto-water/feed, which is a paid-tier **economy** change. The fiction is scoped to the single tutorial
+plant; global sim/time and the `max_catchup_hours` knob are untouched (general dormancy RISK #9
+unchanged). (2) *No auto-divert of existing players* — the migration backfills `ftue_step='welcome'`
 (`server_default`), so the web only routes **freshly created** accounts into `/ftue`; returning
-sign-ins and pre-existing players are never swept into the tutorial. **Consequences:** the FTUE epic
-is additive (3 nullable-safe `Player` columns + a new service/coach/route + endpoints); the core
-loop and ledger are untouched; the "come back tomorrow" hook points players at the existing daily
-stipend rather than minting a new reward. Migrations `c7ecd7523cc8` (grant rail) and `9d669edf48a8`
-(FTUE columns) keep a single Alembic head.
+sign-ins and pre-existing players are never swept into the tutorial. **Consequences:** the epic is
+additive (3 nullable-safe `Player` columns + a new service/coach/route + endpoints; one-shot starter
+grant via a `grant_claims` unique index); the core loop and ledger are untouched; the "come back
+tomorrow" hook points at the existing daily stipend rather than minting a new reward. Migrations
+`c7ecd7523cc8` (grant rail) and `9d669edf48a8` (FTUE columns) keep a single Alembic head.
+
+### 2026-06-14 — Mobile-first navigation: native bottom tab bar over a hamburger drawer (PR #36)
+**Decision:** On small screens the web client uses a **native-app bottom tab bar** (primary
+destinations + a "More" sheet for secondaries) rather than a hamburger/drawer; the desktop header
+takes over at the `lg` breakpoint. Touch targets are ≥44px, with `env(safe-area-inset-*)` padding for
+notches/home bars and focus-visible rings for keyboard a11y. **Why:** thumb-reach + muscle memory on
+phones, and the grow chamber is the emotional core — it should feel like a native app, not a desktop
+site shrunk down. **Consequences:** shipped in `web/src/components/layout/` (tab bar + responsive
+shell); the chamber became responsive; remaining player surfaces (dashboard / PDP / `/ftue`) still
+need a small-screen sweep (open PRs #40 bottom-nav follow-through, #41 care feedback). Visual-only;
+no API/economy change.
+
+### 2026-06-14 — Adopt the OMNI Charter v1.0 as the organizational constitution (PR #38)
+**Decision:** Add `docs/OMNI_CHARTER.md` as the **governance** layer (who decides, who builds, what
+each team may touch, how work crosses boundaries) sitting beside — not replacing — the technical
+memory system (`CLAUDE.md` + `docs/memory/`, which governs the *code*). Codifies the chain of command
+(Owner → Director Chat → Department Leads → Specialist Agents → Monitoring), department roster, the
+work-order system for cross-department changes, and canonical principles (off-chain MVP first; polish
+over features; no Phase-2 leakage into Phase-1; CI/audits before merges; emotional attachment as a
+first-class metric). **Why:** work is fanning out across many specialized AI sessions; clear authority
+and boundaries prevent scope creep and duplicate work. **Consequences:** the charter's "no autonomous
+merges / no repository mutations without approval" rule aligns with the existing delegation charter in
+`CLAUDE.md`; the Records-Department reconciliation function (this sweep, REC-004) and
+`docs/memory/CANONICAL_STATE.md` are governance artifacts under the Operations department.
