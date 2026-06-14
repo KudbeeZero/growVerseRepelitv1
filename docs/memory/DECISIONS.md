@@ -389,3 +389,19 @@ flags govern *exposure* only. Per-player/cohort targeting is deferred until a re
 additive table, not a rewrite). **Consequences:** Backend core ships first (this PR); web route/nav
 gating is a separate surface-claimed PR. Defaults are ON, so adding a flag changes no behaviour until
 a surface is explicitly gated.
+
+### 2026-06-14 — Web feature gating reads flags at runtime (GET /api/game/flags)
+**Decision:** The web client gates protected routes + nav items from the **runtime** flag map served
+by `GET /api/game/flags` (BE-003), via `useFlags`/`useFlag` (`hooks/useFlags.ts`, `lib/api/flags.ts`)
+and `resolveFeature` (`lib/features.ts`). `RequireFeature` and `visibleNavLinks` (consumed by `NavBar`
++ `MobileTabBar`) resolve enablement through this path. A small web→backend **name map**
+(`WEB_TO_BACKEND_FLAG`: `cup→cup_competitions`, `marketplace`, `university`) bridges the differing key
+namespaces; web features with **no** backend flag (`chain`, `contracts`) keep their existing build-time
+`FEATURES` gate. **Why:** the prior web gating was **build-time** (`NEXT_PUBLIC_ENABLE_*`), so a flag
+could only change with a redeploy — the opposite of BE-003's "kill-switch without a deploy" purpose.
+Resolution is **optimistic-ON** while the flag map loads and for unmapped keys (mirroring the backend's
+defaults-ON), so an enabled surface never flashes a redirect. **Consequences:** no backend / economy /
+unrelated-UI changes; `navLinks.ts` stays pure (`visibleNavLinks(flags)`) so desktop + mobile filter
+identically and it's unit-testable; flipping a backend flag now hides its route + nav entry on the next
+flag refetch. Per-player/cohort targeting and migrating `chain`/`contracts` to backend flags are
+deferred (would need new backend flag keys — out of scope here).

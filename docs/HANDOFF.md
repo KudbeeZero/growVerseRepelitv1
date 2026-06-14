@@ -33,21 +33,23 @@ overlapping*. **PR #42** *MVP Feature Flag Layer* (the NEXT ACTION).
 
 ## NEXT ACTION (the one scoped item the next chat does)
 
-**Feature Flags — web gating (PR #2).** The **backend flag core shipped** (BE-003, PR pending review):
-`balance.yaml` `feature_flags:` defaults + `feature_flags.py` (env-overridable `FEATURE_<NAME>`,
-fail-closed) + `GET /api/game/flags` + `require_feature`/`feature_required` guard. Defaults are ON, so
-nothing is gated yet. **Next chat:** the web-gating PR — a `useFlag`/`RequireFeature` hook reading
-`GET /api/game/flags`, then gate routes + nav visibility. This touches the **protected Navigation +
-Layout surfaces**, so claim them in `STUDIO_AGENT_REGISTRY.md` and get Director sign-off first.
+**Playtesting → Retention Validation → MVP Launch Candidate** (Director's critical path). Feature
+Flags are now **end-to-end**: backend core (BE-003, merged PR #55) **+** web gating (this PR —
+`useFlag`/`RequireFeature` over `GET /api/game/flags`, runtime, gating the market/cup/university routes
++ nav items; web→backend key map; `chain`/`contracts` stay build-time). A kill-switch flip now takes
+effect without a redeploy. **Next chat:** run guided-FTUE playtests and measure the retention metrics
+(time-to-first-harvest / first-reward, Day-1 return, replant %, sessions/day), then iterate FTUE pacing.
 - **Off-limits:** no economy / chain / breeding / factions / combat / new crop families. No new
   Phase-2 systems. No per-player flag table (deferred). Do NOT modify the parked PRs (#27, #28).
+- **Open decision (small):** `chain` / `contracts` web features have **no backend flag** — they remain
+  build-time gated. Promote them to backend flags only if a runtime kill-switch is actually needed
+  (additive backend key; out of scope this PR).
 - **Reuse, don't rebuild:** the chamber renders through `web/src/lib/chamber/chamberCore.ts`
   (single source for the live component + the headless `npm run gen:stages` generator) — keep it
   intact. The flat `GET …/plants/<id>/state` wire is canonical (see DECISIONS 2026-06-14); do not
   build the aspirational `GameState/EnvironmentState/UIState` aggregate.
 - **Follow the registry:** claim file surfaces in `docs/STUDIO_AGENT_REGISTRY.md` and rebase onto
-  `main` first (this chat's collision — BE-004 built on #47's branch while a separate branch was
-  planned — is exactly what the registry exists to prevent).
+  `main` first before any new work.
 
 > **In flight (owner-approved):** **STEP 4.5 — `GameService` on `active_clock()` + cure e2e**
 > (directive BE-004.5) is an **open PR** on `claude/be-step45-active-clock`: the one-line

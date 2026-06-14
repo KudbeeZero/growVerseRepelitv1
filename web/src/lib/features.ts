@@ -43,7 +43,37 @@ export const FEATURES = computeFeatures({
 
 export type FeatureName = keyof typeof FEATURES;
 
-/** True if a named feature is enabled in this build. */
+/** True if a named feature is enabled in this build (build-time only). */
 export function isFeatureEnabled(name: FeatureName): boolean {
+  return FEATURES[name];
+}
+
+/**
+ * Web feature name → backend flag key served by `GET /api/game/flags`. Names
+ * with an entry are resolved at RUNTIME (flip without a deploy, per BE-003);
+ * names without one (e.g. `chain`, `contracts`) have no backend flag and fall
+ * back to the build-time `FEATURES` map above.
+ */
+export const WEB_TO_BACKEND_FLAG: Partial<Record<FeatureName, string>> = {
+  marketplace: "marketplace",
+  cup: "cup_competitions",
+  university: "university",
+};
+
+/**
+ * Resolve a web feature's enablement. If it maps to a backend flag, the runtime
+ * value wins; while the flag map is still loading (or the key is absent) we stay
+ * optimistic-ON, mirroring the backend's defaults-ON so an enabled surface never
+ * flashes a redirect. Features with no backend flag use the build-time `FEATURES`.
+ */
+export function resolveFeature(
+  name: FeatureName,
+  runtimeFlags?: Record<string, boolean>,
+): boolean {
+  const backendKey = WEB_TO_BACKEND_FLAG[name];
+  if (backendKey) {
+    if (runtimeFlags && backendKey in runtimeFlags) return runtimeFlags[backendKey];
+    return true; // optimistic: backend flags default ON (also covers the loading window)
+  }
   return FEATURES[name];
 }

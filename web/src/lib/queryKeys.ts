@@ -21,6 +21,7 @@ export const queryKeys = {
   advisor: (plantId: string) => ["advisor", plantId] as const,
   harvests: (id: string) => ["harvests", id] as const,
   market: () => ["market"] as const,
+  flags: () => ["flags"] as const,
   contracts: (id: string, status?: string) => ["contracts", id, status ?? "all"] as const,
   leaderboard: (board: LeaderboardKind) => ["leaderboard", board] as const,
   cupCurrent: () => ["cup", "current"] as const,

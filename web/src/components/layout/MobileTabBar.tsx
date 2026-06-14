@@ -4,12 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "@/lib/session";
-import {
-  PRIMARY_LINKS,
-  SECONDARY_LINKS,
-  isActiveLink,
-  type NavLink,
-} from "./navLinks";
+import { useFlags } from "@/hooks/useFlags";
+import { visibleNavLinks, isActiveLink, type NavLink } from "./navLinks";
 
 /**
  * Mobile bottom tab bar — the native-app navigation pattern, shown below `lg`
@@ -22,6 +18,7 @@ import {
 export function MobileTabBar() {
   const pathname = usePathname();
   const { isAuthed } = useSession();
+  const { data: flags } = useFlags();
   const [moreOpen, setMoreOpen] = useState(false);
 
   // Close the sheet whenever the route changes (e.g. a tab was tapped).
@@ -46,7 +43,10 @@ export function MobileTabBar() {
   // aside so it never paints over their bottom controls.
   if (pathname.includes("/chamber")) return null;
 
-  const moreActive = SECONDARY_LINKS.some((l) => isActiveLink(pathname, l.href));
+  const navLinks = visibleNavLinks(flags);
+  const primaryLinks = navLinks.filter((l) => l.primary);
+  const secondaryLinks = navLinks.filter((l) => !l.primary);
+  const moreActive = secondaryLinks.some((l) => isActiveLink(pathname, l.href));
 
   return (
     <>
@@ -65,7 +65,7 @@ export function MobileTabBar() {
           >
             <div className="mx-auto h-1 w-10 rounded-full bg-ink-600" />
             <nav aria-label="More" className="grid gap-1 p-3">
-              {SECONDARY_LINKS.map((l) => {
+              {secondaryLinks.map((l) => {
                 const active = isActiveLink(pathname, l.href);
                 return (
                   <Link
@@ -95,7 +95,7 @@ export function MobileTabBar() {
         className="fixed inset-x-0 bottom-0 z-30 border-t border-ink-700 bg-ink-900/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
       >
         <div className="mx-auto flex max-w-md items-stretch justify-around">
-          {PRIMARY_LINKS.map((l) => (
+          {primaryLinks.map((l) => (
             <Tab key={l.href} link={l} active={isActiveLink(pathname, l.href)} />
           ))}
           <button

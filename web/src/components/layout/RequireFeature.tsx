@@ -2,14 +2,16 @@
 
 import { useEffect, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { FEATURES, type FeatureName } from "@/lib/features";
+import { type FeatureName } from "@/lib/features";
+import { useFlag } from "@/hooks/useFlags";
 import { LoadingBlock } from "@/components/ui/Spinner";
 
 /**
- * Guard a route behind an MVP feature flag. When the feature is off the user is
- * sent back to the dashboard, so a deep-link to a hidden system never renders.
- * Flags are build-time constants (identical on server and client), so there is
- * no hydration flash when the feature is on.
+ * Guard a route behind an MVP feature flag, resolved at RUNTIME from
+ * `GET /api/game/flags` (so a flag flip takes effect without a redeploy). When
+ * the feature is off the user is sent back to the dashboard, so a deep-link to a
+ * hidden system never renders. Resolution is optimistic-ON while the flag map
+ * loads (backend defaults ON), so an enabled feature never flashes a redirect.
  */
 export function RequireFeature({
   feature,
@@ -19,7 +21,7 @@ export function RequireFeature({
   children: ReactNode;
 }) {
   const router = useRouter();
-  const enabled = FEATURES[feature];
+  const enabled = useFlag(feature);
 
   useEffect(() => {
     if (!enabled) router.replace("/dashboard");

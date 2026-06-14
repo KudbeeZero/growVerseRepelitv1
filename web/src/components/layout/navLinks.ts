@@ -9,12 +9,14 @@
  * ≤ 4 + a "More" sheet — the native-app convention). The rest live behind
  * "More" on mobile but stay first-class on desktop.
  *
- * `feature` gates a link behind an MVP feature flag (`web/src/lib/features.ts`).
- * Gating happens **here**, at the shared source, so a flagged-off system (e.g.
+ * `feature` gates a link behind an MVP feature flag, resolved at RUNTIME from
+ * `GET /api/game/flags` (see `resolveFeature`). Gating happens **here**, at the
+ * shared source via `visibleNavLinks`, so a flagged-off system (e.g.
  * Market/Cup/University) disappears from *both* the desktop nav and the mobile
- * tab bar in lock-step — never just one surface.
+ * tab bar in lock-step — never just one surface. This module stays pure (no
+ * hooks); the consumers pass the live flag map in.
  */
-import { FEATURES, type FeatureName } from "@/lib/features";
+import { resolveFeature, type FeatureName } from "@/lib/features";
 
 export type NavLink = {
   href: string;
@@ -27,7 +29,7 @@ export type NavLink = {
   feature?: FeatureName;
 };
 
-const ALL_NAV_LINKS: NavLink[] = [
+export const ALL_NAV_LINKS: NavLink[] = [
   { href: "/dashboard", label: "Grow", icon: "🌱", primary: true },
   { href: "/lab", label: "Lab", icon: "🧬", primary: true },
   { href: "/market", label: "Market", icon: "🛒", primary: true, feature: "marketplace" },
@@ -37,15 +39,17 @@ const ALL_NAV_LINKS: NavLink[] = [
   { href: "/profile", label: "Profile", icon: "👤" },
 ];
 
-/** Nav links visible in this build — entries whose feature flag is OFF are dropped. */
-export const NAV_LINKS: NavLink[] = ALL_NAV_LINKS.filter(
-  (l) => !l.feature || FEATURES[l.feature],
-);
+/**
+ * Nav links visible for the given runtime flag map — entries whose feature flag
+ * resolves OFF are dropped. Pure (takes the flag map as input) so it's testable
+ * and the desktop + mobile nav filter identically. `runtimeFlags` undefined =
+ * still loading → optimistic-ON (see `resolveFeature`).
+ */
+export function visibleNavLinks(runtimeFlags?: Record<string, boolean>): NavLink[] {
+  return ALL_NAV_LINKS.filter((l) => !l.feature || resolveFeature(l.feature, runtimeFlags));
+}
 
 /** True when `pathname` is on `href` or one of its sub-routes. */
 export function isActiveLink(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(href + "/");
 }
-
-export const PRIMARY_LINKS = NAV_LINKS.filter((l) => l.primary);
-export const SECONDARY_LINKS = NAV_LINKS.filter((l) => !l.primary);
