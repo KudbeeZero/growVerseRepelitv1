@@ -6,7 +6,7 @@
 > the same surface. It governs **coordination**; `CLAUDE.md` + `docs/memory/` govern the **code**.
 >
 > **Maintainer:** Records Department · **Authority:** Studio Director (Mission Control)
-> **Last updated:** 2026-06-14 (DX-005 — ledger reconciled; FP-5 duplication caught)
+> **Last updated:** 2026-06-14 (BE-003 PR #61 — #55 retired, #42 canonical; FF-RECON-001 superseded by CEO)
 
 ---
 
@@ -70,6 +70,7 @@ Open / in-flight directives. One row per directive; update **Status** as it move
 |---|---|---|---|---|---|---|---|---|
 | BE-003 (retire duplicate flag layer) | Builder | BE-A00 | BE-A00, QA-A00 | `claude/be-retire-duplicate-flags` | (this PR) | Remove #55 only: `feature_flags.py`, `tests/test_feature_flags.py`, `api/game_api.py` (`/flags`+handler), `data/balance.yaml` (`feature_flags:`), `.env.example`. **Preserves #42.** | PR #42 (canonical) | 🟢 Open |
 | DX-007 (P2 FTUE Coach-Marks) | Design & Experience | DX-A00 | DX-A01–A10 | `claude/dx-ftue-coach-marks` | (this PR) | FTUE/Onboarding (coach-mark layer): `components/onboarding/CoachMarks.tsx` (new), `lib/coachMarks.ts` (new), `lib/coachMarkStore.ts` (new), + `data-coach` tags & mount in `app/dashboard/page.tsx` | Builds **on top of** canonical FTUE (#35/#39) — does not modify the `/ftue` route. New layer; no overlap with the merged plant-care work. | 🟢 Open |
+| ~~FF-RECON-001 (Feature Flag Reconciliation)~~ | Builder / DX | — | — | — | — | (was: consolidate A→B onto #55) | — | 🟥 **SUPERSEDED** — **CEO decision 2026-06-14: adopt PR #42 as canonical; retire #55 (PR #61).** No A→B consolidation; do **not** resurrect #55. See Collision Log + DECISIONS. |
 
 ### Recently merged to `main` (for collision awareness)
 
@@ -109,7 +110,7 @@ Open / in-flight directives. One row per directive; update **Status** as it move
 | 2026-06-14 | Two mobile bottom-nav implementations (PR #40 `BottomNav` vs merged #36 `MobileTabBar`) on the **Navigation** surface | DIR-004: retire #40's FP-1; keep #36. |
 | 2026-06-14 | Two FTUE systems (PR #37 `GrowGuide` vs merged #35/#39 guided tutorial) on the **FTUE** surface | DIR-004: close #37; salvage ideas to backlog (below). |
 | 2026-06-14 | DX-005 set out to build FP-5 (Care Feedback & Celebration) — but the pre-work registry/flight-plan check found **#41 already shipped it**. | **Registry working as designed**: no duplicate built. DX-005 scoped down to wiring the new primary CTA (#45) into the existing #41 feedback system — the one surface #41 couldn't have known about. |
-| 2026-06-14 | **Two feature-flag systems** merged in the same window — BE-003 #55 (`balance.yaml` + `/api/game/flags`, defaults ON) vs **PR #42** (env `FEATURE_*` + web gating, defaults OFF). The BE-003 audit was clean at 11:58 because #42 merged later. | Director: **adopt #42 as canonical**, retire #55 (this PR). Root cause: neither flag effort was claimed in the registry while in flight → feature-flag infra is now a **single-writer protected surface** (above). |
+| 2026-06-14 | **Two feature-flag systems** merged in the same window — System A (PR #42: env `FEATURE_*` + web `features.ts`/`NEXT_PUBLIC_ENABLE_*` + nav/route gating, **defaults OFF, wired**) vs System B (BE-003 / #55: `feature_flags.py` + `balance.yaml` + `GET /api/game/flags`, env-overridable/fail-closed, **defaults ON, unwired**). Surfaced + claimed as **FF-RECON-001** during the BE-004.5 playtest. | **CEO decision (2026-06-14): adopt #42 as canonical; retire #55 via PR #61; FF-RECON-001 SUPERSEDED** — no A→B consolidation, #55 not resurrected. Root cause: neither flag effort claimed the surface while in flight → feature-flag infra is now a **single-writer protected surface** (above). |
 
 **Salvaged from #37 (archived to `docs/memory/BACKLOG.md`):** persistent per-player tutorial state,
 non-nagging dismissal, and game-state-driven (auto-advancing) progression.
