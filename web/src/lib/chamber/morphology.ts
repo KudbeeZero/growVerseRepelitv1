@@ -68,6 +68,14 @@ export interface Silhouette {
   branchStrength: number;
   /** Bud-weight multiplier — >1 heavier flowers (more droop / cola lean). */
   budWeightMul: number;
+  /**
+   * Apical dominance 0..1 — how strongly the leader (top cola) suppresses its
+   * rivals. High (≈1) = one dominant cola + subordinate side branches (a spear /
+   * Christmas-tree); low (≈0) = several co-dominant tops competing for the apex
+   * (a bushy, multi-cola canopy). Drives Engines 1 & 2 (apical-dominance / multi-
+   * cola architecture).
+   */
+  apicalDominance: number;
 }
 
 /** Morphology parameters the geometry builder consumes. */

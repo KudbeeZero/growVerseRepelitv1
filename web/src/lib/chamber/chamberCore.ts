@@ -21,6 +21,8 @@ import {
   type Silhouette,
 } from "./morphology";
 import { pickPaletteColor, dominantPaletteColor, type BudDNA } from "./budDna";
+import { phyllotaxis, foreshorten, depthShade } from "./phyllotaxy";
+import { colaTops } from "./apicalDominance";
 import { CONDITION_VISUALS, SEVERITY_SCALE, dominantFlag } from "../conditionVisuals";
 import {
   branchFlex as branchFlexFor,
@@ -490,6 +492,11 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
     branchlets: Branchlet[]; // secondary forks
     nodeLeafSize: number; // leaf cluster hugging the stem at this node
     nodeBud: FlowerSite | null; // bud forming at the node intersection (upper)
+    // ---- Engine 3 (phyllotaxy) / Engine 4 (leaf orientation) ----
+    depth: number; // sin(azimuth) ∈ [-1,1]; +1 toward camera (front), -1 back
+    litAdj: number; // atmospheric depth shade (HSL lightness delta)
+    leafYaw: number; // horizontal squash of the tip fan (1 = face-on, →0 edge-on)
+    leafRoll: number; // small per-node leaf roll so no two fans align
   }
   interface Plant {
     P: DevParams; CL: ReturnType<typeof climateModel>; stage: string;
@@ -570,6 +577,24 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
     const nodeTarget = Math.floor((hN / S.internode) * SK.nodeDensity * SK.vertStack * flowerPack);
     const maxNodes = Math.min(18, Math.max(d <= 10 ? 1 : 2, nodeTarget));
     const grow = smooth(clamp((d - 8) / 22, 0, 1));
+    // Engine 3 — phyllotaxy: azimuths winding around the stem (decussate at the
+    // base → 137.5° golden spiral toward the apex). Veg keeps a gentle spiral
+    // (the maturity floor); flowering winds it the rest of the way. A per-plant
+    // phase rotates the whole pattern so two plants of a strain never line up —
+    // this is the biggest single "no two plants look identical" lever.
+    const maturity = clamp(
+      lerp(0.42, 1, smooth(clamp((d - 12) / 40, 0, 1))) + (flowering ? 0.14 : 0),
+      0.42, 1,
+    );
+    const phase = mulberry32((seed * 2246822519) >>> 0)() * TAU;
+    const azi = phyllotaxis(maxNodes, maturity, phase);
+    // Engines 1 & 2 — apical dominance: how many co-dominant tops compete with
+    // the leader. High dominance → 1 cola (spear); low → several upright tops
+    // (bush). Only the highest nodes are promoted, and only in flower (a veg
+    // plant has no colas yet), so veg/seedling silhouettes are unchanged.
+    const tops = colaTops(SK.apicalDominance);
+    const nTop = flowering ? Math.min(tops.count - 1, Math.max(0, maxNodes - 2)) : 0;
+    const topFromIdx = maxNodes - nTop; // nodes at index >= this become co-colas
     for (let i = 0; i < maxNodes; i++) {
       // Genetic/organic internode spacing: tighter toward the apex (more so for
       // spear strains, via vertStack), plus per-node jitter so nodes aren't
@@ -582,12 +607,28 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
       // Lower branches splay wide (skirt); upper branches tuck in and shorten.
       const spread = lerp(1, SK.lowerSpread, low);
       const shorten = 1 - SK.upperShorten * f;
-      const side = i % 2 ? 1 : -1;
-      const tilt = (0.92 + rnd() * 0.3) * (1 - f * 0.22) * lerp(1, 1.12, low);
-      const len = A * 0.27 * S.branchMul * (0.35 + 0.65 * low) * grow * shorten;
+      // Engine 3/4: azimuth → signed-and-foreshortened horizontal projection
+      // (lateral) + front/back depth. `side` keeps its legacy ±1 meaning for the
+      // sign-dependent geometry below; `lateral` carries the foreshortening so a
+      // branch winding toward/away from the camera reads narrower.
+      const az = azi[i];
+      const side = az.side;
+      const lateral = az.lateral;
+      // Engines 1&2: is this node a co-dominant top (one of the highest `nTop`)?
+      const topK = nTop > 0 && i >= topFromIdx ? i - topFromIdx : -1;
+      let tilt = (0.92 + rnd() * 0.3) * (1 - f * 0.22) * lerp(1, 1.12, low);
+      let len = A * 0.27 * S.branchMul * (0.35 + 0.65 * low) * grow * shorten;
+      if (topK >= 0) {
+        // A released top straightens toward vertical and extends up to race the
+        // leader to the canopy — turning a side branch into a competing cola.
+        tilt *= lerp(1, 0.42, tops.release);
+        len *= lerp(1, 2.6, tops.release);
+      }
+      // Back branches read a touch smaller as well as darker (aerial perspective).
+      const depthSize = lerp(0.86, 1.06, (az.depth + 1) / 2);
       const nd: Node = {
         x: p.x, y: p.y, f, side, tilt, len, spread,
-        leafSize: A * (0.08 + 0.05 * low) * (0.55 + 0.45 * grow) * (1 - 0.4 * P.budDev * f),
+        leafSize: A * (0.08 + 0.05 * low) * (0.55 + 0.45 * grow) * (1 - 0.4 * P.budDev * f) * depthSize,
         leaflets: Math.min(S.leafletMax, 3 + 2 * Math.floor(d / 14)),
         phase: rnd() * TAU,
         tipX: 0, tipY: 0, site: null, budRot: 0,
@@ -596,10 +637,30 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
         branchlets: [],
         nodeLeafSize: A * (0.05 + 0.04 * low) * (0.55 + 0.45 * grow) * SK.nodeLeaf * (1 - 0.35 * P.budDev * f),
         nodeBud: null,
+        depth: az.depth,
+        litAdj: depthShade(az.depth),
+        // A camera-facing branch (lateral≈0) shows its fan nearly edge-on; a
+        // side-facing one shows it broad — so leaves no longer all billboard.
+        leafYaw: foreshorten(lateral, 0.34),
+        leafRoll: (rnd() - 0.5) * 0.5,
       };
-      nd.tipX = Math.sin(nd.tilt) * nd.side * nd.len * spread;
-      nd.tipY = -Math.cos(nd.tilt) * nd.len * 0.55;
-      if (P.budDev > 0 && f > S.flowerFrom) {
+      // Horizontal projection foreshortens with |lateral|; the tip drops toward the
+      // viewer (depth>0, front) or lifts behind the stem (depth<0, back) for volume.
+      nd.tipX = Math.sin(nd.tilt) * lateral * nd.len * spread;
+      nd.tipY = -Math.cos(nd.tilt) * nd.len * 0.55 + az.depth * nd.len * 0.18;
+      if (P.budDev > 0 && topK >= 0) {
+        // Co-dominant top → its own cola (a scaled-down sibling of the leader),
+        // sized by this top's mass share relative to the leader so the leader
+        // still reads as the main cola. Total flower mass is conserved by the
+        // leaderShare/secondaryShares split.
+        const coShare = tops.secondaryShares[topK] / tops.leaderShare; // ≤1 vs leader
+        const axis = stemH * 0.13 * S.clusterLen * SK.colaScale * (0.5 + 0.5 * P.budDev) * lerp(0.72, 1.06, coShare) * (1 + P.ripe * 0.18);
+        const baseW = axis * (S.pattern === "spiral" ? 0.3 : 0.46) * S.clusterFat * (0.95 + 0.18 * P.ripe);
+        const nC = Math.max(3, Math.round(S.bracts * (S.pattern === "spiral" ? 1.5 : 1.05)));
+        nd.site = buildFlowerSite(rnd, axis, baseW, { pattern: S.pattern, nClusters: nC, bracts: S.bracts, fatMul: 1.05 });
+        nd.budRot = nd.side * 0.06;
+        nd.weight = lerp(0.95, 1.7, f) * S.clusterFat; // a top cola is heavy
+      } else if (P.budDev > 0 && f > S.flowerFrom) {
         const sizeUp = lerp(0.55, 1.15, f);
         const axis = A * (0.05 + 0.09 * f) * S.clusterLen * sizeUp * (0.5 + 0.5 * P.budDev);
         const baseW = axis * 0.42 * S.clusterFat;
@@ -609,8 +670,9 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
         nd.weight = lerp(0.5, 1.1, f) * S.clusterFat; // higher / fatter buds weigh more
       }
       // A bud forming at the node intersection itself (not just the tip) —
-      // upper/mid nodes only, where light reaches and flower sites set.
-      if (P.budDev > 0 && f > Math.max(S.flowerFrom, 0.38)) {
+      // upper/mid nodes only, where light reaches and flower sites set. Skipped
+      // on co-cola tops, which read as a clean single cola.
+      if (P.budDev > 0 && topK < 0 && f > Math.max(S.flowerFrom, 0.38)) {
         const axis = A * (0.035 + 0.05 * f) * S.clusterLen * (0.5 + 0.5 * P.budDev);
         const baseW = axis * 0.4 * S.clusterFat;
         const nC = Math.max(1, Math.round(S.bracts * 0.4 * f));
@@ -618,8 +680,9 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
         nd.weight += 0.25 * S.clusterFat;
       }
       // Secondary branchlets — small forks carrying their own foliage and, in
-      // flower, a small bud at the tip. Denser on the lower/mid canopy.
-      if (nd.len > A * 0.045 && d > 14) {
+      // flower, a small bud at the tip. Denser on the lower/mid canopy. Skipped
+      // on co-cola tops (they read as a clean single cola).
+      if (topK < 0 && nd.len > A * 0.045 && d > 14) {
         let nBL = rnd() < SK.branchletFrac ? 1 : 0;
         if (low > 0.45 && rnd() < SK.branchletFrac * 0.75) nBL += 1;
         for (let b = 0; b < nBL; b++) {
@@ -647,7 +710,11 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
       // Top cola gains mass through flowering and swells further in late flower
       // (ripeness) — the apex should be the visual climax, not a tidy spike.
       const lateMass = 1 + P.ripe * 0.2;
-      const axis = stemH * (0.15 + 0.18 * P.budDev) * S.clusterLen * SK.colaScale * lateMass;
+      // Engines 1&2: when the canopy shares its mass across several tops the
+      // leader cola shrinks toward its share (but never below ~0.62×, so it still
+      // reads as THE main cola). leaderShare = 1 for single-cola strains → no change.
+      const leaderMul = lerp(0.62, 1, tops.leaderShare);
+      const axis = stemH * (0.15 + 0.18 * P.budDev) * S.clusterLen * SK.colaScale * lateMass * leaderMul;
       const baseW = axis * (S.pattern === "spiral" ? 0.3 : 0.46) * S.clusterFat * (0.95 + 0.18 * P.ripe);
       const nC = Math.round(S.bracts * (S.pattern === "spiral" ? 1.7 : 1.15));
       cola = {
@@ -792,17 +859,26 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
   // ---- leaves ----
   const FAN_A = [0, 0.42, -0.42, 0.85, -0.85, 1.22, -1.22, 1.5, -1.5];
   const FAN_M = [1, 0.86, 0.86, 0.7, 0.7, 0.52, 0.52, 0.36, 0.36];
-  function drawFan(size: number, n: number, topBoost: number, claw: number) {
+  // Engine 4 — fan-leaf orientation. `litAdj` shades the leaf by canopy depth;
+  // `yaw` horizontally squashes the whole fan (1 = broad/face-on, →0 edge-on) so a
+  // leaf on a branch winding toward the camera turns side-on instead of billboarding.
+  function drawFan(size: number, n: number, topBoost: number, claw: number, litAdj = 0, yaw = 1) {
     // Clamp to the FAN_A/FAN_M table length: a future per-strain leaflet count
     // above 9 would otherwise index past the arrays → undefined → NaN geometry.
     const leaflets = Math.min(n, FAN_A.length);
+    const lit = S.lit + topBoost * 6 + litAdj;
+    const yawed = yaw < 0.999;
+    if (yawed) {
+      ctx!.save();
+      ctx!.scale(yaw, 1);
+    }
     for (let i = 0; i < leaflets; i++) {
       const L = size * FAN_M[i], Wd = L * 0.32 * S.leafW;
       const a = FAN_A[i] + (claw ? Math.sign(FAN_A[i] || 1) * claw * (0.2 + Math.abs(FAN_A[i]) * 0.5) : 0);
       ctx!.save();
       ctx!.rotate(a);
-      const col = `hsl(${S.hue}, ${S.sat}%, ${S.lit + topBoost * 6}%)`;
-      ctx!.strokeStyle = `hsl(${S.hue}, ${S.sat * 0.7}%, ${(S.lit + topBoost * 6) * 0.8}%)`;
+      const col = `hsl(${S.hue}, ${S.sat}%, ${lit}%)`;
+      ctx!.strokeStyle = `hsl(${S.hue}, ${S.sat * 0.7}%, ${lit * 0.8}%)`;
       ctx!.lineWidth = 1;
       ctx!.beginPath();
       ctx!.moveTo(0, 0);
@@ -822,6 +898,7 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
       ctx!.stroke();
       ctx!.restore();
     }
+    if (yawed) ctx!.restore();
   }
 
   // ---- physics + dust ----
@@ -1105,7 +1182,10 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
     const flex = branchFlexFor(S.branchMul);
     // Flowering weight ladder (seed/veg 0 → harvest 1): scales all bud-load droop.
     const stageMul = flowerStageMultiplier(p.stage as GrowthStage, bd);
-    for (let i = 0; i < p.nodes.length; i++) {
+    // Engine 3 — paint back→front (by azimuth depth) so the spiral reads as a 3-D
+    // canopy: branches winding toward the camera overlap the ones behind the stem.
+    const order = p.nodes.map((_, i) => i).sort((a, b) => p.nodes[a].depth - p.nodes[b].depth);
+    for (const i of order) {
       const nd = p.nodes[i];
       // Bud-weight physics: heavier branches droop more (rotated, not just a tip
       // sag, so the whole branch bows) and move with more inertia in the airflow.
@@ -1125,7 +1205,7 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
       // The whole branch rotates downward under load (nd.side keeps the sign so
       // both sides droop toward the floor), then sways/springs around that.
       ctx!.rotate(sway + spring + nd.side * droopRot + nd.side * condClaw * 0.4);
-      ctx!.strokeStyle = `hsl(${S.hue - 10}, 32%, 30%)`;
+      ctx!.strokeStyle = `hsl(${S.hue - 10}, 32%, ${clamp(30 + nd.litAdj, 18, 46)}%)`;
       ctx!.lineWidth = clamp(sw0 * 0.5 * (1 - nd.f * 0.4), 1, 4);
       ctx!.lineCap = "round";
       // Curved branch: arcs upward (nd.curve) then sags at the tip under weight.
@@ -1139,15 +1219,17 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
       ctx!.stroke();
       ctx!.save();
       ctx!.translate(endX, endY);
-      ctx!.rotate(nd.side * (0.5 + nd.tilt * 0.18));
-      drawFan(nd.leafSize, nd.leaflets, nd.f, claw);
+      // Engine 4: roll the fan a touch per node and yaw it by the branch azimuth
+      // so the tip leaves aren't all flat to the camera.
+      ctx!.rotate(nd.side * (0.5 + nd.tilt * 0.18) + nd.leafRoll);
+      drawFan(nd.leafSize, nd.leaflets, nd.f, claw, nd.litAdj, nd.leafYaw);
       ctx!.restore();
       // Leaf cluster hugging the stem at the node — every node carries foliage,
       // not just the branch tip, so internodes don't read as bare gaps.
       for (const [ang, scl] of [[-nd.side * 0.32, 0.55], [-nd.side * 0.74, 0.36], [nd.side * 0.22, 0.3]] as const) {
         ctx!.save();
         ctx!.rotate(ang);
-        drawFan(nd.nodeLeafSize * scl, Math.max(3, nd.leaflets - 2), 0, claw);
+        drawFan(nd.nodeLeafSize * scl, Math.max(3, nd.leaflets - 2), 0, claw, nd.litAdj, lerp(nd.leafYaw, 1, 0.4));
         ctx!.restore();
       }
       // Secondary branchlets — forks part-way along the branch (sharing the
@@ -1170,8 +1252,8 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
         ctx!.stroke();
         ctx!.save();
         ctx!.translate(bex, bey);
-        ctx!.rotate(bl.side * (0.4 + bl.tilt * 0.2));
-        drawFan(bl.leafSize, bl.leaflets, nd.f, claw);
+        ctx!.rotate(bl.side * (0.4 + bl.tilt * 0.2) + nd.leafRoll * 0.6);
+        drawFan(bl.leafSize, bl.leaflets, nd.f, claw, nd.litAdj, lerp(nd.leafYaw, 1, 0.5));
         ctx!.restore();
         if (bl.site) {
           ctx!.save();

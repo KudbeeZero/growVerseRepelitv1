@@ -273,6 +273,52 @@ on a rejected key (RISK #9); `usePods` refreshes on an interval + focus so the c
 reflects committed pod environment. The knowledge doc's `GameState/EnvironmentState/UIState` section
 is documentation aspiration, not a build target, until a future PR proves a need.
 
+### 2026-06-14 — Phyllotaxy & pseudo-3-D depth for the whole-plant chamber (Engines 3 & 4)
+**Decision:** The chamber whole-plant skeleton no longer places every node hard-left/hard-right in one
+flat picture plane. A new pure module `web/src/lib/chamber/phyllotaxy.ts` assigns each node an
+**azimuth** around the stem — decussate (~180° alternation) at the base, easing into the **137.5°
+golden-angle spiral** toward the apex as the plant matures — and `chamberCore` projects that azimuth
+into pseudo-3-D: signed horizontal foreshortening (`lateral = cos·az`), front/back **depth**
+(`sin·az`) that drives back→front draw order, an atmospheric lightness shade, and a per-node **leaf
+yaw** that turns fans edge-on when their branch winds toward the camera (Engine 4) plus a small
+per-node roll. A per-plant `phase` (seeded) rotates the whole pattern so no two plants of a strain
+align. **Why:** the PBSA charter's two most explicit "do not" items were "billboard all leaves toward
+the camera" and "leaves must never all face the camera"; the flat alternation read as a decorative
+diagram, not a living organism. This is the highest-leverage believability + "no two plants identical"
+win, and is renderer-only (no economy/chain/db/api). **Why this shape:** the azimuth is built by
+*cumulative* angular steps lerping 180°→137.5°, so at the seedling/veg end (steps≈180°) it reproduces
+the **legacy flat alternation exactly** — the signed-off veg/seedling silhouettes are preserved — and
+only blooms into spiral depth with maturity; strain silhouette knobs (spread/shorten/density/cola)
+are untouched, so G13 stays a slim spear and PDP/White Rhino stay chunky. **Consequences:** the
+`Node` carries `depth/litAdj/leafYaw/leafRoll`; `drawFan` gained optional `litAdj`/`yaw`; `drawPlant`
+sorts nodes by depth before painting. `phyllotaxy.ts` is unit-tested (the maturity-0 case asserts
+byte-equivalence to the old left/right alternation). Verified against the headless `gen:stages` PNGs
+across all seven curated strains × stage matrix. Pointer/physics indexing is unchanged (draw order is
+cosmetic; `phys.nodes[i]` still keyed by real node index). Next builds on this: branch azimuth can
+later feed true light-seeking pitch and circadian leaf motion (PR #28, parked).
+
+### 2026-06-14 — Apical dominance / multi-cola architecture (Engines 1 & 2)
+**Decision:** The whole-plant chamber no longer always grows exactly one top cola. A new pure module
+`web/src/lib/chamber/apicalDominance.ts` (`colaTops`) turns a strain's new `Silhouette.apicalDominance`
+(0..1) into how many tops compete with the leader (1 → 4) and how the flower mass splits between them
+(`leaderShare` + `secondaryShares`, conserved to 1). `chamberCore.buildPlant` promotes the highest
+`count−1` nodes — **only in flower** — into upright **co-colas**: it straightens their tilt toward
+vertical and extends their length so they race the leader to the canopy, builds each a scaled-down
+sibling of the leader cola sized by its mass share, and suppresses their node-buds/branchlets so they
+read as clean colas; the central leader cola is scaled by `leaderShare` (floored at 0.62× so it stays
+*the* main cola). **Why:** the PBSA charter (Engines 1 & 2) and `knowledge/whole-plant-architecture.md`
+call apical dominance "the highest-impact" identity knob — a single cola + side branches (spear, G13)
+vs. several competing tops (bush, Purple Diddy Punch / White Rhino) is what makes strains read as
+*different plants*, not recolours of one model. **Why this shape:** `apicalDominance = 1` ⇒ `count = 1`,
+`leaderShare = 1` ⇒ byte-identical to the old single-cola path, so high-dominance spear strains and all
+veg/seedling plants are unchanged (co-colas exist only in flowering); mass is conserved so a multi-top
+plant doesn't gain total bud. Authored per curated strain (G13 0.85, White Fire OG 0.72, Animal
+Mints 0.6, Gelato 0.55, Wedding Cake 0.5, PDP 0.42, White Rhino 0.4) and derived `lerp(0.72,0.58,r)`
+for others. **Consequences:** `Silhouette` gained a required `apicalDominance` field (all 7 authored
+silhouettes + the derived fallback updated; `colaTops` unit-tested incl. mass-conservation + the
+single-cola degenerate case). Verified across the 7-strain × stage PNG matrix. Built on the same
+PBSA branch as Engines 3 & 4 (carried in PR #58).
+
 ### 2026-06-14 — Simulation test clock is an offset on the existing compute-on-read seam (BE-002, STEP 3)
 **Decision:** The dev/test-only "simulation test clock" is built as an **`OffsetClock`** layered on the
 engine's existing `Clock` seam — not a new code path through the engine. The engine is already

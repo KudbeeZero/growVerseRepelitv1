@@ -73,8 +73,23 @@ once they appear here. Last reconciled: **2026-06-14** (REC-004 full repository 
   (single source for the live component + a headless generator); `web/scripts/gen-stage-pngs.ts`
   (`npm run gen:stages`) renders the curated strains × stage matrix to PNG via `@napi-rs/canvas`
   (output `web/canonical-stages/`, gitignored). De-grape ported into `chamberCore` on merge.
+- 🎨 ✅ **Phyllotaxy & Pseudo-3-D Depth — Engines 3 & 4** (branch `claude/cannabis-growth-engine-s114yu`,
+  2026-06-14) — the whole-plant skeleton now winds nodes around the stem by a real azimuth (decussate
+  base → 137.5° golden spiral apex) instead of flat left/right alternation, projected to pseudo-3-D
+  (foreshortening + front/back depth + back→front paint order + atmospheric shade) with per-node leaf
+  **yaw** so fans no longer all billboard at the camera, and a per-plant phase so no two plants align.
+  New pure module `web/src/lib/chamber/phyllotaxy.ts` (+ tests, maturity-0 ≡ legacy alternation);
+  `chamberCore` integration only. Silhouettes preserved (verified across the 7-strain × stage PNG
+  matrix). ADR `DECISIONS.md` 2026-06-14. **Device sign-off pending** (owner to view the chamber).
+- 🎨 ✅ **Apical Dominance / Multi-Cola — Engines 1 & 2** (PR #58, 2026-06-14) — strains now grow one
+  dominant cola (spear: G13, White Fire OG) *or* several competing upright tops (bush: Purple Diddy
+  Punch, White Rhino) from a new `Silhouette.apicalDominance` knob. New pure `apicalDominance.ts`
+  (`colaTops`, mass-conserving, +tests); `chamberCore` promotes the top nodes into co-colas in flower
+  only (single-cola + veg paths unchanged). ADR `DECISIONS.md` 2026-06-14. **Device sign-off pending.**
 - 🎨 ⬜ **PR #27 — Phenotype Generator Foundation** — *PARKED* (open PR, green). Do not modify.
-- 🎨 ⬜ **PR #28 — Circadian Leaf Motion** — *PARKED* (open PR, green). Do not modify.
+- 🎨 ⬜ **PR #28 — Circadian Leaf Motion** — *PARKED* (open PR, green). Do not modify. *Note: the
+  per-node branch azimuth now available on `Node` (Engines 3&4, PR #58) is the natural input for
+  light-seeking pitch + circadian droop when #28 lands.*
 - 🎨 ✅ **PR #29/#30 — Dashboard / GameState Wiring Polish** (merged 2026-06-14) — consumption polish
   on the flat `GET …/plants/<id>/state` wire (it stays canonical; no aggregate `GameState` object —
   see `DECISIONS.md` 2026-06-14). Added a global `AuthErrorListener` (401/403 → session teardown,
