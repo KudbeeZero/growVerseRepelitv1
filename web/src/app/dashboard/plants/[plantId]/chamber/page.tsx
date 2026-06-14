@@ -10,6 +10,7 @@ import { CareButtons } from "@/components/plant/CareButtons";
 import { GrowChamber, type ChamberView } from "@/components/viz/GrowChamber";
 import { usePlantState } from "@/hooks/usePlantState";
 import { useStrainMap, usePods } from "@/hooks/queries";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { useSession } from "@/lib/session";
 import { useToast } from "@/components/ui/Toast";
 import { api, ApiError } from "@/lib/api";
@@ -82,6 +83,7 @@ function ChamberScreen({ plantId }: { plantId: string }) {
   const { map } = useStrainMap();
   const { data: pods } = usePods();
 
+  const reducedMotion = usePrefersReducedMotion();
   const [tab, setTab] = useState<"grow" | "climate" | "time" | "view">("grow");
   const [view, setView] = useState<ChamberView>("chamber");
   const [climate, setClimate] = useState<ChamberClimate>(DEFAULT_CLIMATE);
@@ -242,11 +244,41 @@ function ChamberScreen({ plantId }: { plantId: string }) {
           />
         </div>
         {ended && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[#050b12]/80 text-center">
-            <p className="text-lg font-bold">{plant.harvested ? "Harvested 🌾" : "This plant has died"}</p>
-            <Link href="/dashboard" className="text-sm text-grow-300 hover:underline">
-              ← Back to dashboard
-            </Link>
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[#050b12]/85 text-center">
+            {plant.harvested ? (
+              <div className="gpe-celebrate-pop relative flex flex-col items-center gap-2 px-6">
+                {/* sparkle rings ripple out behind the trophy (motion only) */}
+                {!reducedMotion && (
+                  <div className="pointer-events-none absolute -top-2 left-1/2 h-24 w-24 -translate-x-1/2" aria-hidden>
+                    <span className="gpe-celebrate-ring absolute inset-0 rounded-full border-2 border-grow-400/70" />
+                    <span
+                      className="gpe-celebrate-ring absolute inset-0 rounded-full border-2 border-grow-300/50"
+                      style={{ animationDelay: "0.35s" }}
+                    />
+                  </div>
+                )}
+                <div className="relative text-5xl">🌾</div>
+                <p className="relative text-xl font-extrabold text-grow-200 text-glow-grow">
+                  Harvest complete!
+                </p>
+                <p className="relative max-w-[16rem] text-xs text-cyan-200/70">
+                  Your {strain?.name ?? "plant"} made it all the way. Cured, weighed and sold.
+                </p>
+                <Link
+                  href="/dashboard"
+                  className="relative mt-1 rounded-lg border border-grow-600 bg-grow-700/40 px-4 py-2 text-sm font-semibold text-grow-100 hover:bg-grow-700/60"
+                >
+                  Grow another →
+                </Link>
+              </div>
+            ) : (
+              <>
+                <p className="text-lg font-bold">This plant has died</p>
+                <Link href="/dashboard" className="text-sm text-grow-300 hover:underline">
+                  ← Back to dashboard
+                </Link>
+              </>
+            )}
           </div>
         )}
       </div>
