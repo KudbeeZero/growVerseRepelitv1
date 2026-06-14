@@ -80,6 +80,25 @@ once they appear here. Last reconciled: **2026-06-14** (REC-004 full repository 
   nesting, reduce the smooth-oval appearance on the Purple Diddy Punch *macro* bud, improve chunky
   calyx definition. Macro ("Detailed Bud View") only — the whole-plant chamber is signed off.
 
+## 🚀 Launch-Readiness path (Builder Dept — STEP sequence)
+> Feature Flags → **STEP 3 Simulation Test Clock** → STEP 4 e2e Grow Loop → Launch Readiness.
+- 🚀 ✅ **STEP 3 — Simulation Test Clock** (BE-002, 2026-06-14) — dev/test-only `OffsetClock` on the
+  existing compute-on-read seam: `/api/dev/clock/{,advance,reset}`, registered only when
+  `GROW_TEST_CLOCK=true` on a non-production `APP_ENV` (force-disabled in prod). Advancing time posts
+  **no ledger entries** (economy untouched), forward-only, capped at 8760h. ADR in `DECISIONS.md`
+  (2026-06-14); usage in `docs/SIMULATION_TEST_CLOCK.md`; `tests/test_test_clock.py` (15).
+- 🚀 ✅ **STEP 4 — e2e Grow Loop** (BE-004, 2026-06-14) — seed → plant → grow → flower → harvest →
+  sell driven over the HTTP API and fast-forwarded with the STEP 3 dev clock
+  (`tests/test_e2e_grow_loop.py`, 3). Ledger integrity proven (advancing time posts no entries).
+  HTTP-boundary coverage for the value-bearing routes — withdraw/deposit/mint/nft — landed
+  (`tests/test_http_boundary.py`, 13), partially closing RISK #8 (backend side). Report:
+  `docs/STEP4_E2E_GROW_LOOP_VALIDATION.md`. Suite 262 green, 83.6% ≥ 79%. **Test-only, no source.**
+- 🚀 ⬜ **STEP 4.5 — GameService on `active_clock()` + cure/auction e2e** (next; owner-approved
+  2026-06-14) — one-line change (`game_service.py:82`, mirroring STEP 3) so the dev clock also
+  fast-forwards harvest/**cure**/sell + auction expiry over HTTP, then extend the e2e loop to the
+  cure step. Prod-behaviour identical (`active_clock()` → `SystemClock` in prod). See Risk #1 in the
+  STEP 4 report.
+
 ## 🔴 Immediate (do now — correctness, truth, or unblocks others)
 - 🔴 🔨 **Concurrency + idempotency hardening** (RISK #6) — *core landed 2026-06-10*: wallet
   optimistic locking (`version_id_col`) + `CHECK(cached_balance >= 0)` + harvest-once unique index

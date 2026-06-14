@@ -256,6 +256,51 @@ on a rejected key (RISK #9); `usePods` refreshes on an interval + focus so the c
 reflects committed pod environment. The knowledge doc's `GameState/EnvironmentState/UIState` section
 is documentation aspiration, not a build target, until a future PR proves a need.
 
+### 2026-06-14 — Simulation test clock is an offset on the existing compute-on-read seam (BE-002, STEP 3)
+**Decision:** The dev/test-only "simulation test clock" is built as an **`OffsetClock`** layered on the
+engine's existing `Clock` seam — not a new code path through the engine. The engine is already
+compute-on-read driven by `clock.now()`; the new clock is a wall-clock shifted by a mutable,
+**forward-only** offset, so advancing it makes the *next* read of any plant catch up through the
+normal `engine.catch_up`. A process-wide singleton (`get_test_clock`/`reset_test_clock`) holds the
+offset; `active_clock()` returns it **only** when `settings.test_clock_enabled`, else a plain
+`SystemClock`. `SimulationService`'s default clock now resolves through `active_clock()` (explicit
+injection still wins), so every read endpoint picks up the shift with no per-call-site changes.
+A dev-only blueprint `api/dev_api.py` (`/api/dev/clock`, `/clock/advance`, `/clock/reset`) is
+**registered only when enabled** and re-guards per request. **Why:** STEP 4 (e2e grow-loop testing)
+and launch-readiness need to drive a full grow → harvest in seconds; the cleanest, lowest-risk way is
+to move the clock, because the engine already treats `now` as the only input. Reusing the seam means
+zero new simulation logic and no drift from production behaviour. **Safe boundaries (constraints
+honoured):** the flag is **force-disabled in production** — `test_clock_enabled = GROW_TEST_CLOCK=true
+AND APP_ENV ∉ {production,prod}` (new `APP_ENV` setting) — so a live deployment can never register the
+routes or hand the engine a fast-forwardable clock. Advancing time triggers **only** compute-on-read
+catch-up, which posts **no ledger entries** and changes no prices/faucets/sinks (covered by
+`test_advance_does_not_touch_the_economy`). The clock is **forward-only** (a backward jump would
+desync `last_tick_at`); a single advance is capped at one catch-up window (`MAX_ADVANCE_HOURS=8760`).
+**Consequences:** `reset` rewinds the *clock*, not the plants — time already simulated is persisted
+(compute-on-read really advanced them), so a full reset means reseeding the dev DB; documented in
+`docs/SIMULATION_TEST_CLOCK.md`. No production behaviour changes when disabled (`active_clock()` →
+`SystemClock`, identical to before). New tests in `tests/test_test_clock.py` (15) cover the primitive,
+the config gating, the selector, and the endpoints; full suite 246 green, coverage 81.9% ≥ 79%.
+
+### 2026-06-14 — e2e grow loop is test-only; the cure-clock fix is deferred (BE-004, STEP 4)
+**Decision:** STEP 4 validates the core loop **seed → plant → grow → flower → harvest → sell**
+end-to-end through the public HTTP API, fast-forwarded with the STEP 3 dev clock, as **test-only
+additions** (`tests/test_e2e_grow_loop.py`, `tests/test_http_boundary.py`) with **no source
+changes** — honouring the directive's "test-only / no production behaviour changes" rule. The
+HTTP-boundary coverage for the value-bearing routes (withdraw/deposit/mint/nft) was added here,
+partially closing RISK #8 on the backend side. **Finding surfaced:** `GameService` (harvest/cure/sell
+and market/auction expiry) defaults to `SystemClock`, **not** `active_clock()`
+(`services/game_service.py:82`), so the dev clock does **not** fast-forward cure or auction timing at
+the HTTP boundary — the directive's loop (no cure) didn't need it, so cure was excluded from the e2e.
+**Why deferred:** closing it is a one-line change mirroring STEP 3 (`self.clock = clock or
+active_clock()`), production-behaviour identical (`active_clock()` → `SystemClock` whenever the clock
+is disabled, i.e. always in prod), but it edits a production-path file — so under a "test-only"
+directive the owner explicitly chose (2026-06-14) to **defer it to the next chat** rather than slip it
+in here. **Consequence:** STEP 4 ships on the **same branch as PR #47** (the STEP 3 clock is not yet
+in `main`, so a STEP 4 PR based on `main` is impossible without first merging #47); PR #47 therefore
+carries clock **+** its first real consumer. NEXT ACTION (owner-approved): STEP 4.5 — the
+`active_clock()` one-liner + cure/auction e2e. Suite 262 green, coverage 83.6% ≥ 79%.
+
 ### 2026-06-14 — FTUE is orchestration on existing rails; tutorial time is a per-plant fiction (FTUE epic: PR #34/#35/#39)
 **Decision:** The first-time-user experience is built as **pure orchestration over existing game
 actions** — no new economy, no Phase-2 systems. A guarded deterministic step machine on
