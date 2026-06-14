@@ -4,16 +4,20 @@
 > the end of every chat; read by `/handoff-audit` at the start of the next. If this file and
 > the code disagree, the code wins — fix the baton. See `docs/SESSION_PROTOCOL.md`.
 
-**Last rewritten:** 2026-06-14 · **By:** BE-003 feature-flag reconciliation chat (collapsed the dual flag system)
-**Active branch:** `claude/be-003-feature-flags-reconcile` (open PR — feature-flag de-dup; awaiting review/audit)
-**This chat (BE-003 recon):** **#42 and #55 both merged ~1 min apart, out of order, leaving TWO
-contradictory feature-flag systems on `main`** (routes gated OFF by #42's `config.py ENABLE_*` while
-`GET /api/game/flags` reported ON from #55's `balance.yaml`). This PR **collapses to the single
-balance.yaml-canonical system** (BE-003 decision): deletes `api/feature_gates.py` + the `config.py`
-`ENABLE_*` block + the `app.config["FEATURE_*"]` mirror; re-points the ~25 route decorators to
-`feature_required` from `growpodempire.feature_flags`; adds `chain`/`contracts` to `balance.yaml` and
-renames the `cup` flag → `cup_competitions`; adds a regression test asserting each route's gate ==
-its `/flags` value. Gates: `make test` **287 passed, 84.55%** · `make lint` ✅ · `make check-memory` ✅.
+**Last rewritten:** 2026-06-14 · **By:** BE-003 feature-flag reconciliation chat (PR #63 — collapsed the dual flag system)
+**Active branch:** `main` (PR #63 squash-merged this chat).
+**Just merged (this chat): PR #63 — BE-003 feature-flag reconciliation.** `main` had carried **two**
+contradictory flag systems (#42's `config.py ENABLE_*` / `feature_gates.py` gating routes OFF while
+`GET /api/game/flags` reported ON from #55's `balance.yaml`). #63 collapses to the single
+balance.yaml-canonical system: deletes `api/feature_gates.py` + the `config.py ENABLE_*` block + the
+`app.config["FEATURE_*"]` mirror; re-points the ~25 route decorators to `feature_required` from
+`growpodempire.feature_flags`; adds `chain`/`contracts` to `balance.yaml`; renames `cup` →
+`cup_competitions`; adds a regression test asserting each route's gate == its `/flags` value.
+Gates: `make test` **287 passed, 84.55%** · `make lint` ✅ · `make check-memory` ✅.
+**Prior context (BE-004.5 / playtest chats):** **PR #59** (STEP 4.5 — `GameService` on `active_clock()`
++ cure e2e) merged (`5d44d35`); **RISK #1 CLOSED** (cure/auction dev-clock-drivable). Playtest done
+(`docs/playtesting/BE-004.5-playtest-report.md`, zero product defects; device/web matrix
+owner-verifiable). **PR #62** (playtesting docs) merged.
 **Just merged to main (this chat):** **PR #47 — Simulation Test Clock (BE-002, STEP 3) + e2e Grow Loop
 (BE-004, STEP 4).** The dev/test-only `OffsetClock`/`active_clock()` seam, the `/api/dev/clock/*`
 endpoints (force-disabled in production), **plus** the full core-loop e2e (seed → plant → flower →
@@ -41,18 +45,24 @@ overlapping*. **PR #42** *MVP Feature Flag Layer* (the NEXT ACTION).
 
 ## NEXT ACTION (the one scoped item the next chat does)
 
-**Feature Flags — web gating (PR #2), now re-pointing the web to the canonical source.** The backend
-flag system is unified (this PR): one balance.yaml-canonical source, gated routes, `GET /api/game/flags`.
-**But the web layer still reads #42's build-time `NEXT_PUBLIC_ENABLE_*`** (`web/src/lib/features.ts`,
-`RequireFeature`, nav filtering) — a *second* flag source that can drift from the backend. **Next
-chat:** the web-gating PR replaces `NEXT_PUBLIC_ENABLE_*` with a `useFlag`/`RequireFeature` hook reading
-`GET /api/game/flags` (runtime, deploy-free), then gates routes + nav. This touches the **protected
-Navigation + Layout surfaces**, so claim them in `STUDIO_AGENT_REGISTRY.md` and get Director sign-off first.
-- **Launch polarity:** gated routes now follow balance.yaml defaults (**ON**). The launch build must
-  set the non-MVP surfaces (`FEATURE_MARKETPLACE/CHAIN/CUP_COMPETITIONS/UNIVERSITY/CONTRACTS=false`)
-  per-environment — a deploy-config step, not a code change.
-- **Owner-pending (REC-004):** the §3 branch prune still has **not** run (all targets present);
-  destructive git is owner-only. After the owner prunes, refresh `CANONICAL_STATE.md` §3.
+**FF-RECON-001 (web half) — single runtime flag consumer.** The **backend reconciliation shipped
+(PR #63)**: one balance.yaml-canonical source, gated routes via `feature_required`, `GET
+/api/game/flags`, route-gate==`/flags` regression test. **Remaining:** the web layer still reads
+build-time `NEXT_PUBLIC_ENABLE_*` (`web/src/lib/features.ts`, `RequireFeature`, nav filtering) — a
+*second* source that can drift. Replace it with a runtime `useFlag`/`RequireFeature` hook reading
+`GET /api/game/flags` (deploy-free), then gate routes + nav from that single source. Touches
+**protected Navigation + Layout** surfaces → claim in `docs/STUDIO_AGENT_REGISTRY.md` + Director
+sign-off first.
+- **Launch polarity:** gated routes now default **ON** (balance.yaml). The launch build sets the
+  non-MVP surfaces (`FEATURE_MARKETPLACE/CHAIN/CUP_COMPETITIONS/UNIVERSITY/CONTRACTS=false`) per-env —
+  deploy config, not code.
+- **Owner-pending (REC-004):** the §3 branch prune still has **not** run (destructive git is
+  owner-only). After the owner prunes, refresh `CANONICAL_STATE.md` §3.
+- **After the web consumer:** web/device playtest pass → Retention Validation → MVP Launch Candidate.
+
+> **Also queued (owner/device):** the web playtest pass — run `cd web && npm i && npm run dev` and verify
+> the device-only matrix the headless playtest could not (mobile viewport/safe-area, reduced-motion,
+> keyboard a11y, refresh-mid-action, stale cache) + stand up the Playwright real-e2e (RISK #8 web side).
 - **Off-limits:** no economy / chain / breeding / factions / combat / new crop families. No new
   Phase-2 systems. No per-player flag table (deferred). Do NOT modify the parked PRs (#27, #28).
 - **Reuse, don't rebuild:** the chamber renders through `web/src/lib/chamber/chamberCore.ts`
@@ -69,6 +79,12 @@ Navigation + Layout surfaces**, so claim them in `STUDIO_AGENT_REGISTRY.md` and 
 > fast-forward under the dev clock, plus `test_cure_advances_under_dev_clock`. Production-behaviour
 > identical (`active_clock()` → `SystemClock` when the test clock is off). Awaiting review/merge; clears
 > RISK #1. After it lands, the path is Playtesting → Retention Validation → MVP Launch Candidate.
+
+</details>
+
+> **✅ Update (BE-004.5 playtest chat):** STEP 4.5 **merged as PR #59** (`5d44d35`); **RISK #1 closed**;
+> Playtesting **done** (this chat — see report). The path is now **FF-RECON-001 → web/device playtest pass →
+> Retention Validation → MVP Launch Candidate.**
 
 ---
 
@@ -119,7 +135,7 @@ Shipped by PR #47 (authored across the BE-002 + BE-004 sessions):
 
 | # | Sev | Risk | Evidence | Status |
 |---|-----|------|----------|--------|
-| 1 | MED | **Cure/auction not dev-clock-drivable.** `GameService` defaulted to `SystemClock`, so the dev clock couldn't fast-forward cure/auction over HTTP. | `services/game_service.py:82` | **FIXED in the open STEP 4.5 PR** (`GameService` → `active_clock()`, + cure e2e). Clears on merge. |
+| 1 | MED | **Cure/auction not dev-clock-drivable.** `GameService` defaulted to `SystemClock`, so the dev clock couldn't fast-forward cure/auction over HTTP. | `services/game_service.py` (now `active_clock()`) | ✅ **CLOSED** — STEP 4.5 merged as **PR #59** (`5d44d35`); verified live in the BE-004.5 playtest + `test_cure_advances_under_dev_clock`. |
 | 3 | HIGH | Idempotency on mutations — general `Idempotency-Key` header (duplicate → original response, not a 409). | `api/game_api.py` | PARTIAL — concurrency core + one-shot grants shipped (`grant_claims`, harvest-once index); FTUE `advance` replay-guarded. General header absent (WIP PR #16 closed unmerged). |
 | 4/7 | HIGH | **Chain settlement not real** — deposit trusts no on-chain proof; treasury-drain path; no txid replay protection / reconciliation / address validation. | `services/settlement_service.py`, `db/models.py` | OPEN — blocks any real value moving (Sprint 4 gate). |
 | 8 | HIGH | **Safety net** — **backend HTTP boundary now covered (PR #47: withdraw/deposit/mint/nft, `tests/test_http_boundary.py`)**; **web** Playwright real e2e still a stub; treasury-cap + chain-failure-rollback UI tests absent. | `web/package.json`, `.github/workflows/ci.yml`, `tests/test_http_boundary.py` | PARTIAL (backend ↑; relates to open PR #32). |
