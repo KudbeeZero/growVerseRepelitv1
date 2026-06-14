@@ -22,6 +22,7 @@ import {
 } from "./morphology";
 import { pickPaletteColor, dominantPaletteColor, type BudDNA } from "./budDna";
 import { phyllotaxis, foreshorten, depthShade } from "./phyllotaxy";
+import { colaTops } from "./apicalDominance";
 import { CONDITION_VISUALS, SEVERITY_SCALE, dominantFlag } from "../conditionVisuals";
 import {
   branchFlex as branchFlexFor,
@@ -587,6 +588,13 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
     );
     const phase = mulberry32((seed * 2246822519) >>> 0)() * TAU;
     const azi = phyllotaxis(maxNodes, maturity, phase);
+    // Engines 1 & 2 — apical dominance: how many co-dominant tops compete with
+    // the leader. High dominance → 1 cola (spear); low → several upright tops
+    // (bush). Only the highest nodes are promoted, and only in flower (a veg
+    // plant has no colas yet), so veg/seedling silhouettes are unchanged.
+    const tops = colaTops(SK.apicalDominance);
+    const nTop = flowering ? Math.min(tops.count - 1, Math.max(0, maxNodes - 2)) : 0;
+    const topFromIdx = maxNodes - nTop; // nodes at index >= this become co-colas
     for (let i = 0; i < maxNodes; i++) {
       // Genetic/organic internode spacing: tighter toward the apex (more so for
       // spear strains, via vertStack), plus per-node jitter so nodes aren't
@@ -606,8 +614,16 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
       const az = azi[i];
       const side = az.side;
       const lateral = az.lateral;
-      const tilt = (0.92 + rnd() * 0.3) * (1 - f * 0.22) * lerp(1, 1.12, low);
-      const len = A * 0.27 * S.branchMul * (0.35 + 0.65 * low) * grow * shorten;
+      // Engines 1&2: is this node a co-dominant top (one of the highest `nTop`)?
+      const topK = nTop > 0 && i >= topFromIdx ? i - topFromIdx : -1;
+      let tilt = (0.92 + rnd() * 0.3) * (1 - f * 0.22) * lerp(1, 1.12, low);
+      let len = A * 0.27 * S.branchMul * (0.35 + 0.65 * low) * grow * shorten;
+      if (topK >= 0) {
+        // A released top straightens toward vertical and extends up to race the
+        // leader to the canopy — turning a side branch into a competing cola.
+        tilt *= lerp(1, 0.42, tops.release);
+        len *= lerp(1, 2.6, tops.release);
+      }
       // Back branches read a touch smaller as well as darker (aerial perspective).
       const depthSize = lerp(0.86, 1.06, (az.depth + 1) / 2);
       const nd: Node = {
@@ -632,7 +648,19 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
       // viewer (depth>0, front) or lifts behind the stem (depth<0, back) for volume.
       nd.tipX = Math.sin(nd.tilt) * lateral * nd.len * spread;
       nd.tipY = -Math.cos(nd.tilt) * nd.len * 0.55 + az.depth * nd.len * 0.18;
-      if (P.budDev > 0 && f > S.flowerFrom) {
+      if (P.budDev > 0 && topK >= 0) {
+        // Co-dominant top → its own cola (a scaled-down sibling of the leader),
+        // sized by this top's mass share relative to the leader so the leader
+        // still reads as the main cola. Total flower mass is conserved by the
+        // leaderShare/secondaryShares split.
+        const coShare = tops.secondaryShares[topK] / tops.leaderShare; // ≤1 vs leader
+        const axis = stemH * 0.13 * S.clusterLen * SK.colaScale * (0.5 + 0.5 * P.budDev) * lerp(0.72, 1.06, coShare) * (1 + P.ripe * 0.18);
+        const baseW = axis * (S.pattern === "spiral" ? 0.3 : 0.46) * S.clusterFat * (0.95 + 0.18 * P.ripe);
+        const nC = Math.max(3, Math.round(S.bracts * (S.pattern === "spiral" ? 1.5 : 1.05)));
+        nd.site = buildFlowerSite(rnd, axis, baseW, { pattern: S.pattern, nClusters: nC, bracts: S.bracts, fatMul: 1.05 });
+        nd.budRot = nd.side * 0.06;
+        nd.weight = lerp(0.95, 1.7, f) * S.clusterFat; // a top cola is heavy
+      } else if (P.budDev > 0 && f > S.flowerFrom) {
         const sizeUp = lerp(0.55, 1.15, f);
         const axis = A * (0.05 + 0.09 * f) * S.clusterLen * sizeUp * (0.5 + 0.5 * P.budDev);
         const baseW = axis * 0.42 * S.clusterFat;
@@ -642,8 +670,9 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
         nd.weight = lerp(0.5, 1.1, f) * S.clusterFat; // higher / fatter buds weigh more
       }
       // A bud forming at the node intersection itself (not just the tip) —
-      // upper/mid nodes only, where light reaches and flower sites set.
-      if (P.budDev > 0 && f > Math.max(S.flowerFrom, 0.38)) {
+      // upper/mid nodes only, where light reaches and flower sites set. Skipped
+      // on co-cola tops, which read as a clean single cola.
+      if (P.budDev > 0 && topK < 0 && f > Math.max(S.flowerFrom, 0.38)) {
         const axis = A * (0.035 + 0.05 * f) * S.clusterLen * (0.5 + 0.5 * P.budDev);
         const baseW = axis * 0.4 * S.clusterFat;
         const nC = Math.max(1, Math.round(S.bracts * 0.4 * f));
@@ -651,8 +680,9 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
         nd.weight += 0.25 * S.clusterFat;
       }
       // Secondary branchlets — small forks carrying their own foliage and, in
-      // flower, a small bud at the tip. Denser on the lower/mid canopy.
-      if (nd.len > A * 0.045 && d > 14) {
+      // flower, a small bud at the tip. Denser on the lower/mid canopy. Skipped
+      // on co-cola tops (they read as a clean single cola).
+      if (topK < 0 && nd.len > A * 0.045 && d > 14) {
         let nBL = rnd() < SK.branchletFrac ? 1 : 0;
         if (low > 0.45 && rnd() < SK.branchletFrac * 0.75) nBL += 1;
         for (let b = 0; b < nBL; b++) {
@@ -680,7 +710,11 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
       // Top cola gains mass through flowering and swells further in late flower
       // (ripeness) — the apex should be the visual climax, not a tidy spike.
       const lateMass = 1 + P.ripe * 0.2;
-      const axis = stemH * (0.15 + 0.18 * P.budDev) * S.clusterLen * SK.colaScale * lateMass;
+      // Engines 1&2: when the canopy shares its mass across several tops the
+      // leader cola shrinks toward its share (but never below ~0.62×, so it still
+      // reads as THE main cola). leaderShare = 1 for single-cola strains → no change.
+      const leaderMul = lerp(0.62, 1, tops.leaderShare);
+      const axis = stemH * (0.15 + 0.18 * P.budDev) * S.clusterLen * SK.colaScale * lateMass * leaderMul;
       const baseW = axis * (S.pattern === "spiral" ? 0.3 : 0.46) * S.clusterFat * (0.95 + 0.18 * P.ripe);
       const nC = Math.round(S.bracts * (S.pattern === "spiral" ? 1.7 : 1.15));
       cola = {

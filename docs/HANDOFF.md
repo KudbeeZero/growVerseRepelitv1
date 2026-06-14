@@ -4,9 +4,11 @@
 > the end of every chat; read by `/handoff-audit` at the start of the next. If this file and
 > the code disagree, the code wins — fix the baton. See `docs/SESSION_PROTOCOL.md`.
 
-**Last rewritten:** 2026-06-14 · **By:** phyllotaxy-engine chat (PBSA charter)
-**Active branch:** `claude/cannabis-growth-engine-s114yu` (base `main`, **NO PR opened** — owner did
-not request one; branch pushed, ready to PR on request).
+**Last rewritten:** 2026-06-14 · **By:** procedural-engine chat (PBSA charter — Engines 1–4)
+**Active branch:** `claude/cannabis-growth-engine-s114yu` → **PR #58 (open, base `main`)**. PR #58
+carries **Engines 3 & 4** (phyllotaxy + leaf orientation) **and Engines 1 & 2** (apical-dominance
+multi-cola) — owner directed both on this branch (ART-004); kept on one branch per the session's
+"push only to the assigned branch" rule, so #58 grew from "3&4" to "1–4". Split on request.
 **main is at:** commit `dc6ccde` — FTUE starter-grant (#34), Launch Strain Pack (#33), PR #30
 Dashboard wiring (#29 merge), PR #26 Bud Weight Physics (carrying #29 canonical-PNG), PR #25
 De-Grape — **all merged**. This branch builds the procedural-engine (PBSA) track on top of that.
@@ -24,20 +26,18 @@ this chat (the baton predated #30/#33/#34 merging) — `/handoff-audit` should c
 
 ## NEXT ACTION (the one scoped item the next chat does)
 
-**Engine 1/2 polish, or Engine 6 (G×E) whole-plant expression — pick ONE.** Engines 3 (Phyllotaxy)
-& 4 (Leaf Orientation) shipped this chat. Natural next scoped builds, all renderer-only, all on the
-PBSA charter:
-- **Engine 6 — G×E whole-plant expression:** extend `knowledge/whole-plant-architecture.md`
-  §Environmental reactions to the *whole plant* (not just buds): high light → compact internodes ·
-  low light → stretch · cool nights → anthocyanin creep up the stem · strong airflow → thicker stems
-  · heat → leaf claw. The `climateModel` already exists in `morphology.ts`; thread its outputs into
-  `buildPlant` height/internode/stem-width the way `growthMult` already nudges height.
-- **Engine 1/2 — apical-dominance multi-cola:** low `apicalDominance` strains should grow several
-  competing tops, not one cola + side branches. Currently a single spine + cola.
+**Engine 6 — G×E whole-plant expression** (renderer-only, PBSA charter). Engines 1–4 shipped (PR #58).
+Engine 6 is the remaining big believability lever: extend `knowledge/whole-plant-architecture.md`
+§Environmental reactions to the *whole plant* (not just buds): high light → compact internodes · low
+light → stretch · cool nights → anthocyanin creep up the stem · strong airflow → thicker stems · heat
+→ leaf claw. The `climateModel` already exists in `morphology.ts` (and `growthMult` already nudges
+height); thread its outputs into `buildPlant` internode/stem-width/leaf-claw and into the stem/leaf
+colour. Stays behind device sign-off like the rest.
 - **Reuse, don't rebuild:** the chamber renders through `web/src/lib/chamber/chamberCore.ts` (shared
-  by the live `<GrowChamber>` and the headless `npm run gen:stages` generator) and the new pure
-  `web/src/lib/chamber/phyllotaxy.ts`. Keep both as single sources. **Verify visuals with
-  `npm run gen:stages`** (writes `web/canonical-stages/*.png`, gitignored) — the only screenshot path.
+  by the live `<GrowChamber>` and the headless `npm run gen:stages` generator). Engine modules are
+  pure + tested: `phyllotaxy.ts` (3&4) and `apicalDominance.ts` (1&2). Keep them as single sources.
+  **Verify visuals with `npm run gen:stages`** (`web/canonical-stages/*.png`, gitignored) — the only
+  screenshot path. New per-strain knobs live on `Silhouette` (`morphology.ts`) + `strainVisuals.ts`.
 - **Do NOT** touch economy / chain / db / api / wallets / dashboards (charter: work-order required).
 - **Macro Bud Polish II** (BACKLOG, *not launch-blocking*): sharper calyx ridges / denser nesting on
   the PDP *macro* bud — macro view only; whole-plant chamber is the engine track's focus.
@@ -64,11 +64,21 @@ nots". Built a real phyllotaxy engine:
   spear, PDP/White Rhino stay chunky; verified across the 7 curated strains × stage PNG matrix.
 - Docs: ADR `DECISIONS.md` (2026-06-14); BACKLOG entry (Engines 3&4 ✅, #28 note); this baton.
 
+**Apical Dominance / Multi-Cola — Engines 1 & 2** (renderer-only). The chamber always grew exactly one
+top cola. Added a strain `apicalDominance` knob (`Silhouette`) and a new pure
+**`web/src/lib/chamber/apicalDominance.ts`** (`colaTops`, mass-conserving, unit-tested): high
+dominance → 1 leader cola (spear, unchanged); low → up to 4 competing tops. `chamberCore.buildPlant`
+promotes the top `count−1` nodes **in flower only** into upright co-colas (straightened tilt, extended
+length, a scaled-down leader-sibling cola sized by mass share, node-buds/branchlets suppressed) and
+scales the leader by `leaderShare` (≥0.62×). `apicalDominance = 1` ⇒ byte-identical single-cola path,
+so veg + spear strains are unchanged. Authored per strain (G13/WFOG high → spear; PDP/White Rhino low
+→ bush). ADR `DECISIONS.md` 2026-06-14; BACKLOG ✅.
+
 ## Verification split (this chat)
 
 **Agent-verifiable (proven):**
-- Web: `tsc --noEmit` ✅ · `next lint` ✅ · `next build` ✅ · `vitest run` **128/128** ✅ (+9 new
-  phyllotaxy tests; Constellation sacred-render hashes untouched — that file not modified).
+- Web: `tsc --noEmit` ✅ · `next lint` ✅ · `next build` ✅ · `vitest run` **134/134** ✅ (+9 phyllotaxy,
+  +6 apicalDominance tests; Constellation sacred-render hashes untouched — that file not modified).
 - Generated the full `npm run gen:stages` PNG matrix (7 strains × 5 stages + macro + motion) and
   **eyeballed them in-session** (G13 veg/late-flower, PDP late-flower, White Rhino veg, Animal Mints
   harvest, Gelato early-flower): spiral depth + varied leaf yaw present, silhouettes intact, no NaN /
@@ -79,10 +89,11 @@ nots". Built a real phyllotaxy engine:
 **Device/human-verifiable (owner — the actual deliverable):**
 - The live chamber pixels + motion/perf. No headless browser drives the live `<GrowChamber>` in CI
   (the PNG generator is static stills). Open a veg and a flowering plant for G13 / Purple Diddy Punch
-  / White Rhino and confirm: branches wind around the stem with front/back depth (not flat left/
-  right), leaves vary broad↔edge-on (not all camera-facing), silhouettes still recognisable, and the
-  airflow sway + bud-weight droop still read correctly with the new depth ordering. **Engines 3&4
-  need device sign-off** before they're called done.
+  / White Rhino and confirm: (3&4) branches wind around the stem with front/back depth (not flat left/
+  right), leaves vary broad↔edge-on (not all camera-facing); (1&2) G13 grows ONE spear cola while
+  PDP/White Rhino grow a leader + competing upright tops (a bush); silhouettes still recognisable; and
+  airflow sway + bud-weight droop still read correctly. **Engines 1–4 need device sign-off** before
+  they're called done.
 
 ---
 

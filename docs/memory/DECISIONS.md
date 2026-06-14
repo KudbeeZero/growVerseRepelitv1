@@ -279,3 +279,25 @@ byte-equivalence to the old left/right alternation). Verified against the headle
 across all seven curated strains × stage matrix. Pointer/physics indexing is unchanged (draw order is
 cosmetic; `phys.nodes[i]` still keyed by real node index). Next builds on this: branch azimuth can
 later feed true light-seeking pitch and circadian leaf motion (PR #28, parked).
+
+### 2026-06-14 — Apical dominance / multi-cola architecture (Engines 1 & 2)
+**Decision:** The whole-plant chamber no longer always grows exactly one top cola. A new pure module
+`web/src/lib/chamber/apicalDominance.ts` (`colaTops`) turns a strain's new `Silhouette.apicalDominance`
+(0..1) into how many tops compete with the leader (1 → 4) and how the flower mass splits between them
+(`leaderShare` + `secondaryShares`, conserved to 1). `chamberCore.buildPlant` promotes the highest
+`count−1` nodes — **only in flower** — into upright **co-colas**: it straightens their tilt toward
+vertical and extends their length so they race the leader to the canopy, builds each a scaled-down
+sibling of the leader cola sized by its mass share, and suppresses their node-buds/branchlets so they
+read as clean colas; the central leader cola is scaled by `leaderShare` (floored at 0.62× so it stays
+*the* main cola). **Why:** the PBSA charter (Engines 1 & 2) and `knowledge/whole-plant-architecture.md`
+call apical dominance "the highest-impact" identity knob — a single cola + side branches (spear, G13)
+vs. several competing tops (bush, Purple Diddy Punch / White Rhino) is what makes strains read as
+*different plants*, not recolours of one model. **Why this shape:** `apicalDominance = 1` ⇒ `count = 1`,
+`leaderShare = 1` ⇒ byte-identical to the old single-cola path, so high-dominance spear strains and all
+veg/seedling plants are unchanged (co-colas exist only in flowering); mass is conserved so a multi-top
+plant doesn't gain total bud. Authored per curated strain (G13 0.85, White Fire OG 0.72, Animal
+Mints 0.6, Gelato 0.55, Wedding Cake 0.5, PDP 0.42, White Rhino 0.4) and derived `lerp(0.72,0.58,r)`
+for others. **Consequences:** `Silhouette` gained a required `apicalDominance` field (all 7 authored
+silhouettes + the derived fallback updated; `colaTops` unit-tested incl. mass-conservation + the
+single-cola degenerate case). Verified across the 7-strain × stage PNG matrix. Built on the same
+PBSA branch as Engines 3 & 4 (carried in PR #58).

@@ -33,6 +33,11 @@ once they appear here. Last reconciled: **2026-06-10**.
   New pure module `web/src/lib/chamber/phyllotaxy.ts` (+ tests, maturity-0 ≡ legacy alternation);
   `chamberCore` integration only. Silhouettes preserved (verified across the 7-strain × stage PNG
   matrix). ADR `DECISIONS.md` 2026-06-14. **Device sign-off pending** (owner to view the chamber).
+- 🎨 ✅ **Apical Dominance / Multi-Cola — Engines 1 & 2** (PR #58, 2026-06-14) — strains now grow one
+  dominant cola (spear: G13, White Fire OG) *or* several competing upright tops (bush: Purple Diddy
+  Punch, White Rhino) from a new `Silhouette.apicalDominance` knob. New pure `apicalDominance.ts`
+  (`colaTops`, mass-conserving, +tests); `chamberCore` promotes the top nodes into co-colas in flower
+  only (single-cola + veg paths unchanged). ADR `DECISIONS.md` 2026-06-14. **Device sign-off pending.**
 - 🎨 ⬜ **PR #27 — Phenotype Generator Foundation** — *PARKED* (open PR, green). Do not modify.
 - 🎨 ⬜ **PR #28 — Circadian Leaf Motion** — *PARKED* (open PR, green). Do not modify. *Note: the
   per-node branch azimuth now available on `Node` is the natural input for light-seeking pitch +
