@@ -240,6 +240,23 @@ was ported into `chamberCore` on merge to avoid regressing it. Output dir `web/c
 gitignored (regenerable artifact; the generator is the committed deliverable). Future card/NFT image
 pipelines (ROADMAP Sprint 4) can build on this headless renderer.
 
+### 2026-06-14 — MVP feature-flag layer (gate non-MVP systems off)
+**Decision:** Five non-MVP systems — marketplace, on-chain wallet/minting (`chain`), the Cup,
+the University, and NPC contracts — are gated behind boolean flags that default **OFF**. Backend
+flags live in `config.Settings` (env `ENABLE_*`), are copied into `app.config["FEATURE_*"]` at
+`create_app`, and are enforced per-route by a `require_feature` decorator (`api/feature_gates.py`)
+applied above `require_player` so a gated route returns **404** before auth — a hidden system is
+indistinguishable from an absent one. The web client mirrors them via `NEXT_PUBLIC_ENABLE_*`
+(`web/src/lib/features.ts`): the nav filters gated entries, a `RequireFeature` guard wraps the
+`/market`, `/cup`, `/university` route segments, and in-page bits (Market→Contracts tab, Profile
+wallet section) hide too. **Why:** the MVP launch ships only the core grow loop; fail-closed
+defaults mean a system can never leak by forgetting to set an env var. **Consequences:** the test
+harness enables all five flags (`tests/conftest.py`) so the subsystem suites keep exercising real
+behavior, with a dedicated `tests/test_feature_gates.py` proving OFF→404 / ON→reachable, gate-
+before-auth, and core-loop-unaffected. The services and routes are untouched (hidden, not removed),
+so flipping a flag on at deploy time restores the full system. First slice of PR #31 (MVP Launch
+Candidate).
+
 ### 2026-06-14 — Flat `/state` wire is canonical; no `GameState` wire object (PR #30)
 **Decision:** The dashboard/PDP/encyclopedia keep reading the **flat** `GET …/plants/<id>/state`
 payload (`PlantState` = `Plant` + server-computed `metrics` + `forecast` + `recent_events`) as the
@@ -301,3 +318,120 @@ for others. **Consequences:** `Silhouette` gained a required `apicalDominance` f
 silhouettes + the derived fallback updated; `colaTops` unit-tested incl. mass-conservation + the
 single-cola degenerate case). Verified across the 7-strain × stage PNG matrix. Built on the same
 PBSA branch as Engines 3 & 4 (carried in PR #58).
+
+### 2026-06-14 — Simulation test clock is an offset on the existing compute-on-read seam (BE-002, STEP 3)
+**Decision:** The dev/test-only "simulation test clock" is built as an **`OffsetClock`** layered on the
+engine's existing `Clock` seam — not a new code path through the engine. The engine is already
+compute-on-read driven by `clock.now()`; the new clock is a wall-clock shifted by a mutable,
+**forward-only** offset, so advancing it makes the *next* read of any plant catch up through the
+normal `engine.catch_up`. A process-wide singleton (`get_test_clock`/`reset_test_clock`) holds the
+offset; `active_clock()` returns it **only** when `settings.test_clock_enabled`, else a plain
+`SystemClock`. `SimulationService`'s default clock now resolves through `active_clock()` (explicit
+injection still wins), so every read endpoint picks up the shift with no per-call-site changes.
+A dev-only blueprint `api/dev_api.py` (`/api/dev/clock`, `/clock/advance`, `/clock/reset`) is
+**registered only when enabled** and re-guards per request. **Why:** STEP 4 (e2e grow-loop testing)
+and launch-readiness need to drive a full grow → harvest in seconds; the cleanest, lowest-risk way is
+to move the clock, because the engine already treats `now` as the only input. Reusing the seam means
+zero new simulation logic and no drift from production behaviour. **Safe boundaries (constraints
+honoured):** the flag is **force-disabled in production** — `test_clock_enabled = GROW_TEST_CLOCK=true
+AND APP_ENV ∉ {production,prod}` (new `APP_ENV` setting) — so a live deployment can never register the
+routes or hand the engine a fast-forwardable clock. Advancing time triggers **only** compute-on-read
+catch-up, which posts **no ledger entries** and changes no prices/faucets/sinks (covered by
+`test_advance_does_not_touch_the_economy`). The clock is **forward-only** (a backward jump would
+desync `last_tick_at`); a single advance is capped at one catch-up window (`MAX_ADVANCE_HOURS=8760`).
+**Consequences:** `reset` rewinds the *clock*, not the plants — time already simulated is persisted
+(compute-on-read really advanced them), so a full reset means reseeding the dev DB; documented in
+`docs/SIMULATION_TEST_CLOCK.md`. No production behaviour changes when disabled (`active_clock()` →
+`SystemClock`, identical to before). New tests in `tests/test_test_clock.py` (15) cover the primitive,
+the config gating, the selector, and the endpoints; full suite 246 green, coverage 81.9% ≥ 79%.
+
+### 2026-06-14 — e2e grow loop is test-only; the cure-clock fix is deferred (BE-004, STEP 4)
+**Decision:** STEP 4 validates the core loop **seed → plant → grow → flower → harvest → sell**
+end-to-end through the public HTTP API, fast-forwarded with the STEP 3 dev clock, as **test-only
+additions** (`tests/test_e2e_grow_loop.py`, `tests/test_http_boundary.py`) with **no source
+changes** — honouring the directive's "test-only / no production behaviour changes" rule. The
+HTTP-boundary coverage for the value-bearing routes (withdraw/deposit/mint/nft) was added here,
+partially closing RISK #8 on the backend side. **Finding surfaced:** `GameService` (harvest/cure/sell
+and market/auction expiry) defaults to `SystemClock`, **not** `active_clock()`
+(`services/game_service.py:82`), so the dev clock does **not** fast-forward cure or auction timing at
+the HTTP boundary — the directive's loop (no cure) didn't need it, so cure was excluded from the e2e.
+**Why deferred:** closing it is a one-line change mirroring STEP 3 (`self.clock = clock or
+active_clock()`), production-behaviour identical (`active_clock()` → `SystemClock` whenever the clock
+is disabled, i.e. always in prod), but it edits a production-path file — so under a "test-only"
+directive the owner explicitly chose (2026-06-14) to **defer it to the next chat** rather than slip it
+in here. **Consequence:** STEP 4 ships on the **same branch as PR #47** (the STEP 3 clock is not yet
+in `main`, so a STEP 4 PR based on `main` is impossible without first merging #47); PR #47 therefore
+carries clock **+** its first real consumer. NEXT ACTION (owner-approved): STEP 4.5 — the
+`active_clock()` one-liner + cure/auction e2e. Suite 262 green, coverage 83.6% ≥ 79%.
+
+### 2026-06-14 — FTUE is orchestration on existing rails; tutorial time is a per-plant fiction (FTUE epic: PR #34/#35/#39)
+**Decision:** The first-time-user experience is built as **pure orchestration over existing game
+actions** — no new economy, no Phase-2 systems. A guarded deterministic step machine on
+`Player.ftue_step` (`welcome → plant → water → environment → grow → harvest → completed`) drives the
+**real** services (`grant_starter_items`, `plant_seed`, `water`, `set_environment`,
+`harvest_plant`+sell); each `advance` is rejected if out-of-sync or already completed (no replay).
+The AI Master Grower's tutorial voice is **deterministic and scripted** (`ai/ftue_coach.py`, per-step
+static `AdvisorReport`s through the real advisor schema) rather than a live AI call, so it works in CI
+with no key and reads identically every time. **Why two sub-choices matter:** (1) *Time-compression* —
+a real first grow is days long; the `grow` step backdates the tutorial plant's `planted_at` (so the
+chamber renders a mature flowering plant) and sets `last_tick_at = now` so the authoritative catch-up
+does **not** retro-decay it. Chosen over (a) running the full hour-by-hour sim across the gap — which
+would drought-kill the un-watered plant and spam event rows — and (b) giving the starter pod
+auto-water/feed, which is a paid-tier **economy** change. The fiction is scoped to the single tutorial
+plant; global sim/time and the `max_catchup_hours` knob are untouched (general dormancy RISK #9
+unchanged). (2) *No auto-divert of existing players* — the migration backfills `ftue_step='welcome'`
+(`server_default`), so the web only routes **freshly created** accounts into `/ftue`; returning
+sign-ins and pre-existing players are never swept into the tutorial. **Consequences:** the epic is
+additive (3 nullable-safe `Player` columns + a new service/coach/route + endpoints; one-shot starter
+grant via a `grant_claims` unique index); the core loop and ledger are untouched; the "come back
+tomorrow" hook points at the existing daily stipend rather than minting a new reward. Migrations
+`c7ecd7523cc8` (grant rail) and `9d669edf48a8` (FTUE columns) keep a single Alembic head.
+
+### 2026-06-14 — Mobile-first navigation: native bottom tab bar over a hamburger drawer (PR #36)
+**Decision:** On small screens the web client uses a **native-app bottom tab bar** (primary
+destinations + a "More" sheet for secondaries) rather than a hamburger/drawer; the desktop header
+takes over at the `lg` breakpoint. Touch targets are ≥44px, with `env(safe-area-inset-*)` padding for
+notches/home bars and focus-visible rings for keyboard a11y. **Why:** thumb-reach + muscle memory on
+phones, and the grow chamber is the emotional core — it should feel like a native app, not a desktop
+site shrunk down. **Consequences:** shipped in `web/src/components/layout/` (tab bar + responsive
+shell); the chamber became responsive; remaining player surfaces (dashboard / PDP / `/ftue`) still
+need a small-screen sweep (open PRs #40 bottom-nav follow-through, #41 care feedback). Visual-only;
+no API/economy change.
+
+### 2026-06-14 — Adopt the OMNI Charter v1.0 as the organizational constitution (PR #38)
+**Decision:** Add `docs/OMNI_CHARTER.md` as the **governance** layer (who decides, who builds, what
+each team may touch, how work crosses boundaries) sitting beside — not replacing — the technical
+memory system (`CLAUDE.md` + `docs/memory/`, which governs the *code*). Codifies the chain of command
+(Owner → Director Chat → Department Leads → Specialist Agents → Monitoring), department roster, the
+work-order system for cross-department changes, and canonical principles (off-chain MVP first; polish
+over features; no Phase-2 leakage into Phase-1; CI/audits before merges; emotional attachment as a
+first-class metric). **Why:** work is fanning out across many specialized AI sessions; clear authority
+and boundaries prevent scope creep and duplicate work. **Consequences:** the charter's "no autonomous
+merges / no repository mutations without approval" rule aligns with the existing delegation charter in
+`CLAUDE.md`; the Records-Department reconciliation function (this sweep, REC-004) and
+`docs/memory/CANONICAL_STATE.md` are governance artifacts under the Operations department.
+
+### 2026-06-14 — GameService reads the active clock too (BE-004.5 / STEP 4.5)
+**Decision:** `GameService` now defaults its clock to `active_clock()` (was `SystemClock()`),
+mirroring the STEP 3 change in `SimulationService`. **Why:** STEP 4 surfaced RISK #1 — harvest/**cure**/
+sell and market/auction expiry all live in `GameService`, which used wall time, so the dev/test clock
+(`/api/dev/clock/advance`) could fast-forward *growth* but not *cure or auction* timing over HTTP. A
+committed cure could never be exercised end-to-end without waiting real days. **Consequences:**
+production behaviour is byte-identical — `active_clock()` returns `SystemClock` whenever the test clock
+is disabled (always in prod; default in tests where no clock is injected), so the full suite is
+unaffected. The dev-clock path now drives cure + auction expiry. New e2e
+`test_e2e_grow_loop.py::test_cure_advances_under_dev_clock` proves a cure can't finish before the dev
+clock passes its window and that finishing then raises quality. Test-only otherwise; one-line source
+change. Suite 273 green, coverage 84.46% ≥ 79%. RISK #1 cleared.
+
+### 2026-06-14 — Feature flags are data-driven (balance.yaml), config-authoritative for exposure
+**Decision:** Player-facing surfaces are gated by a feature-flag layer whose definitions/defaults
+live in `balance.yaml` (`feature_flags:`), resolved by `feature_flags.py` with per-environment
+`FEATURE_<NAME>` env overrides, served read-only at `GET /api/game/flags`, and guarded server-side
+via `require_feature`/`feature_required`. Flags fail closed (unknown → off); no per-player table.
+**Why:** Mirrors the existing "tuning surface" convention (data over code) so launch surfaces (FTUE,
+chamber, marketplace, …) can be kill-switched without a deploy. DB stays authoritative for gameplay;
+flags govern *exposure* only. Per-player/cohort targeting is deferred until a real need (would be an
+additive table, not a rewrite). **Consequences:** Backend core ships first (this PR); web route/nav
+gating is a separate surface-claimed PR. Defaults are ON, so adding a flag changes no behaviour until
+a surface is explicitly gated.

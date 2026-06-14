@@ -59,7 +59,7 @@ export function PodCard({
       {plantIds.length > 0 ? (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {plantIds.map((id) => (
-            <PlantCard key={id} playerId={pod.player_id} plantId={id} />
+            <PlantCard key={id} playerId={pod.player_id} plantId={id} pod={pod} />
           ))}
         </div>
       ) : (

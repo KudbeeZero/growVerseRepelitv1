@@ -5,34 +5,42 @@
 > the code disagree, the code wins — fix the baton. See `docs/SESSION_PROTOCOL.md`.
 
 **Last rewritten:** 2026-06-14 · **By:** procedural-engine chat (PBSA charter — Engines 1–4)
-**Active branch:** `claude/cannabis-growth-engine-s114yu` → **PR #58 (open, base `main`)**. PR #58
-carries **Engines 3 & 4** (phyllotaxy + leaf orientation) **and Engines 1 & 2** (apical-dominance
-multi-cola) — owner directed both on this branch (ART-004); kept on one branch per the session's
-"push only to the assigned branch" rule, so #58 grew from "3&4" to "1–4". Split on request.
-**main is at:** commit `dc6ccde` — FTUE starter-grant (#34), Launch Strain Pack (#33), PR #30
-Dashboard wiring (#29 merge), PR #26 Bud Weight Physics (carrying #29 canonical-PNG), PR #25
-De-Grape — **all merged**. This branch builds the procedural-engine (PBSA) track on top of that.
-**Parked as of the previous (stale) baton — RE-VERIFY before touching:** **PR #27** Phenotype
-Generator Foundation, **PR #28** Circadian Leaf Motion. Their open/merged state was not re-audited
-this chat (the baton predated #30/#33/#34 merging) — `/handoff-audit` should confirm.
+**Active branch:** `claude/cannabis-growth-engine-s114yu` → **PR #58 (open, base `main`)** — the PBSA
+plant-visual-engine track. PR #58 carries **Engines 3 & 4** (phyllotaxy + leaf orientation) **and
+Engines 1 & 2** (apical-dominance multi-cola) — owner directed both on this branch (ART-004) and
+confirmed keeping them unified in #58 (do not split unless audit finds a scope problem). **Status:
+awaiting on-device sign-off → audit → review.** Engine 6 (G×E) is parked until #58 merges.
+**Merged `main` into this branch** (to clear a docs-only conflict + unblock CI): `main` is at
+`5d44d35` — PR #47 Simulation Test Clock + e2e (BE-002/BE-004), FTUE epic (#34/#35/#39), Feature
+Flags (#42), Dashboard wiring (#29/#30), Launch Strain Pack (#33), mobile-nav (#36), OMNI Charter
+(#38), REC-004 memory reconciliation. PR #58 is renderer-only on top of all that.
+**Parked (open PRs, green — do NOT modify):** **PR #27** Phenotype Generator Foundation, **PR #28**
+Circadian Leaf Motion.
 
-> **⚠️ Baton context.** The previous baton was frozen mid-graphics-phase (it still said "merging #26
-> now" though #26/#29/#30/#33/#34 have all since merged to `main`). This chat works the **PBSA
-> charter** ("Procedural Botanical Systems Architect" — own the plant: Engines 1–6) and started the
-> engine track rather than the old "PR #30 dashboard" next-action (which has since merged anyway).
-> The **backend OPEN RISKS below remain carried/NOT re-audited** — renderer-only work this chat.
+> **Two parallel tracks.** This branch is the **PBSA plant-visual-engine** track (Engines 1–6,
+> renderer-only). The studio's **Launch-Readiness** track (Builder Dept: Feature Flags ✅ → Sim Test
+> Clock ✅ → e2e ✅ → Playtesting → Retention → MVP) continues independently on `main`; its consolidated
+> ledger is `docs/memory/CANONICAL_STATE.md` and live coordination is `docs/STUDIO_AGENT_REGISTRY.md`.
+> The backend OPEN RISKS below are carried from the studio baton (not re-audited by this renderer-only
+> chat).
 
 ---
 
 ## NEXT ACTION (the one scoped item the next chat does)
 
-**Engine 6 — G×E whole-plant expression** (renderer-only, PBSA charter). Engines 1–4 shipped (PR #58).
-Engine 6 is the remaining big believability lever: extend `knowledge/whole-plant-architecture.md`
-§Environmental reactions to the *whole plant* (not just buds): high light → compact internodes · low
-light → stretch · cool nights → anthocyanin creep up the stem · strong airflow → thicker stems · heat
-→ leaf claw. The `climateModel` already exists in `morphology.ts` (and `growthMult` already nudges
-height); thread its outputs into `buildPlant` internode/stem-width/leaf-claw and into the stem/leaf
-colour. Stays behind device sign-off like the rest.
+**Drive PR #58 to green + reviewed (PBSA Engines 1–4).** Per the owner (2026-06-14): keep Engines 1–4
+unified in #58; run **on-device sign-off** (multi-cola/apical-dominance visuals look right; stills
+match live chamber; no mobile-layout regression; no perf regression; no unrelated UI changes), then
+**audit PR #58**; do **not** start Engine 6 until #58 is reviewed, audited, and merged. CI on #58 was
+blocked by a docs-only merge conflict with `main` — this chat merged `main` in to clear it; confirm CI
+goes green on the merge commit.
+
+**After #58 merges → Engine 6 — G×E whole-plant expression** (renderer-only, PBSA charter). The
+remaining big believability lever: extend `knowledge/whole-plant-architecture.md` §Environmental
+reactions to the *whole plant* (not just buds): high light → compact internodes · low light → stretch ·
+cool nights → anthocyanin creep up the stem · strong airflow → thicker stems · heat → leaf claw. The
+`climateModel` already exists in `morphology.ts` (and `growthMult` already nudges height); thread its
+outputs into `buildPlant` internode/stem-width/leaf-claw and into the stem/leaf colour.
 - **Reuse, don't rebuild:** the chamber renders through `web/src/lib/chamber/chamberCore.ts` (shared
   by the live `<GrowChamber>` and the headless `npm run gen:stages` generator). Engine modules are
   pure + tested: `phyllotaxy.ts` (3&4) and `apicalDominance.ts` (1&2). Keep them as single sources.
@@ -42,9 +50,13 @@ colour. Stays behind device sign-off like the rest.
 - **Macro Bud Polish II** (BACKLOG, *not launch-blocking*): sharper calyx ridges / denser nesting on
   the PDP *macro* bud — macro view only; whole-plant chamber is the engine track's focus.
 
+> **Studio Launch-Readiness track (parallel, on `main`):** Feature Flags ✅ → Sim Test Clock ✅ → e2e ✅
+> → **STEP 4.5** (`GameService` on `active_clock()` + cure e2e, open on `claude/be-step45-active-clock`,
+> clears RISK #1) → Playtesting → Retention → MVP. Owned by the Builder Dept, not this PBSA chat.
+
 ---
 
-## What THIS chat did
+## What THIS chat did (PBSA Engines 1–4 → PR #58)
 
 **Phyllotaxy & Pseudo-3-D Depth — Engines 3 & 4** (renderer-only; PBSA charter). The whole-plant
 chamber placed every node hard-left/hard-right in one flat picture plane, so plants read as a
@@ -74,6 +86,12 @@ scales the leader by `leaderShare` (≥0.62×). `apicalDominance = 1` ⇒ byte-i
 so veg + spear strains are unchanged. Authored per strain (G13/WFOG high → spear; PDP/White Rhino low
 → bush). ADR `DECISIONS.md` 2026-06-14; BACKLOG ✅.
 
+**Integration:** merged current `main` (PR #47 sim-test-clock/e2e + the REC-004 reconciliation) into
+this branch to clear a **docs-only** conflict (`HANDOFF.md`/`BACKLOG.md`/`DECISIONS.md`) — zero
+source-code conflicts; the engine files are renderer-only and don't touch any path `main` changed —
+and to unblock PR #58's CI (a conflicted PR can't produce a test-merge commit, so no checks ran).
+Opened **PR #58** and updated it to cover Engines 1–4.
+
 ## Verification split (this chat)
 
 **Agent-verifiable (proven):**
@@ -81,10 +99,10 @@ so veg + spear strains are unchanged. Authored per strain (G13/WFOG high → spe
   +6 apicalDominance tests; Constellation sacred-render hashes untouched — that file not modified).
 - Generated the full `npm run gen:stages` PNG matrix (7 strains × 5 stages + macro + motion) and
   **eyeballed them in-session** (G13 veg/late-flower, PDP late-flower, White Rhino veg, Animal Mints
-  harvest, Gelato early-flower): spiral depth + varied leaf yaw present, silhouettes intact, no NaN /
-  vanished branches / artifacts.
-- Backend (no Python changed): `make test` **226 passed, 80.95% ≥ 79** ✅ · `make lint` ✅ ·
-  `make check-memory` ✅ (incl. the new ADR/BACKLOG links).
+  harvest, Gelato early-flower): spiral depth + varied leaf yaw present, single-vs-multi-cola contrast
+  present, silhouettes intact, no NaN / vanished branches / artifacts.
+- Backend carried from `main` (no Python changed by this branch); post-merge gates re-run after the
+  conflict resolution — see the merge commit. `make check-memory` ✅ (new ADR/BACKLOG links resolve).
 
 **Device/human-verifiable (owner — the actual deliverable):**
 - The live chamber pixels + motion/perf. No headless browser drives the live `<GrowChamber>` in CI
@@ -92,25 +110,46 @@ so veg + spear strains are unchanged. Authored per strain (G13/WFOG high → spe
   / White Rhino and confirm: (3&4) branches wind around the stem with front/back depth (not flat left/
   right), leaves vary broad↔edge-on (not all camera-facing); (1&2) G13 grows ONE spear cola while
   PDP/White Rhino grow a leader + competing upright tops (a bush); silhouettes still recognisable; and
-  airflow sway + bud-weight droop still read correctly. **Engines 1–4 need device sign-off** before
-  they're called done.
+  airflow sway + bud-weight droop still read correctly. Plus: no mobile-layout regression, no perf
+  regression, no unrelated UI changes (owner's PR #58 checklist). **Engines 1–4 need device sign-off.**
 
 ---
 
-## OPEN RISKS (carried) — INHERITED from the pre-graphics-phase baton, NOT re-audited this chat
+## OPEN RISKS (carried) — re-verify against current code before acting
 
-> These predate the Graphics Phase and were not re-verified here. Re-audit against current code
-> before acting on any of them. A risk clears only when VERIFIED FIXED (test-backed).
+> A risk clears only when VERIFIED FIXED (test-backed). Risk #1 is new (STEP 4).
 
-| # | Sev | Risk | Evidence | Status (as last recorded 2026-06-10/11) |
+| # | Sev | Risk | Evidence | Status |
 |---|-----|------|----------|--------|
-| 3 | HIGH | Idempotency on mutations. | `api/game_api.py` | PARTIAL — concurrency core fixed; general `Idempotency-Key` header + one-shot grants appear shipped in **open PR #16** (confirm/merge-audit). |
-| 4/7 | HIGH | **Chain settlement not real** — deposit trusts no on-chain proof; treasury drain path; no txid replay protection / reconciliation / address validation. | `services/settlement_service.py`, `db/models.py`, `game_service.py` | OPEN — blocks any real value moving (Sprint 4 gate). |
-| 8 | HIGH | **Web safety net** — vitest now runs in CI (PR #22), but Playwright e2e is still an `echo` stub; treasury-cap + chain-failure-rollback tests absent. | `web/package.json`, `.github/workflows/ci.yml` | PARTIAL. |
-| 9 | MED | **Sim dormancy semantics** — can delay an earned harvest if `max_catchup_hours` lowered below a stage; skips lethal decay. Masked at default cap. | `simulation/engine.py` | OPEN — needs a design decision + knob guard. |
-| 10 | MED | **Web: no global 401/403 handler** — stale key reads as "logged in" to a broken dashboard. | `web/src/lib/api/client.ts`, `RequireAuth.tsx` | OPEN. |
-| 11 | LOW | Rate-limiter `memory://` per-worker (set Redis); `get_level` public oracle. | see fleet-sweep | PARTIAL — validation 500s→400 fixed earlier. |
+| 1 | MED | **Cure/auction not dev-clock-drivable.** `GameService` defaulted to `SystemClock`, so the dev clock couldn't fast-forward cure/auction over HTTP. | `services/game_service.py:82` | **FIXED in the open STEP 4.5 PR** (`GameService` → `active_clock()`, + cure e2e). Clears on merge. |
+| 3 | HIGH | Idempotency on mutations — general `Idempotency-Key` header (duplicate → original response, not a 409). | `api/game_api.py` | PARTIAL — concurrency core + one-shot grants shipped (`grant_claims`, harvest-once index); FTUE `advance` replay-guarded. General header absent (WIP PR #16 closed unmerged). |
+| 4/7 | HIGH | **Chain settlement not real** — deposit trusts no on-chain proof; treasury-drain path; no txid replay protection / reconciliation / address validation. | `services/settlement_service.py`, `db/models.py` | OPEN — blocks any real value moving (Sprint 4 gate). |
+| 8 | HIGH | **Safety net** — **backend HTTP boundary now covered (PR #47: withdraw/deposit/mint/nft, `tests/test_http_boundary.py`)**; **web** Playwright real e2e still a stub; treasury-cap + chain-failure-rollback UI tests absent. | `web/package.json`, `.github/workflows/ci.yml`, `tests/test_http_boundary.py` | PARTIAL (backend ↑; relates to open PR #32). |
+| 9 | MED | **Sim dormancy semantics** — large `max_catchup_hours` gaps can delay an earned harvest / skip lethal decay; needs a design decision + knob guard. (FTUE sidesteps it for the tutorial plant via `last_tick_at = now`.) | `simulation/engine.py` | OPEN. |
+| 11 | LOW | Rate-limiter `memory://` per-worker (set Redis for multi-worker); `get_level` public oracle. | fleet-sweep audit | PARTIAL. |
+
+**Cleared earlier:** *Web global 401/403 handler* (prev RISK #10) — an `AuthErrorListener` tears down
+the session on a rejected key, shipped in **PR #29/#30** (see `DECISIONS.md` 2026-06-14).
 
 > Reassuring (verified solid earlier, not re-checked here): no IDOR; auth/authz server-authoritative;
 > AI SpendGuard unescapable + CI never hits a live key; ledger correct single-threaded; no
-> model↔migration drift.
+> model↔migration drift (single Alembic head).
+
+---
+
+## DIRECTOR DECISIONS (resolved 2026-06-14)
+
+**BE-004A — PR reconciliation (this chat):**
+1. **PR #47** — **CANONICAL** for the Simulation Test Clock; preserve `OffsetClock` / `active_clock()`
+   / `/api/dev/clock/{,advance,reset}` / dev-only gating (`GROW_TEST_CLOCK` + `APP_ENV`, prod
+   hard-disable). Conflicts resolved + **merged** this chat (owner-approved exception to
+   one-PR-one-responsibility, since BE-004 was already built+green on the branch). ✅
+2. **PR #44** — **closed** as superseded by #47. ✅
+3. **PR #32** — service-layer e2e + a CI gate step; now overlaps #47's HTTP e2e. **Owner decision
+   pending:** merge for the CI gate, or close as overlapping. ⬜
+4. **BE-004** — **closed/complete** (its deliverables shipped within PR #47). ✅
+
+**REC-004 (prior sweep, still in force):**
+- **PR #43** owner-merged (folded into REC-004). **PR #37** closed (superseded by the FTUE epic; WO-1/
+  WO-2 logged to BACKLOG). **Branch pruning** approved — recommended list in
+  `docs/memory/CANONICAL_STATE.md` §3; owner executes (destructive git is owner-only).

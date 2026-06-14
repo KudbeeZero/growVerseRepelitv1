@@ -19,7 +19,7 @@ from ..db.models import (
     Plant, GrowPod, PlantEvent, EnvironmentReading, ConsumableInventory,
 )
 from ..simulation import engine
-from ..simulation.clock import Clock, SystemClock
+from ..simulation.clock import Clock, active_clock
 from .game_service import GameError
 
 
@@ -32,7 +32,10 @@ class SimulationService:
     ):
         self.session = session
         self.cfg = config or get_economy_config()
-        self.clock = clock or SystemClock()
+        # Default to the active clock: plain wall time, or the shared test clock
+        # when it is enabled (dev/test only). Explicit injection (tests, other
+        # services) always wins.
+        self.clock = clock or active_clock()
 
     @property
     def _sim(self) -> dict:

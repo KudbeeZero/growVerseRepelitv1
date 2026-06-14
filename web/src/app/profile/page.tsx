@@ -22,6 +22,7 @@ import {
 } from "@/hooks/queries";
 import { api } from "@/lib/api";
 import { useSession } from "@/lib/session";
+import { FEATURES } from "@/lib/features";
 import { queryKeys } from "@/lib/queryKeys";
 import { grow, dateTime, titleCase } from "@/lib/format";
 
@@ -115,26 +116,28 @@ function ProfileInner() {
               ))}
             </div>
           )}
-          <div className="mt-4">
-            <div className="instrument-label mb-1">ALGORAND WALLET</div>
-            {p?.algorand_address ? (
-              <code className="block break-all rounded-md border border-ink-600 bg-ink-900 px-3 py-2 text-xs text-gray-300">
-                {p.algorand_address}
-              </code>
-            ) : (
-              <div className="flex gap-2">
-                <TextInput
-                  value={addr}
-                  onChange={(e) => setAddr(e.target.value)}
-                  placeholder="Algorand address"
-                  aria-label="Algorand wallet address"
-                />
-                <Button size="sm" loading={link.isPending} disabled={!addr.trim()} onClick={() => link.mutate()}>
-                  Link
-                </Button>
-              </div>
-            )}
-          </div>
+          {FEATURES.chain && (
+            <div className="mt-4">
+              <div className="instrument-label mb-1">ALGORAND WALLET</div>
+              {p?.algorand_address ? (
+                <code className="block break-all rounded-md border border-ink-600 bg-ink-900 px-3 py-2 text-xs text-gray-300">
+                  {p.algorand_address}
+                </code>
+              ) : (
+                <div className="flex gap-2">
+                  <TextInput
+                    value={addr}
+                    onChange={(e) => setAddr(e.target.value)}
+                    placeholder="Algorand address"
+                    aria-label="Algorand wallet address"
+                  />
+                  <Button size="sm" loading={link.isPending} disabled={!addr.trim()} onClick={() => link.mutate()}>
+                    Link
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
         </Card>
       </div>
 

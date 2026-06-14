@@ -55,6 +55,25 @@ class Settings:
 
         self.sql_echo: bool = os.environ.get("SQL_ECHO", "false").lower() == "true"
 
+        # --- Deployment environment ---------------------------------------
+        # Names the running environment. "production"/"prod" hard-disables every
+        # dev-only affordance (currently the simulation test clock below),
+        # regardless of any other flag. Defaults to "development" so local runs
+        # and CI stay unlocked without extra config.
+        self.app_env: str = os.environ.get("APP_ENV", "development").strip().lower()
+        self.is_production: bool = self.app_env in {"production", "prod"}
+
+        # --- Simulation test clock (DEV/TEST ONLY) ------------------------
+        # A controllable clock that lets developers/testers fast-forward grow
+        # time without touching the economy or real players. OFF by default and
+        # FORCE-DISABLED in production: enabling it requires GROW_TEST_CLOCK=true
+        # AND a non-production APP_ENV. When on, it registers the /api/dev/clock
+        # endpoints and makes the engine read an advanceable offset clock.
+        _test_clock_requested = (
+            os.environ.get("GROW_TEST_CLOCK", "false").strip().lower() == "true"
+        )
+        self.test_clock_enabled: bool = _test_clock_requested and not self.is_production
+
         # --- Security / hardening -----------------------------------------
         # Allowed browser origins for CORS. Comma-separated; defaults to the
         # local web dev server. Set to the deployed web origin in production.
@@ -118,6 +137,20 @@ class Settings:
         self.enable_auto_care: bool = (
             os.environ.get("ENABLE_AUTO_CARE", "true").lower() == "true"
         )
+
+        # --- MVP feature flags ---------------------------------------------
+        # Non-MVP systems are gated OFF by default so the launch build exposes
+        # only the core grow loop (grow → care → harvest → cure → breed). Flip
+        # a flag on (env=true) to surface that system's API + UI. The web
+        # client mirrors these via NEXT_PUBLIC_ENABLE_* (web/src/lib/features.ts).
+        def _feature(name: str) -> bool:
+            return os.environ.get(name, "false").lower() == "true"
+
+        self.enable_marketplace: bool = _feature("ENABLE_MARKETPLACE")
+        self.enable_chain: bool = _feature("ENABLE_CHAIN")
+        self.enable_cup: bool = _feature("ENABLE_CUP")
+        self.enable_university: bool = _feature("ENABLE_UNIVERSITY")
+        self.enable_contracts: bool = _feature("ENABLE_CONTRACTS")
 
 
 @lru_cache(maxsize=1)

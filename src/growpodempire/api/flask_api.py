@@ -41,6 +41,15 @@ def create_app(init_database: bool = True):
     app.config["RATELIMIT_STORAGE_URI"] = settings.ratelimit_storage_uri
     init_limiter(app)
 
+    # MVP feature flags: gate non-MVP systems (marketplace, on-chain, cup,
+    # university, contracts) off by default. Gated routes check these via
+    # current_app.config (see api/feature_gates.py).
+    app.config["FEATURE_MARKETPLACE"] = settings.enable_marketplace
+    app.config["FEATURE_CHAIN"] = settings.enable_chain
+    app.config["FEATURE_CUP"] = settings.enable_cup
+    app.config["FEATURE_UNIVERSITY"] = settings.enable_university
+    app.config["FEATURE_CONTRACTS"] = settings.enable_contracts
+
     # Ensure the persistent game schema exists (no-op for already-migrated DBs).
     if init_database:
         init_db()
@@ -56,6 +65,13 @@ def create_app(init_database: bool = True):
 
     # DB-backed game layer (players, economy, strains, breeding, market).
     app.register_blueprint(game_bp)
+
+    # DEV/TEST ONLY: the simulation test clock (/api/dev/clock/*). Registered
+    # only when explicitly enabled on a non-production environment, so it can
+    # never exist on a live deployment.
+    if settings.test_clock_enabled:
+        from .dev_api import dev_bp
+        app.register_blueprint(dev_bp)
 
     @app.route('/')
     def index():
