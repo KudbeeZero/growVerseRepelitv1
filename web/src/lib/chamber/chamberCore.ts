@@ -290,15 +290,64 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
     ctx!.lineTo(0, -site.axisLen * 0.98);
     ctx!.stroke();
 
+    // Per-cluster placement, computed once so the continuous bud-mass
+    // silhouette and the calyx texture that rides on it stay in lock-step.
+    const geo: Array<{ cx: number; cy: number; cw: number; podW: number; d: number } | null> = [];
     for (let i = 0; i < site.clusters.length; i++) {
       const cl = site.clusters[i];
       const d = clusterDev(cl, P.budDev);
-      if (d <= 0.01) continue;
+      if (d <= 0.01) { geo.push(null); continue; }
       const cyc = jig ? Math.sin(tt * 30 + cl.ph) * jig : 0;
       const cx = cl.lateral * (0.4 + 0.6 * d) + cyc * 0.5;
       const cy = -cl.along * site.axisLen + (jig ? Math.cos(tt * 26 + cl.ph) * jig * 0.5 : 0);
       const cw = site.baseW * cl.fat * cl.tipTaper * (0.55 + 0.45 * d);
       const podW = Math.max(1.2, cw * 0.2);
+      geo.push({ cx, cy, cw, podW, d });
+    }
+
+    // ---- De-grape: continuous bud-mass silhouette (ported from PR #25) ----
+    // At chamber distance the calyx pods are too small to overlap on their own,
+    // so a flower site read as a handful of loose circles (grapes). Paint a
+    // single SOLID, stacked column behind them first: each developed cluster
+    // contributes an overlapping blob, all fused into one fill so the gaps
+    // close. The calyx texture below then sits ON this mass. Width follows the
+    // existing per-cluster `cw`, so the silhouette stays strain-recognisable
+    // (G13 spiral = slim spear cola; PDP/Animal Mints = chunky stacked mass).
+    const mass = geo.filter((g): g is NonNullable<typeof g> => !!g && g.d > 0.06);
+    if (mass.length) {
+      mass.sort((a, b) => a.cy - b.cy);
+      const bc = live.current.budColor;
+      let top = Infinity, bot = -Infinity;
+      const blobs = mass.map((m, i) => {
+        const up = i > 0 ? Math.abs(m.cy - mass[i - 1].cy) : Infinity;
+        const dn = i < mass.length - 1 ? Math.abs(mass[i + 1].cy - m.cy) : Infinity;
+        const gap = Math.min(up, dn);
+        const rw = Math.max(m.podW * 1.15, m.cw * 0.5) * (0.62 + 0.38 * m.d);
+        // Reach ~70% of the way to the nearest neighbour so adjacent blobs fuse
+        // into one continuous silhouette (no gaps between sites = no grapes).
+        const rh = Math.min(rw * 2.3, Math.max(rw * 1.12, (isFinite(gap) ? gap : rw) * 0.72));
+        top = Math.min(top, m.cy - rh);
+        bot = Math.max(bot, m.cy + rh);
+        return { cx: m.cx, cy: m.cy, rw, rh };
+      });
+      const massLit = 35 + bc.anthocyanin * 2;
+      const mg = ctx!.createLinearGradient(0, top, 0, bot);
+      mg.addColorStop(0, `hsl(${bc.calyxHue + 4}, ${bc.calyxSat}%, ${massLit + 7}%)`);
+      mg.addColorStop(1, `hsl(${bc.calyxHue}, ${Math.min(88, bc.calyxSat + 8)}%, ${Math.max(12, massLit - 13)}%)`);
+      ctx!.fillStyle = mg;
+      ctx!.beginPath();
+      for (const b of blobs) {
+        ctx!.moveTo(b.cx + b.rw, b.cy);
+        ctx!.ellipse(b.cx, b.cy, b.rw, b.rh, 0, 0, TAU);
+      }
+      ctx!.fill();
+    }
+
+    for (let i = 0; i < site.clusters.length; i++) {
+      const cl = site.clusters[i];
+      const gi = geo[i];
+      if (!gi) continue;
+      const { cx, cy, cw, podW, d } = gi;
       const podH = podW * 1.5;
       const bc = live.current.budColor;
       const calyxHue = bc.calyxHue + 3;
