@@ -210,3 +210,37 @@ strains:
     terpenes: [caryophyllene, limonene, myrcene]
     traits: {indica_ratio: 0.75, thc: 23, cbd: 0.5, flowering_time: 60, yield: 520, difficulty: 2, disease_resistance: 0.6, pest_resistance: 0.6, vigor: 0.75}
     dominant: [indica_ratio, thc]
+
+  # --- Launch Strain Integration Pack. Visuals authored in
+  # web/src/lib/chamber/{strainVisuals,budDna}.ts; encyclopedia in strain_knowledge.yaml.
+  - name: White Rhino
+    lineage_type: hybrid
+    rarity: rare
+    stability: 0.85
+    terpenes: [myrcene, caryophyllene, pinene]
+    traits: {indica_ratio: 0.85, thc: 22, cbd: 0.5, flowering_time: 56, yield: 600, difficulty: 2, disease_resistance: 0.7, pest_resistance: 0.6, vigor: 0.75}
+    dominant: [indica_ratio, yield]
+
+  - name: White Fire OG
+    lineage_type: hybrid
+    rarity: epic
+    stability: 0.8
+    terpenes: [caryophyllene, limonene, myrcene]
+    traits: {indica_ratio: 0.55, thc: 23, cbd: 0.5, flowering_time: 63, yield: 480, difficulty: 3, disease_resistance: 0.5, pest_resistance: 0.6, vigor: 0.7}
+    dominant: [thc]
+
+  - name: Gelato
+    lineage_type: hybrid
+    rarity: epic
+    stability: 0.8
+    terpenes: [caryophyllene, limonene, myrcene]
+    traits: {indica_ratio: 0.55, thc: 24, cbd: 0.5, flowering_time: 60, yield: 520, difficulty: 3, disease_resistance: 0.5, pest_resistance: 0.6, vigor: 0.7}
+    dominant: [thc]
+
+  - name: Wedding Cake
+    lineage_type: hybrid
+    rarity: epic
+    stability: 0.8
+    terpenes: [caryophyllene, limonene, myrcene]
+    traits: {indica_ratio: 0.6, thc: 25, cbd: 0.5, flowering_time: 60, yield: 520, difficulty: 3, disease_resistance: 0.6, pest_resistance: 0.6, vigor: 0.7}
+    dominant: [thc, indica_ratio]
