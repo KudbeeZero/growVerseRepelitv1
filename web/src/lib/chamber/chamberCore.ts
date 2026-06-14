@@ -22,6 +22,14 @@ import {
 } from "./morphology";
 import { pickPaletteColor, dominantPaletteColor, type BudDNA } from "./budDna";
 import { phyllotaxis, foreshorten, depthShade } from "./phyllotaxy";
+import {
+  maturityMix,
+  maturityFor,
+  trichHeadColor,
+  shimmer,
+  budSiteDensity,
+  SHIMMER_MAX_AMP,
+} from "./trichomes";
 import { colaTops } from "./apicalDominance";
 import { CONDITION_VISUALS, SEVERITY_SCALE, dominantFlag } from "../conditionVisuals";
 import {
@@ -211,14 +219,6 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
     r = lerp(r, 244, mag); g = lerp(g, 120, mag); b = lerp(b, 178, mag);
     return `rgb(${r | 0},${g | 0},${b | 0})`;
   }
-  // Resin-head colour by maturity: clear → cloudy-white (the dominant frosty
-  // band) → amber only at the very end. Frost should read mostly white.
-  function trichHead(p: number) {
-    if (p < 0.5) return "rgba(236,250,255,0.6)";
-    if (p < 0.9) return "rgba(248,250,244,0.95)";
-    return "rgba(228,188,110,0.95)";
-  }
-
   function buildFlowerSite(
     rnd: () => number,
     axisLen: number,
@@ -283,7 +283,13 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
     return clamp(budDev * (0.4 + 0.9 * Math.max(0, cl.centerBias)), 0, 1) * (budDev > 0.02 ? 1 : 0);
   }
 
-  function drawFlowerSite(site: FlowerSite, P: DevParams, jig: number, tt: number) {
+  function drawFlowerSite(
+    site: FlowerSite,
+    P: DevParams,
+    jig: number,
+    tt: number,
+    trichScale = 1,
+  ) {
     ctx!.strokeStyle = `hsl(${S.hue - 12}, 32%, 30%)`;
     ctx!.lineWidth = Math.max(1.5, site.baseW * 0.06);
     ctx!.lineCap = "round";
@@ -416,13 +422,18 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
           ctx!.fill();
         }
       }
-      // Trichomes — stalked capitate glands spread across the calyx surface:
-      // a clear glassy stalk, a bulbous resin head (clear→cloudy→amber with
-      // maturity) and a specular sparkle. Dense coverage reads as frost.
+      // Trichomes (Engine 7) — stalked capitate glands coating the calyx: a
+      // glassy stalk + a bulbous resin head whose colour is THIS gland's maturity
+      // bucket (clear→cloudy→amber). The population ripens with the plant, frost
+      // thins off the top cola via `trichScale`, purple phenos tip the heads a
+      // touch lavender, and each head micro-shimmers out of phase (never a strobe).
       if (P.trich > 0 && detailed) {
         ctx!.lineCap = "round";
+        const purple = clamp(live.current.budColor?.anthocyanin ?? 0, 0, 1);
+        const mix = maturityMix(clamp(P.ripe * 0.7 + P.brown * 0.6, 0, 1), purple * 0.4);
+        const dens = P.trich * clamp(trichScale, 0, 1);
         for (const tr of cl.tris) {
-          if (tr.k > P.trich) continue;
+          if (tr.k > dens) continue;
           // Dense, SHORT glands coating the calyx surface — a frost, not spikes.
           const rad = cw * (0.08 + 0.44 * tr.k);
           const L = cw * (0.025 + 0.05 * tr.len);
@@ -434,13 +445,18 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
           ctx!.moveTo(x0, y0);
           ctx!.lineTo(x1, y1);
           ctx!.stroke();
+          // bulbous resin head — maturity-coloured, micro-shimmering
+          const m = maturityFor(tr.mat, mix);
+          const sh = motionOK
+            ? shimmer(tt, tr.a * 7.13, 0.6 + tr.len * 1.2, SHIMMER_MAX_AMP * 0.7)
+            : 1;
           const hr = tr.headR * Math.max(0.55, cw * 0.013);
-          ctx!.fillStyle = trichHead(clamp(P.trich - tr.mat * 0.4, 0, 1));
+          ctx!.fillStyle = trichHeadColor(m, clamp(0.85 * sh, 0, 1), purple);
           ctx!.beginPath();
           ctx!.arc(x1, y1, hr, 0, TAU);
           ctx!.fill();
-          // faint matte glint (not a wet-plastic specular)
-          ctx!.fillStyle = "rgba(236,242,236,0.22)";
+          // faint matte glint (shimmers with the head, not a wet-plastic specular)
+          ctx!.fillStyle = `rgba(236,242,236,${(0.22 * sh).toFixed(2)})`;
           ctx!.beginPath();
           ctx!.arc(x1 - hr * 0.3, y1 - hr * 0.3, hr * 0.26, 0, TAU);
           ctx!.fill();
@@ -1260,7 +1276,8 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
           ctx!.translate(bex, bey);
           // Small extra nod: the bud hangs a touch beyond the (already drooped) branch.
           ctx!.rotate(nd.side * 0.12 + nd.side * droopRot * 0.15);
-          drawFlowerSite(bl.site, p.P, jig, tt);
+          // branchlet buds sit lower/outer — thinner frost than their parent node
+          drawFlowerSite(bl.site, p.P, jig, tt, budSiteDensity(nd.f) * 0.7);
           ctx!.restore();
         }
         ctx!.restore();
@@ -1270,7 +1287,7 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
         ctx!.save();
         ctx!.translate(0, -2);
         ctx!.rotate(-nd.side * 0.12);
-        drawFlowerSite(nd.nodeBud, p.P, jig, tt);
+        drawFlowerSite(nd.nodeBud, p.P, jig, tt, budSiteDensity(nd.f) * 0.9);
         ctx!.restore();
       }
       // Bud at the branch tip.
@@ -1278,7 +1295,7 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
         ctx!.save();
         ctx!.translate(endX * 0.85, endY * 0.85);
         ctx!.rotate(nd.budRot + nd.side * droopRot * 0.2); // bud nods a touch past the drooped branch
-        drawFlowerSite(nd.site, p.P, jig, tt);
+        drawFlowerSite(nd.site, p.P, jig, tt, budSiteDensity(nd.f));
         ctx!.restore();
       }
       ctx!.restore();
@@ -1300,7 +1317,7 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
       ctx!.translate(0, -p.cola.site.axisLen * 0.04);
       drawFan(p.A * 0.08 * (1 - 0.35 * p.P.budDev), Math.min(S.leafletMax, 5 + Math.floor(day / 18)), 1, claw);
       ctx!.restore();
-      drawFlowerSite(p.cola.site, p.P, cjig, tt);
+      drawFlowerSite(p.cola.site, p.P, cjig, tt, 1.0); // top cola — full frost
       ctx!.restore();
     } else {
       ctx!.save();
@@ -1537,20 +1554,22 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
     // ---- trichome frost: soft additive specks that build into fuzzy frost
     // patches (revealed with their host calyx, never floating) ----
     if (P.trich > 0) {
-      // Normal blend (not additive): matte, light-scattering resin dust — cool
-      // cream-grey, not a white glow. A little amber only on the most mature.
+      // Engine 7: the close-up frost carries the same maturity model — each speck
+      // is clear / cloudy / amber by its stable bucket against the ripening mix,
+      // with a lavender tip on purple phenos. Matte, light-scattering resin dust.
       ctx!.save();
+      const purpleM = clamp(live.current.budColor?.anthocyanin ?? 0, 0, 1);
+      const mixM = maturityMix(clamp(P.ripe * 0.7 + P.brown * 0.6, 0, 1), purpleM * 0.4);
       for (const t of bud.trichs) {
         if (t.k > P.trich || grow < 0.04 + t.depth * 0.35) continue;
         const x = t.x - baseX, y = t.y - baseY;
-        const mt = clamp(P.trich - t.mat * 0.4, 0, 1);
-        ctx!.globalAlpha = 0.1 + 0.2 * mt;
-        ctx!.fillStyle = mt > 0.9 ? "rgb(168,140,86)" : "rgb(214,224,216)";
+        const m = maturityFor(t.mat, mixM);
+        const a = 0.1 + 0.2 * clamp(P.trich - t.mat * 0.4, 0, 1);
+        ctx!.fillStyle = trichHeadColor(m, a, purpleM);
         ctx!.beginPath();
         ctx!.arc(x, y, t.r * Math.max(0.8, budW * 0.014), 0, TAU);
         ctx!.fill();
       }
-      ctx!.globalAlpha = 1;
       ctx!.restore();
     }
     ctx!.restore();
