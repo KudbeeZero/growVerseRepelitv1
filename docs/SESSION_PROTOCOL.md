@@ -5,11 +5,6 @@
 > system (see `docs/memory/README.md`); it does not replace it. The baton
 > (`docs/HANDOFF.md`) is the live tip of that stack — what the *next* chat does first.
 
-> **Meta:** this protocol + the Layer 0–4 memory system are the live substrate that the
-> **AI Studio Framework** concept generalizes into a portable, multi-agent studio (roles as
-> enforced subagents, machine-readable state, a skills marketplace). See
-> `AI_STUDIO_FRAMEWORK.md`.
-
 ## The loop
 
 ```

@@ -12,6 +12,7 @@ import { advisor } from "./advisor";
 import { harvests } from "./harvests";
 import { cup } from "./cup";
 import { university } from "./university";
+import { ftue } from "./ftue";
 
 export const api = {
   players,
@@ -28,6 +29,7 @@ export const api = {
   harvests,
   cup,
   university,
+  ftue,
 };
 
 export { ApiError } from "./client";

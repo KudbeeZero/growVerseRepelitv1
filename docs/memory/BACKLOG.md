@@ -1,9 +1,57 @@
 # Backlog (Layer 3) — single source of priority
 
 Status: `⬜ todo · 🔨 doing · ✅ done · ❄️ parked`. Standups may *propose* items; they're only real
-once they appear here. Last reconciled: **2026-06-10**.
+once they appear here. Last reconciled: **2026-06-14** (REC-004 full repository memory sweep).
 
-## 🎨 Graphics Phase II/III (active track — visual polish to MVP launch; no scope expansion)
+> **Reconciliation note (REC-004, 2026-06-14):** the Graphics Phase + Dashboard wiring are done and
+> signed off; the studio is on the **New-Player / Launch-Readiness** track below. The full ledger of
+> PRs / branches / directives + the launch critical path + department status live in
+> `docs/memory/CANONICAL_STATE.md`.
+
+## 🚀 New-Player / Launch-Readiness (ACTIVE track — onboarding → MVP launch)
+> Player-facing, additive work on existing rails toward a launchable MVP — **no economy / chain /
+> breeding / factions / combat / new crop families, no new Phase-2 systems.** Off-chain MVP first.
+- 🚀 ✅ **FTUE Epic — guided first grow** (merged 2026-06-14) — **PR #34** starter-grant rail
+  (one-shot/idempotent via `grant_claims` unique index, migration `c7ecd7523cc8`), **PR #35** tutorial
+  backend (`services/ftue_service.py` — a guarded deterministic step machine on `Player.ftue_step`,
+  per-step scripted AI Master Grower coaching `ai/ftue_coach.py`, tutorial-only time-compression,
+  `/ftue` endpoints, migration `9d669edf48a8`), **PR #39** web `/ftue` guided route. New signups walk
+  plant → water → climate → grow → harvest → "come back tomorrow". ADR in `DECISIONS.md` (2026-06-14);
+  5 FTUE tests in `tests/test_ftue.py`.
+- 🚀 ✅ **Launch Strain Integration Pack** (PR #33, merged 2026-06-13) — White Rhino, White Fire OG,
+  Gelato, Wedding Cake added to `data/strains.yaml` + `data/strain_knowledge.yaml` (catalog now
+  **29 strains**, 1:1 KB sync test green) with authored chamber visuals + per-strain physics knobs.
+- 🚀 ✅ **Mobile-first navigation** (PR #36, merged 2026-06-14) — native bottom tab bar (primary +
+  "More" sheet), `env(safe-area-inset-*)` handling, focus-visible rings, thumb-zone CTA targets
+  (≥44px), responsive Grow Chamber. ADR in `DECISIONS.md` (2026-06-14). (PR #40's competing bottom-nav
+  was retired — FP-1 superseded by #36; see `docs/STUDIO_AGENT_REGISTRY.md` collision log.)
+- 🚀 ✅ **DX-001 Care Feedback & Celebration** (PR #41, merged 2026-06-14) — rewarding care actions +
+  a harvest moment (`web/src/components/plant/CareFeedback.tsx`, `web/src/components/plant/careFeedback.ts`,
+  `web/src/lib/haptics.ts`, `web/src/hooks/usePrefersReducedMotion.ts`); reduced-motion safe. Addresses
+  #37's FP-5/FP-9 friction.
+- 🚀 ✅ **FP-3 Primary Plant CTA** (PR #45, "DIR-004", merged 2026-06-14) — the next action is always
+  visually primary on the dashboard for a new grower (`web/src/lib/plantAction.ts`,
+  `web/src/components/plant/PlantActionCTA.tsx`). The re-cut of #37's FP-3.
+- 🚀 ⬜ **Salvaged from PR #37 (Grow Guide, closed)** — backend work orders the closed coach needed,
+  not yet built: **WO-1** per-action "last cared at" / care-acknowledged signals (so a tutorial can
+  gate discrete Water/Feed/Check steps without guessing from decaying levels); **WO-2** a lightweight
+  "session delta / welcome-back" endpoint (what changed since last seen — stage advances, new buds,
+  frost) to power a return-moment. Both are backend (WO-gated); design only until approved.
+- 🚀 ✅ **Feature Flags** (PR #42, landed 2026-06-14) — data-driven MVP launch gate: non-MVP systems
+  (marketplace, on-chain `chain`, Cup, University, contracts) gated **OFF by default**. Backend
+  `config.Settings` `ENABLE_*` → `app.config["FEATURE_*"]` enforced by a `require_feature` decorator
+  (`api/feature_gates.py`) applied **above** `require_player` (gated route → **404 before auth**). Web
+  mirrors via `NEXT_PUBLIC_ENABLE_*` (`web/src/lib/features.ts`): feature-gating lives in the shared
+  `web/src/components/layout/navLinks.ts` so **both** the desktop `NavBar` and the mobile `MobileTabBar`
+  hide gated entries, plus `RequireFeature` route guards and in-page hides. Tests:
+  `tests/test_feature_gates.py`, `web/src/lib/__tests__/features.test.ts`. ADR in `DECISIONS.md`
+  (2026-06-14).
+- 🚀 ⬜ **Playtesting → Retention Validation → MVP Launch Candidate** — the launch critical-path tail.
+- 🚀 ❄️ **OMNI Charter v1.0** (PR #38, merged 2026-06-14) — organizational constitution
+  (`docs/OMNI_CHARTER.md`): chain of command, departments, work-order system, canonical principles.
+  Governance layer; no further backlog action.
+
+## 🎨 Graphics Phase II/III (COMPLETE — signed off 2026-06-14; no scope expansion)
 > The game's emotional core is the whole-plant chamber view. This track is **visual-only** —
 > no economy / chain / breeding / factions / combat / new crop families. Canon lives in
 > `knowledge/` (botanical-bible, macro-bud-rules, whole-plant-architecture, strain-dna,
@@ -27,17 +75,34 @@ once they appear here. Last reconciled: **2026-06-10**.
   (output `web/canonical-stages/`, gitignored). De-grape ported into `chamberCore` on merge.
 - 🎨 ⬜ **PR #27 — Phenotype Generator Foundation** — *PARKED* (open PR, green). Do not modify.
 - 🎨 ⬜ **PR #28 — Circadian Leaf Motion** — *PARKED* (open PR, green). Do not modify.
-- 🎨 ⬜ **PR #30 — Dashboard / GameState Wiring Polish** — next actual build PR. Unify the
-  chamber/dashboard state wiring.
-- 🎨 🔨 **PR #31 — MVP Launch Candidate.**
-  - ✅ **Feature-flag layer** (2026-06-14) — non-MVP systems (marketplace, on-chain, cup,
-    university, contracts) gated OFF by default; `require_feature` decorator (`api/feature_gates.py`)
-    + `config.Settings` flags backend, `web/src/lib/features.ts` + `RequireFeature` on the web.
-    Tests: `tests/test_feature_gates.py`. See `DECISIONS.md` 2026-06-14.
-  - ⬜ Remaining: sim test-clock, e2e grow-loop in CI, FTUE (+ fresh `grant_claims`).
+- 🎨 ✅ **PR #29/#30 — Dashboard / GameState Wiring Polish** (merged 2026-06-14) — consumption polish
+  on the flat `GET …/plants/<id>/state` wire (it stays canonical; no aggregate `GameState` object —
+  see `DECISIONS.md` 2026-06-14). Added a global `AuthErrorListener` (401/403 → session teardown,
+  clears prior RISK #10) and `usePods` refresh-on-interval/focus.
+- MVP Launch Candidate now lives on the 🚀 New-Player / Launch-Readiness track above (after Feature
+  Flags → Mobile Polish → Playtesting → Retention Validation).
 - 🎨 ⬜ **Macro Bud Polish II** (future; *not launch-blocking*) — sharper calyx ridges, denser calyx
   nesting, reduce the smooth-oval appearance on the Purple Diddy Punch *macro* bud, improve chunky
   calyx definition. Macro ("Detailed Bud View") only — the whole-plant chamber is signed off.
+
+## 🚀 Launch-Readiness path (Builder Dept — STEP sequence)
+> Feature Flags → **STEP 3 Simulation Test Clock** → STEP 4 e2e Grow Loop → Launch Readiness.
+- 🚀 ✅ **STEP 3 — Simulation Test Clock** (BE-002, 2026-06-14) — dev/test-only `OffsetClock` on the
+  existing compute-on-read seam: `/api/dev/clock/{,advance,reset}`, registered only when
+  `GROW_TEST_CLOCK=true` on a non-production `APP_ENV` (force-disabled in prod). Advancing time posts
+  **no ledger entries** (economy untouched), forward-only, capped at 8760h. ADR in `DECISIONS.md`
+  (2026-06-14); usage in `docs/SIMULATION_TEST_CLOCK.md`; `tests/test_test_clock.py` (15).
+- 🚀 ✅ **STEP 4 — e2e Grow Loop** (BE-004, 2026-06-14) — seed → plant → grow → flower → harvest →
+  sell driven over the HTTP API and fast-forwarded with the STEP 3 dev clock
+  (`tests/test_e2e_grow_loop.py`, 3). Ledger integrity proven (advancing time posts no entries).
+  HTTP-boundary coverage for the value-bearing routes — withdraw/deposit/mint/nft — landed
+  (`tests/test_http_boundary.py`, 13), partially closing RISK #8 (backend side). Report:
+  `docs/STEP4_E2E_GROW_LOOP_VALIDATION.md`. Suite 262 green, 83.6% ≥ 79%. **Test-only, no source.**
+- 🚀 ⬜ **STEP 4.5 — GameService on `active_clock()` + cure/auction e2e** (next; owner-approved
+  2026-06-14) — one-line change (`game_service.py:82`, mirroring STEP 3) so the dev clock also
+  fast-forwards harvest/**cure**/sell + auction expiry over HTTP, then extend the e2e loop to the
+  cure step. Prod-behaviour identical (`active_clock()` → `SystemClock` in prod). See Risk #1 in the
+  STEP 4 report.
 
 ## 🔴 Immediate (do now — correctness, truth, or unblocks others)
 - 🔴 🔨 **Concurrency + idempotency hardening** (RISK #6) — *core landed 2026-06-10*: wallet

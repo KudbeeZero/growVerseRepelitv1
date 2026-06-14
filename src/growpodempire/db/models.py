@@ -56,6 +56,11 @@ class Player(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     cannabis_cup_title: Mapped[Optional[str]] = mapped_column(String(96), default=None)
     # Highest GrowPod University degree title earned (permanent).
     university_title: Mapped[Optional[str]] = mapped_column(String(96), default=None)
+    # First-time-user experience: which guided tutorial step the player is on
+    # ("welcome" → … → "completed"), the tutorial plant, and when they finished.
+    ftue_step: Mapped[str] = mapped_column(String(32), default="welcome", nullable=False)
+    ftue_plant_id: Mapped[Optional[str]] = mapped_column(String(32), default=None)
+    ftue_completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
 
     wallet: Mapped["Wallet"] = relationship(
         back_populates="player", uselist=False, cascade="all, delete-orphan"
@@ -188,6 +193,31 @@ class SeedInventory(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
     __table_args__ = (
         Index("ix_seed_player_strain", "player_id", "strain_id"),
+    )
+
+
+class GrantClaim(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    """A one-shot grant ledger for non-currency faucets (starter pod/seed, etc.).
+
+    The unique index on (player_id, grant_type, grant_key) is the hard backstop
+    that makes a faucet idempotent: a raced double-signup or a re-run of the grant
+    path can never hand out a second starter pod or seed. Distinct from the money
+    ledger — this records *that* a one-time item grant happened, not a balance."""
+
+    __tablename__ = "grant_claims"
+
+    player_id: Mapped[str] = mapped_column(ForeignKey("players.id"), nullable=False)
+    grant_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    grant_key: Mapped[str] = mapped_column(String(64), nullable=False)
+
+    __table_args__ = (
+        Index(
+            "uq_grant_claims_player_type_key",
+            "player_id",
+            "grant_type",
+            "grant_key",
+            unique=True,
+        ),
     )
 
 

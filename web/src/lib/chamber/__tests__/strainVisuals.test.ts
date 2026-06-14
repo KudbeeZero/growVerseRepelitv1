@@ -55,3 +55,38 @@ describe("budColorForStrain (regression — unchanged by silhouette work)", () =
     expect(c.calyxHue).toBeGreaterThan(255);
   });
 });
+
+describe("Launch Strain Integration Pack — authored visuals + identity", () => {
+  const LAUNCH = ["white-rhino", "white-fire-og", "gelato", "wedding-cake"] as const;
+
+  it("gives each launch strain an authored silhouette (not the indica-derived default)", () => {
+    for (const slug of LAUNCH) {
+      expect(silhouetteFor(slug, 0.6), `${slug} silhouette authored`).not.toEqual(silhouetteFor(undefined, 0.6));
+    }
+  });
+
+  it("carries the PR #26 bud-weight physics knobs on every launch silhouette", () => {
+    for (const slug of LAUNCH) {
+      const s = silhouetteFor(slug, 0.6);
+      expect(s.branchStrength, `${slug} branchStrength`).toBeGreaterThan(0);
+      expect(s.budWeightMul, `${slug} budWeightMul`).toBeGreaterThan(0);
+    }
+    // White Rhino is the heaviest, chunkiest cola (most droop): highest budWeightMul.
+    expect(silhouetteFor("white-rhino", 0.6).budWeightMul).toBeGreaterThan(silhouetteFor("white-fire-og", 0.6).budWeightMul);
+  });
+
+  it("frosty-WHITE strains carry no anthocyanin (frost, not purple)", () => {
+    expect(budColorForStrain("white-rhino", 110, 1).anthocyanin).toBe(0);
+    expect(budColorForStrain("white-fire-og", 110, 1).anthocyanin).toBe(0);
+  });
+
+  it("purple-dessert strains carry high anthocyanin + a purple accent", () => {
+    const gelato = budColorForStrain("gelato", 110, 1);
+    expect(gelato.anthocyanin).toBeGreaterThan(0.5);
+    expect(gelato.accentHue).toBeGreaterThan(255);
+
+    const weddingCake = budColorForStrain("wedding-cake", 110, 1);
+    expect(weddingCake.anthocyanin).toBeGreaterThan(0.4);
+    expect(weddingCake.accentHue).toBeGreaterThan(255);
+  });
+});

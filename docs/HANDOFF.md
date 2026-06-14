@@ -4,90 +4,138 @@
 > the end of every chat; read by `/handoff-audit` at the start of the next. If this file and
 > the code disagree, the code wins — fix the baton. See `docs/SESSION_PROTOCOL.md`.
 
-**Last rewritten:** 2026-06-14 · **By:** bud-weight-physics + canonical-PNG chat
-**Active branch:** `claude/bud-weight-physics-polish-7daxpa` (PR #26, base `main`)
-**Just merged to main:** **PR #25** (De-Grape, 2026-06-14). **Merging now:** **PR #26** (Bud Weight
-Physics) — which carries **PR #29** (Canonical Stage PNG Generation) on the same branch; both land
-together. Owner gave visual sign-off on #25/#26 via the canonical stage stills (2026-06-14).
-**Parked (open PRs, green — do NOT modify):** **PR #27** Phenotype Generator Foundation, **PR #28**
-Circadian Leaf Motion.
+**Last rewritten:** 2026-06-14 · **By:** BE-004A reconciliation chat (landed PR #47 = STEP 3 clock **+** STEP 4 e2e)
+**Active branch:** `main` (post-merge — PR #47 just landed; no feature branch open from this chat)
+**Just merged to main (this chat):** **PR #47 — Simulation Test Clock (BE-002, STEP 3) + e2e Grow Loop
+(BE-004, STEP 4).** The dev/test-only `OffsetClock`/`active_clock()` seam, the `/api/dev/clock/*`
+endpoints (force-disabled in production), **plus** the full core-loop e2e (seed → plant → flower →
+harvest → sell over the HTTP API, fast-forwarded with the dev clock) and HTTP-boundary coverage for
+the value-bearing routes (RISK #8, backend side). **Test-only / no production behaviour change.**
+**Closed this chat:** **PR #44** (the competing STEP 3 test-clock) — **superseded by PR #47** per the
+Director's BE-004A reconciliation decision.
+**Recently merged (per `main` / REC-004 sweep):** FTUE epic (**#34/#35/#39**), Dashboard wiring
+(**#29/#30**), Launch Strain Pack (**#33** → 29-strain catalog), mobile-first nav (**#36**), OMNI
+Charter (**#38**), DX-001 Care Feedback (**#41**), FP-3 Primary CTA (**#45**), REC-003 Studio Agent
+Registry (**#46**), REC-004 memory reconciliation (**#50**), University curriculum docs (**#51**).
+**Parked (open PRs, green — do NOT modify):** **PR #27** Phenotype Generator Foundation,
+**PR #28** Circadian Leaf Motion.
+**Other open PRs (owner decision):** **PR #32** E2E grow-loop CI (service-layer + a CI gate step) —
+**now overlaps PR #47's HTTP e2e**; the owner should decide *merge for the CI gate* vs *close as
+overlapping*. **PR #42** *MVP Feature Flag Layer* (the NEXT ACTION).
 
-> **⚠️ Baton was stale before this chat.** This file had been frozen at the 2026-06-10 *backend*
-> phase (idempotency/concurrency) while the entire **Graphics Phase** (PRs ~#13–#25: grow-chamber
-> renderer, macro-bud system, whole-plant architecture, per-strain leaf morphology, stage-reference
-> grid) landed without updating it. This chat rewrote the baton to the graphics track. The
-> inherited **backend OPEN RISKS below were NOT re-audited** during the graphics phase — they are
-> carried forward verbatim and flagged as such. A chat returning to backend work must re-verify
-> them against current code (note: RISK #6's idempotency remainder appears to have shipped in the
-> still-open PR #16 — confirm before acting).
+> **Launch-Readiness path (Builder Dept):** Feature Flags → STEP 3 Simulation Test Clock ✅ → STEP 4
+> e2e Grow Loop ✅ → **Feature Flags (#42, NEXT)** → Playtesting → Retention Validation → MVP Launch
+> Candidate. The backend OPEN RISKS below were **not** re-audited beyond RISK #1/#8; re-verify against
+> current code before acting. The authoritative consolidated Records ledger is
+> `docs/memory/CANONICAL_STATE.md`; live cross-agent coordination is `docs/STUDIO_AGENT_REGISTRY.md`.
 
 ---
 
 ## NEXT ACTION (the one scoped item the next chat does)
 
-**PR #30 — Dashboard / GameState Wiring Polish.** With the whole-plant chamber visuals signed off
-(#25/#26) and the canonical-stage generator landed (#29), the next build PR unifies the
-chamber/dashboard game-state wiring (`GameState · PlantState · EnvironmentState · UIState · BudState`
-per `knowledge/whole-plant-architecture.md` § State). Then **PR #31 — MVP Launch Candidate**.
-- **Visual/UX-only track.** No economy / chain / breeding / factions / combat / tomato / crop
-  families. Do NOT start organic-geometry / mutation rendering yet.
-- **Do NOT modify PR #27 (Phenotype) or PR #28 (Circadian)** — both parked and green.
-- **Reuse, don't rebuild:** the chamber now renders through `web/src/lib/chamber/chamberCore.ts`
-  (shared by the live component and the headless `npm run gen:stages` generator). Keep that single
-  source intact.
-- **Macro Bud Polish II** (BACKLOG, *not launch-blocking*): sharper calyx ridges / denser nesting /
-  reduce the smooth-oval look on the PDP *macro* bud — macro view only; whole-plant is signed off.
+**Audit & land Feature Flags (open PR #42 — "MVP Feature Flag Layer")** — the head of the launch
+critical path, per the Director's post-merge path. A PR already exists, so **audit and finish #42**
+rather than building from scratch. Goal: a minimal, data-driven launch gate / kill-switch surface so
+player-facing surfaces (the `/ftue` tutorial, chamber polish, future systems) can be toggled
+per-environment **without a deploy**, mirroring the `balance.yaml` "tuning surface" convention.
+Confirm the shape is additive: a `flags` section in config (or a small `feature_flags` table only if
+per-player/cohort targeting is needed), a server-authoritative read endpoint, and a tiny web hook to
+gate routes/components.
+- **Off-limits:** no economy / chain / breeding / factions / combat / new crop families; no new
+  Phase-2 systems. Do **not** modify the parked PRs (#27, #28).
+- **Reuse, don't rebuild:** the chamber renders through `web/src/lib/chamber/chamberCore.ts` (single
+  source); the flat `GET …/plants/<id>/state` wire is canonical (DECISIONS 2026-06-14) — do **not**
+  build the aspirational `GameState/EnvironmentState/UIState` aggregate.
+- **Follow the registry:** claim file surfaces in `docs/STUDIO_AGENT_REGISTRY.md` and rebase onto
+  `main` first (this chat's collision — BE-004 built on #47's branch while a separate branch was
+  planned — is exactly what the registry exists to prevent).
+
+> **Known deferred follow-up (owner-approved, not the immediate NEXT):** **STEP 4.5 —
+> `GameService` on `active_clock()` + cure/auction e2e.** STEP 4 surfaced that `GameService`
+> (harvest/**cure**/sell + market/auction expiry) defaults to `SystemClock`, not `active_clock()`
+> (`services/game_service.py:82`), so the dev clock does NOT fast-forward cure/auction over HTTP. The
+> fix is one line (`self.clock = clock or active_clock()`, mirroring `simulation_service.py:38`),
+> production-behaviour identical, but it edits a production-path file — deferred out of the test-only
+> STEP 4. See RISK #1.
 
 ---
 
-## What THIS chat did
+## What THIS chat did (BE-004A reconciliation + PR #47 landing)
 
-**PR #25 — De-Grape Whole Plant Buds** (visual-only). Chamber flower sites read as grapes (loose
-circles) because `drawFlowerSite` painted only a stem axis + discrete teardrop calyx pods, which
-are too small to overlap at chamber distance. Ported the macro renderer's solid-core idea down to
-the chamber:
-- Each `FlowerSite` now paints **one continuous bud-mass silhouette** behind its calyxes —
-  overlapping per-cluster blobs fused into a single fill, each reaching ~70% of the way to its
-  neighbour so the gaps close into a stacked solid column; calyxes/pistils/trichomes ride on top
-  as texture. Width follows the existing per-cluster width curve, so silhouettes stay
-  strain-recognisable (G13 slim spear cola; PDP / Animal Mints chunky stacked masses); top cola +
-  node/tip sites flow through the same path and merge near the apex.
-- Cluster placement is precomputed once and shared by the mass fill and the texture pass
-  (lock-step sway); cost is one gradient + one fill per site per frame. Pure logic
-  (`morphology`/`budDna`/`strainVisuals`) untouched.
-- Docs: ADR in `DECISIONS.md` (2026-06-13); `🎨 Graphics Phase II` tracker in `BACKLOG.md` (PR #25
-  ✅, PR #26–30 queued); standup `2026-06-13-lut-report.md`; kickoff audit receipt.
+Reconciled the three overlapping Builder-Dept PRs and landed the canonical one, per the Director's
+BE-004A decision:
+- **Reviewed PRs #32 / #44 / #47** and recommended #47 as canonical (the only one delivering the
+  `/api/dev/clock/*` HTTP endpoints + `APP_ENV` prod-gate that BE-004 requires); confirmed BE-004's
+  e2e + HTTP-boundary work was **already built on #47's branch** (commit `e9df323`), test-only and
+  green.
+- **Resolved #47's merge conflicts against current `main`** — docs-only (`HANDOFF.md`,
+  `DECISIONS.md`; `BACKLOG.md` auto-merged); **zero source-code conflicts** — and merged #47.
+- **Closed PR #44** as superseded by #47.
+- Folded the STEP 3 (BE-002) and STEP 4 (BE-004) ADRs into `DECISIONS.md` alongside main's FTUE /
+  mobile-nav / OMNI ADRs; recorded the landing in `BACKLOG.md` (STEP 3 ✅ / STEP 4 ✅).
+
+Shipped by PR #47 (authored across the BE-002 + BE-004 sessions):
+- **`tests/test_e2e_grow_loop.py` (3)** — full HTTP-API loop, dev-clock fast-forward; asserts balance
+  rises by exactly the `harvest_sale` entry, no double-sell, and **ledger integrity** (advancing the
+  clock posts zero ledger entries — BE-A08).
+- **`tests/test_http_boundary.py` (13)** — RISK #8 HTTP coverage: withdraw/deposit (happy + validation
+  + auth + insufficient), mint (happy/idempotent/not-found), strain non-breeder, ARC-3 metadata +
+  unknown-kind 404. Offline `MockChainProvider`.
+- **`tests/test_test_clock.py` (15)** — the OffsetClock primitive, config gating (off by default /
+  on in dev / **force-off in prod**), the `active_clock()` selector, and the endpoints.
+- **Docs:** `docs/SIMULATION_TEST_CLOCK.md`, `docs/STEP4_E2E_GROW_LOOP_VALIDATION.md`,
+  `docs/audits/PR-47-simulation-test-clock.md`, standups `2026-06-14-lut-report-be002.md` /
+  `-be004.md`.
 
 ## Verification split (this chat)
 
 **Agent-verifiable (proven):**
-- Web: `tsc --noEmit` ✅ · `next lint` ✅ · `next build` ✅ · `vitest run` **100/100** ✅ (Constellation
-  sacred-render hashes untouched — that file not modified).
-- Backend (no Python changed): `make test` **223 passed, 80.83% ≥ 79** ✅ · `make lint` ✅ ·
-  `make check-memory` ✅.
+- Post-merge gates on the merge result: `make test` ✅ · `make lint` ✅ · `make check-memory` ✅
+  (re-run after conflict resolution — see the closeout report). PR #47's own suite: **262 passed,
+  83.63% ≥ 79**; settlement 87% / minting 73% HTTP-boundary coverage.
 
-**Device/human-verifiable (owner — the actual deliverable):**
-- The pixels. No headless browser in CI to screenshot the chamber. Open a flowering plant in the
-  chamber view for G13 / Purple Diddy Punch / Animal Mints and confirm the buds read as continuous
-  stacked colas, not grapes (spear cola for G13; chunky masses for PDP/Animal Mints; frost on
-  Animal Mints), silhouettes are continuous, and performance is stable.
+**Device/human-verifiable (owner):**
+- `GROW_TEST_CLOCK=true APP_ENV=development make serve`; `POST /api/dev/clock/advance {"days":40}` →
+  plant flowers on next `/state`; harvest + sell succeed; `/api/dev/clock/*` 404 with flags unset.
+  (Automated equivalents of all four are in the suite above.)
 
 ---
 
-## OPEN RISKS (carried) — INHERITED from the pre-graphics-phase baton, NOT re-audited this chat
+## OPEN RISKS (carried) — re-verify against current code before acting
 
-> These predate the Graphics Phase and were not re-verified here. Re-audit against current code
-> before acting on any of them. A risk clears only when VERIFIED FIXED (test-backed).
+> A risk clears only when VERIFIED FIXED (test-backed). Risk #1 is new (STEP 4).
 
-| # | Sev | Risk | Evidence | Status (as last recorded 2026-06-10/11) |
+| # | Sev | Risk | Evidence | Status |
 |---|-----|------|----------|--------|
-| 3 | HIGH | Idempotency on mutations. | `api/game_api.py` | PARTIAL — concurrency core fixed; general `Idempotency-Key` header + one-shot grants appear shipped in **open PR #16** (confirm/merge-audit). |
-| 4/7 | HIGH | **Chain settlement not real** — deposit trusts no on-chain proof; treasury drain path; no txid replay protection / reconciliation / address validation. | `services/settlement_service.py`, `db/models.py`, `game_service.py` | OPEN — blocks any real value moving (Sprint 4 gate). |
-| 8 | HIGH | **Web safety net** — vitest now runs in CI (PR #22), but Playwright e2e is still an `echo` stub; treasury-cap + chain-failure-rollback tests absent. | `web/package.json`, `.github/workflows/ci.yml` | PARTIAL. |
-| 9 | MED | **Sim dormancy semantics** — can delay an earned harvest if `max_catchup_hours` lowered below a stage; skips lethal decay. Masked at default cap. | `simulation/engine.py` | OPEN — needs a design decision + knob guard. |
-| 10 | MED | **Web: no global 401/403 handler** — stale key reads as "logged in" to a broken dashboard. | `web/src/lib/api/client.ts`, `RequireAuth.tsx` | OPEN. |
-| 11 | LOW | Rate-limiter `memory://` per-worker (set Redis); `get_level` public oracle. | see fleet-sweep | PARTIAL — validation 500s→400 fixed earlier. |
+| 1 | MED | **Cure/auction not dev-clock-drivable.** `GameService` defaults to `SystemClock`, not `active_clock()`, so the dev clock can't fast-forward cure/auction over HTTP. | `services/game_service.py:82` | OPEN — NEW (STEP 4). One-line fix = STEP 4.5 (owner-approved follow-up). |
+| 3 | HIGH | Idempotency on mutations — general `Idempotency-Key` header (duplicate → original response, not a 409). | `api/game_api.py` | PARTIAL — concurrency core + one-shot grants shipped (`grant_claims`, harvest-once index); FTUE `advance` replay-guarded. General header absent (WIP PR #16 closed unmerged). |
+| 4/7 | HIGH | **Chain settlement not real** — deposit trusts no on-chain proof; treasury-drain path; no txid replay protection / reconciliation / address validation. | `services/settlement_service.py`, `db/models.py` | OPEN — blocks any real value moving (Sprint 4 gate). |
+| 8 | HIGH | **Safety net** — **backend HTTP boundary now covered (PR #47: withdraw/deposit/mint/nft, `tests/test_http_boundary.py`)**; **web** Playwright real e2e still a stub; treasury-cap + chain-failure-rollback UI tests absent. | `web/package.json`, `.github/workflows/ci.yml`, `tests/test_http_boundary.py` | PARTIAL (backend ↑; relates to open PR #32). |
+| 9 | MED | **Sim dormancy semantics** — large `max_catchup_hours` gaps can delay an earned harvest / skip lethal decay; needs a design decision + knob guard. (FTUE sidesteps it for the tutorial plant via `last_tick_at = now`.) | `simulation/engine.py` | OPEN. |
+| 11 | LOW | Rate-limiter `memory://` per-worker (set Redis for multi-worker); `get_level` public oracle. | fleet-sweep audit | PARTIAL. |
+
+**Cleared earlier:** *Web global 401/403 handler* (prev RISK #10) — an `AuthErrorListener` tears down
+the session on a rejected key, shipped in **PR #29/#30** (see `DECISIONS.md` 2026-06-14).
 
 > Reassuring (verified solid earlier, not re-checked here): no IDOR; auth/authz server-authoritative;
 > AI SpendGuard unescapable + CI never hits a live key; ledger correct single-threaded; no
-> model↔migration drift.
+> model↔migration drift (single Alembic head).
+
+---
+
+## DIRECTOR DECISIONS (resolved 2026-06-14)
+
+**BE-004A — PR reconciliation (this chat):**
+1. **PR #47** — **CANONICAL** for the Simulation Test Clock; preserve `OffsetClock` / `active_clock()`
+   / `/api/dev/clock/{,advance,reset}` / dev-only gating (`GROW_TEST_CLOCK` + `APP_ENV`, prod
+   hard-disable). Conflicts resolved + **merged** this chat (owner-approved exception to
+   one-PR-one-responsibility, since BE-004 was already built+green on the branch). ✅
+2. **PR #44** — **closed** as superseded by #47. ✅
+3. **PR #32** — service-layer e2e + a CI gate step; now overlaps #47's HTTP e2e. **Owner decision
+   pending:** merge for the CI gate, or close as overlapping. ⬜
+4. **BE-004** — **closed/complete** (its deliverables shipped within PR #47). ✅
+
+**REC-004 (prior sweep, still in force):**
+- **PR #43** owner-merged (folded into REC-004). **PR #37** closed (superseded by the FTUE epic; WO-1/
+  WO-2 logged to BACKLOG). **Branch pruning** approved — recommended list in
+  `docs/memory/CANONICAL_STATE.md` §3; owner executes (destructive git is owner-only).

@@ -67,6 +67,12 @@ export function usePods() {
     queryKey: queryKeys.pods(playerId ?? ""),
     queryFn: () => api.pods.list(playerId!),
     enabled: isAuthed,
+    // Pod sensor values feed the chamber bud phenotype (temp→purple, light→foxtails,
+    // humidity→mold). Same-tab env edits invalidate ["pods"] already, but background
+    // weather rolls / another tab won't — so refresh on a slow cadence and on focus
+    // to keep the rendered plant honest without hammering the endpoint.
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: true,
   });
 }
 

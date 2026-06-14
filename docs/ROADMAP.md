@@ -75,6 +75,20 @@ criteria. "Roles" are functional hats, not headcount.
 > - **GrowPod University**: enroll → study → degrees (permanent perks) taught by an AI Professor
 >   (`/university/*`).
 
+## New-Player / Launch-Readiness track (post-Sprint-3, ACTIVE) 🔨
+**Goal:** turn the working game into a *launchable* MVP — onboarding, mobile, retention — on existing
+rails (off-chain MVP first). Shipped since the web client v1:
+- ✅ **FTUE epic — guided first grow** (2026-06-14, PRs #34/#35/#39): a free starter pod + seed on
+  signup (one-shot/idempotent), a deterministic guided tutorial (plant → water → climate → grow →
+  harvest → "come back tomorrow") coached by a scripted AI Master Grower, and the web `/ftue` route.
+- ✅ **Launch Strain Integration Pack** (2026-06-13, PR #33): White Rhino, White Fire OG, Gelato,
+  Wedding Cake — catalog now **29 strains** with a 1:1 scientist-grade encyclopedia (sync test green).
+- ✅ **Mobile-first navigation** (2026-06-14, PR #36): native bottom tab bar, safe-area handling,
+  focus-visible rings, ≥44px thumb-zone CTAs, responsive Grow Chamber.
+- ✅ **OMNI Charter v1.0** (2026-06-14, PR #38): organizational constitution (`docs/OMNI_CHARTER.md`).
+- 🔨 **Critical path to MVP:** Feature Flags (open PR #42) → Mobile Polish → Playtesting → Retention
+  Validation → MVP Launch Candidate. See `docs/memory/CANONICAL_STATE.md` + `docs/HANDOFF.md`.
+
 ## Sprint 4 — Real TestNet + IPFS (Days 43–56) ⬜
 **Goal:** assets are really on-chain.
 - ⬜ Fund a TestNet treasury; run `reset_asa`; wire `ASA_ID`

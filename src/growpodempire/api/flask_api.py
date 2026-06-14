@@ -66,6 +66,13 @@ def create_app(init_database: bool = True):
     # DB-backed game layer (players, economy, strains, breeding, market).
     app.register_blueprint(game_bp)
 
+    # DEV/TEST ONLY: the simulation test clock (/api/dev/clock/*). Registered
+    # only when explicitly enabled on a non-production environment, so it can
+    # never exist on a live deployment.
+    if settings.test_clock_enabled:
+        from .dev_api import dev_bp
+        app.register_blueprint(dev_bp)
+
     @app.route('/')
     def index():
         """API root endpoint"""

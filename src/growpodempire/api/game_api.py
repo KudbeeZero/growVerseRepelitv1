@@ -51,6 +51,9 @@ def create_player():
         with session_scope() as s:
             svc = GameService(s)
             player = svc.create_player(data["username"], data.get("email"))
+            # On signup, hand the new player a starter pod + seed (idempotent,
+            # one-shot) so they can reach their first grow with zero setup.
+            svc.grant_starter_items(player.id)
             wallet = svc.get_wallet(player.id)
             payload = player_payload(player, wallet)
             # Returned exactly once — the client must store it to authenticate writes.
@@ -575,6 +578,52 @@ def plant_advisor(player_id, plant_id):
         return _error(str(e), 404)
     except AdvisorError as e:
         return _error(f"Advisor unavailable: {e}", 503)
+
+
+@game_bp.get("/players/<player_id>/ftue/status")
+@require_player
+def ftue_status(player_id):
+    """Current first-time-tutorial step + the tutorial plant (if any)."""
+    from ..services.ftue_service import FTUEService
+
+    try:
+        with session_scope() as s:
+            return jsonify(FTUEService(s).get_status(player_id))
+    except GameError as e:
+        return _error(str(e), 404)
+
+
+@game_bp.get("/players/<player_id>/ftue/coaching/<step>")
+@require_player
+def ftue_coaching(player_id, step):
+    """The Master Grower's scripted coaching for a tutorial step (deterministic)."""
+    from ..services.ftue_service import FTUEService
+
+    try:
+        with session_scope() as s:
+            report = FTUEService(s).get_coaching(player_id, step)
+            return jsonify({"provider": "ftue_coach", **report.model_dump()})
+    except GameError as e:
+        return _error(str(e), 404)
+
+
+@game_bp.post("/players/<player_id>/ftue/advance")
+@require_player
+@limiter.limit("60 per minute")
+def ftue_advance(player_id):
+    """Complete the given tutorial step (performing its real game action) and
+    advance to the next. Body: {"step": "<current step>"}."""
+    from ..services.ftue_service import FTUEService
+
+    data = request.get_json(force=True, silent=True) or {}
+    step = data.get("step")
+    if not step:
+        return _error("step is required")
+    try:
+        with session_scope() as s:
+            return jsonify(FTUEService(s).advance(player_id, step))
+    except GameError as e:
+        return _error(str(e), 400)
 
 
 @game_bp.post("/players/<player_id>/plants/<plant_id>/advisor/auto-care")
