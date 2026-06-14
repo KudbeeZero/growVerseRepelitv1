@@ -67,12 +67,13 @@ Open / in-flight directives. One row per directive; update **Status** as it move
 
 | Directive | Dept | Lead | Workers | Branch | PR | Owned file surfaces | Deps | Status |
 |---|---|---|---|---|---|---|---|---|
-| DX-007 (P2 FTUE Coach-Marks) | Design & Experience | DX-A00 | DX-A01–A10 | `claude/dx-ftue-coach-marks` | (this PR) | FTUE/Onboarding (coach-mark layer): `components/onboarding/CoachMarks.tsx` (new), `lib/coachMarks.ts` (new), `lib/coachMarkStore.ts` (new), + `data-coach` tags & mount in `app/dashboard/page.tsx` | Builds **on top of** canonical FTUE (#35/#39) — does not modify the `/ftue` route. New layer; no overlap with the merged plant-care work. | 🟢 Open |
+| _(DX lane idle — DX Sprint 02 closed; see Work Orders below + the launch critical path)_ | — | — | — | — | — | — | — | — |
 
 ### Recently merged to `main` (for collision awareness)
 
 | PR | Title | Surfaces touched |
 |---|---|---|
+| #52 | DX-007 FTUE Coach-Marks (non-intrusive dashboard guidance) | FTUE/Onboarding (`CoachMarks`, `coachMarks`, `coachMarkStore`, `data-coach` tags on dashboard) |
 | #48 | DX-006 Sticky One-Handed CTA | Plant-care placement (`StickyActionBar`, plant detail) |
 | #49 | DX-005 FP-5 completion — primary CTA celebration | Plant-care (`PlantActionCTA`) |
 | #46 | Studio Agent Registry (REC-003) | docs (governance) |
@@ -110,6 +111,19 @@ Open / in-flight directives. One row per directive; update **Status** as it move
 
 **Salvaged from #37 (archived to `docs/memory/BACKLOG.md`):** persistent per-player tutorial state,
 non-nagging dismissal, and game-state-driven (auto-advancing) progression.
+
+---
+
+## Open Work Orders (carry-forward)
+
+Cross-department asks raised by shipped DX work. Backend/infra WOs are **WO-gated** — design only
+until a Director approves. (DX Sprint 02 raised these; not launch-blocking.)
+
+| WO | Raised by | Dept | Ask | Status |
+|---|---|---|---|---|
+| WO-001 | DX-007 (#52) | BE / DevOps | Analytics pipeline + client sink for coach-mark `viewed` / `dismissed` / `completed` events (no analytics sink exists today — do not invent one client-side). | ⬜ proposed |
+| WO-002 | DX-007 (#52) | BE | Server-side per-player coach-mark state (suppress tips for pre-existing veterans; reset on a fresh device). Today gating is once-per-player **localStorage**. Overlaps the salvaged "persistent per-player tutorial state" above. | ⬜ proposed |
+| WO-003 | DX-006 (#48) | DX | Cleanup: replace the hard-coded `3.25rem` `StickyActionBar` bottom offset with a shared constant / CSS var tracking `MobileTabBar` height. Frontend-only; non-blocking. | ⬜ proposed |
 
 ---
 

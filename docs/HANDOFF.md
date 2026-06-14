@@ -5,8 +5,14 @@
 > the code disagree, the code wins — fix the baton. See `docs/SESSION_PROTOCOL.md`.
 
 **Last rewritten:** 2026-06-14 · **By:** REC-004 — Full Repository Memory Reconciliation Sweep
-**Active branch:** `claude/repo-memory-reconciliation-frcgap` (docs/memory-only — see "Open PRs" below)
-**Just merged to main (head moved `15f9699` → post-#46 during this sweep):** the **FTUE epic** —
+**Active branch:** `claude/dx-007-closeout` (docs-only DX Sprint 02 closeout — see "Open PRs" below)
+**DX Sprint 02 — "Playable on a Phone" + onboarding loop — COMPLETE & merged (2026-06-14):**
+**PR #36** (mobile nav + responsive chamber) · **PR #41** (DX-001 care feedback & celebration) ·
+**PR #45** (FP-3 primary plant CTA) · **PR #49** (DX-005 FP-5 completion) · **PR #48** (DX-006 sticky
+one-handed CTA) · **PR #52** (DX-007 FTUE coach-marks — non-intrusive dashboard guidance on top of
+canonical FTUE). Carry-forward Work Orders logged in the registry: **WO-001** analytics events,
+**WO-002** server-side coach-mark state, **WO-003** `StickyActionBar` offset constant.
+**Just merged to main (head moved `15f9699` → post-#46 during the REC-004 sweep):** the **FTUE epic** —
 **PR #34** (starter-grant rail), **PR #35** (FTUE tutorial backend + Master Grower coaching),
 **PR #39** (web `/ftue` guided route). Also live: **PR #29** (Dashboard / GameState wiring, titled
 "PR #30"), **PR #33** (Launch Strain Integration Pack → 29-strain catalog), **PR #36** (mobile-first

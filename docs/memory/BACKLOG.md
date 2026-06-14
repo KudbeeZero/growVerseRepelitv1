@@ -32,6 +32,18 @@ once they appear here. Last reconciled: **2026-06-14** (REC-004 full repository 
 - 🚀 ✅ **FP-3 Primary Plant CTA** (PR #45, "DIR-004", merged 2026-06-14) — the next action is always
   visually primary on the dashboard for a new grower (`web/src/lib/plantAction.ts`,
   `web/src/components/plant/PlantActionCTA.tsx`). The re-cut of #37's FP-3.
+- 🚀 ✅ **DX-005 FP-5 completion** (PR #49, merged 2026-06-14) — wired the new primary CTA (#45) into
+  the existing #41 care-feedback/celebration system (the surface #41 couldn't have known about; the
+  registry caught the would-be duplication).
+- 🚀 ✅ **DX-006 Sticky One-Handed CTA** (PR #48, merged 2026-06-14) — `StickyActionBar` pins FP-3's
+  `PlantActionCTA` in the mobile thumb zone above the tab bar (placement-only; reuses the resolver
+  read-only). Carries **WO-003** (hard-coded `3.25rem` tab-bar offset → shared constant; non-blocking).
+- 🚀 ✅ **DX-007 FTUE Coach-Marks** (PR #52, merged 2026-06-14) — non-intrusive, dismissible,
+  per-player dashboard coach-marks built **on top of** canonical FTUE (`/ftue` untouched):
+  `web/src/components/onboarding/CoachMarks.tsx`, `web/src/lib/coachMarks.ts`,
+  `web/src/lib/coachMarkStore.ts`. Carries **WO-001** (analytics events) + **WO-002** (server-side
+  per-player state) — deferred, accepted for MVP. **→ DX Sprint 02 ("Playable on a Phone" + onboarding
+  loop) CLOSED.**
 - 🚀 ⬜ **Salvaged from PR #37 (Grow Guide, closed)** — backend work orders the closed coach needed,
   not yet built: **WO-1** per-action "last cared at" / care-acknowledged signals (so a tutorial can
   gate discrete Water/Feed/Check steps without guessing from decaying levels); **WO-2** a lightweight
