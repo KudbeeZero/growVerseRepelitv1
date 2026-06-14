@@ -1,8 +1,14 @@
 # FINAL ART DIRECTION REPORT — GrowPod Empire
 
-> **Directive:** ART-002 — Canonical Visual Language Ratification
+> **Directive:** ART-002 — Canonical Visual Language Ratification ·
+> **Ratified + extended by:** ART-004 (2026-06-14, "Higgsfield is now the official art direction")
 > **Lead Agent:** ART-A00 · **Workers:** ART-A01–A10 · **Date:** 2026-06-14
 > **Status:** ✅ **CERTIFIED** — all deliverables complete, cross-consistent, and implementation-ready.
+>
+> **ART-004 deltas folded in (concept-only):** (1) rarity gains a 5th **Mythic** tier — animated
+> multi-spectrum gradient, above Legendary; (2) health is framed as 4 canonical states
+> (Healthy / Moderate Stress / Neglected / Critical), mapped onto the spec's 5-state sheet below;
+> (3) reconciliation items now have an explicit priority order (Section 6).
 > **Scope discipline:** Concept & documentation only. No renderer modifications, no code changes,
 > no asset replacements, no PR created. Every spec is written so the Plant Engine and Asset teams
 > can implement immediately.
@@ -47,8 +53,8 @@ extend actual parameter names, not invented ones.
    Engine priority; the 70–80% emotional-impact bar is measured against the frost board.
 3. **Health Through Posture** — praying leaves (tips up) = healthy, drooping = neglected; **color is
    secondary**. Posture is the primary, glanceable health read.
-4. **Color = Rarity** — Common green · Rare blue · Epic purple/pink · Legendary gold — applied to
-   **UI chrome (aura/frame/badge), never the plant body**.
+4. **Color = Rarity** — Common green · Rare blue · Epic purple/pink · Legendary gold · **Mythic
+   animated spectrum** (ART-004) — applied to **UI chrome (aura/frame/badge), never the plant body**.
 5. **Asset Split** — AI for marketing/loading/splash/trailers/hero renders; Code/SVG for live
    plants, growth stages, accessories, genetics visuals, chamber animations.
 
@@ -91,16 +97,24 @@ From PLANT_ENGINE_VISUAL_TARGETS + FROST_FIRST:
 ## 6. Implementation reconciliation notes (flagged by workers — NOT acted on)
 
 These are real code↔canon gaps the specs surfaced. They are **recorded for the implementation phase**,
-not changed here (this directive is concept-only):
+not changed here (this directive is concept-only). **ART-004 sets the priority order:**
 
-1. **Rarity tiers (A04):** shipped `web/src/lib/.../format.ts` uses **5 tiers with off-canon hexes**;
-   canon is **4 tiers**. The eventual reskin must retint `RARITY_HEX`/`RARITY_STYLES` to canon and
-   fold `uncommon` into the Common-green family.
-2. **Frost determinism (A02):** `chamberCore.ts spawnDust()` currently uses `Math.random()`. Frost
-   must **not** follow that pattern — the spec mandates a seeded `mulberry32` + position-hash, driven
-   by composition time. (Also worth auditing `spawnDust` itself for seek-safety.)
-3. **Frost onset timing (A02):** recommend shifting the trichome ramp from `(day-48)/18` to
-   `(day-44)/22` so faint frost appears during Bud Swell, matching board intent. Flagged, not changed.
+1. **Frost determinism (A02)** — *ART-004 priority #1.* `chamberCore.ts spawnDust()` currently uses
+   `Math.random()`. Frost must **not** follow that pattern — the spec mandates a seeded `mulberry32` +
+   position-hash, driven by composition time. (Also audit `spawnDust` itself for seek-safety.)
+2. **Frost onset timing (A02)** — *ART-004 priority #2.* Shift the trichome ramp from `(day-48)/18`
+   to `(day-44)/22` so faint frost appears during Bud Swell, matching board intent.
+3. **Rarity retint (A04)** — *ART-004 priority #3.* Shipped `web/src/lib/format.ts` uses a 5-tier set
+   (`common·uncommon·rare·epic·legendary`) with off-canon hexes and **no Mythic**. Canon (post-ART-004)
+   is **5 tiers: Common·Rare·Epic·Legendary·Mythic**. The reskin retints `RARITY_HEX`/`RARITY_STYLES`,
+   **adds `mythic`** (animated spectrum chrome), and folds the legacy `uncommon` into the Common-green
+   family.
+
+> **Health-state framing (ART-004):** ART-004 names 4 states — **Healthy** (praying), **Moderate
+> Stress** (neutral posture), **Neglected** (drooping), **Critical** (curling/fading/collapse). These
+> map onto `LEAF_POSTURE_HEALTH_GUIDE.md`'s 5-state sheet: Thriving+Healthy → *Healthy*;
+> Mild Stress → *Moderate Stress*; Neglected → *Neglected*; Critical → *Critical*. No conflict — the
+> 5-state sheet is the finer-grained implementation of ART-004's 4-state canon.
 
 ## 7. Hand-off
 

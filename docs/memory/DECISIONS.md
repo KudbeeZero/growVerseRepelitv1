@@ -275,3 +275,20 @@ The Plant Engine 70–80% target is ranked (frost density+sparkle → per-strain
 bud-stacking fusion → leaf-posture health → node-spacing vigor) in BACKLOG. Higgsfield credits are
 real money (owner-funded); generation spends stay logged per chat. Supersede this if the house style
 or the AI/code split changes.
+
+### 2026-06-14 — ART-002/ART-004: art-direction specs ratified; +Mythic tier, reconciliation order
+**Decision:** Ratify the canonical visual language into **8 implementation-ready specs** under
+`docs/art-direction/` (CANONICAL_VISUAL_LANGUAGE_V1, FROST_FIRST_IMPLEMENTATION_GUIDE,
+RARITY_COLOR_SYSTEM, LEAF_POSTURE_HEALTH_GUIDE, ACCESSORY_SVG_SPEC, PLANT_ENGINE_VISUAL_TARGETS,
+SCREENSHOT_MOMENTS_GUIDE, FINAL_ART_DIRECTION_REPORT). ART-004 extends the canon: (a) rarity is now
+**5 tiers** — Common green `#4faf5a` · Rare blue `#34a8ff` · Epic purple/pink `#b45cff` · Legendary
+gold `#f5c542` · **Mythic = deterministic animated multi-spectrum gradient** (apex, motion-defined);
+(b) health is 4 canonical states (Healthy/Moderate-Stress/Neglected/Critical), implemented by the
+spec's finer 5-state posture sheet; (c) implementation reconciliation has a fixed priority:
+**1 Frost determinism → 2 Frost timing → 3 Rarity retint**. **Why:** lock one consistent, code-grounded
+art bible so Plant Engine + Asset teams implement without drift; ART-004 formally names Higgsfield the
+official art direction. **Consequences:** specs are concept-only — **no renderer/economy/asset code
+changed, no PR**. Known code↔canon gaps recorded (not fixed): `format.ts` rarity is off-canon + 5
+legacy tiers w/o Mythic; `chamberCore.spawnDust()` uses `Math.random()` (frost must be seeded/seek-safe);
+frost ramp timing tweak. Cross-consistency certified (shared canon hexes verbatim, zero off-canon
+hexes). Supersede via a new dated spec version; don't edit spec history.

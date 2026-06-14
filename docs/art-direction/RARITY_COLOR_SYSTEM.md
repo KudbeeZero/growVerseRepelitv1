@@ -1,10 +1,14 @@
 # Rarity Color System — GrowPod Empire
 
-> **Directive:** ART-002 · **Worker:** ART-A04 · **Date:** 2026-06-14
+> **Directive:** ART-002 · **Ratified + extended by:** ART-004 (2026-06-14) · **Worker:** ART-A04
 > **Status:** CONCEPT / SPEC ONLY — documentation, no code changes. This is a design
 > contract for how *rarity* is communicated visually across the web client. It defines the
-> canonical 4-tier color system, the per-tier chrome treatment, and — most importantly — the
-> rules that keep rarity color from colliding with the plant's own maturity/health colors.
+> canonical **5-tier** color system (4 fixed-color tiers + an animated **Mythic** capstone), the
+> per-tier chrome treatment, and — most importantly — the rules that keep rarity color from
+> colliding with the plant's own maturity/health colors.
+>
+> **ART-004 update:** the canon now includes a fifth tier, **Mythic** (animated multi-spectrum
+> gradient), above Legendary. Sections 1, 2, and 7 reflect it.
 >
 > **Viewport priority:** Desktop-first. All radii, glow sizes, and particle counts below are
 > authored for **1920×1080**, validated to read at **1440×900** and **1366×768**. Mobile is
@@ -35,19 +39,21 @@ body.** Everything else here serves that ruling.
 
 ### Reconciling the canon with the existing code
 
-The shared canon for this directive defines **4 tiers**. The shipped client
-(`web/src/lib/types.ts`) currently models **5**: `common · uncommon · rare · epic · legendary`,
-with hex tints in `web/src/lib/format.ts` (`RARITY_HEX`) that do **not** match the canon hexes.
+The canon (as ratified by **ART-004**) defines **5 tiers**: `Common · Rare · Epic · Legendary ·
+Mythic`. The shipped client (`web/src/lib/types.ts`) currently models a different 5 —
+`common · uncommon · rare · epic · legendary` — with hex tints in `web/src/lib/format.ts`
+(`RARITY_HEX`) that do **not** match the canon hexes, and **no Mythic tier**.
 
-This spec is authored against the **4 canonical tiers** and treats `uncommon` as a **sub-band of
-Common** (same green family, see Section 7). When the client is reskinned to this system, the
-existing `RARITY_HEX`/`RARITY_STYLES` maps in `format.ts` are the single edit point; the `Rarity`
-type may keep 5 values, with `uncommon` rendering in the Common-green family at slightly higher
-intensity. No code is changed by this document.
+This spec is authored against the **5 canonical tiers** and treats the code's `uncommon` as a
+**sub-band of Common** (same green family, see Section 7). When the client is reskinned to this
+system, the existing `RARITY_HEX`/`RARITY_STYLES` maps in `format.ts` are the single edit point;
+the `Rarity` type must **add `mythic`** and retint to canon, with `uncommon` rendering in the
+Common-green family at slightly higher intensity. No code is changed by this document — this is the
+**Rarity Retint** reconciliation item (ART-004 implementation priority #3).
 
 ---
 
-## 1. The four tiers
+## 1. The five tiers
 
 | Tier | Hex | Token name | Meaning |
 |------|-----|-----------|---------|
@@ -55,6 +61,12 @@ intensity. No code is changed by this document.
 | **Rare** | `#34a8ff` | `rarity.rare` (neon blue) | A genuinely good roll — notable trait expression or a clean stabilized cross. |
 | **Epic** | `#b45cff` | `rarity.epic` (purple-pink); accent `#ff6ad5` | A standout phenotype: high-value trait stacking or a rare mutation expressed. |
 | **Legendary** | `#f5c542` | `rarity.legendary` (gold) | The trophy. A near-perfect, fully stabilized, mintable cultivar — the screenshot moment. |
+| **Mythic** | *animated multi-spectrum gradient* (cycles `#34a8ff → #b45cff → #ff6ad5 → #f5c542` and back) | `rarity.mythic` | The apex — beyond Legendary. The rarest possible outcome (e.g. a fully stabilized cultivar carrying a top-tier mutation *and* a perfect trait stack). The chrome itself is **alive**. |
+
+**Mythic is defined by motion, not a single hex.** Where every other tier is a fixed color, Mythic
+is an animated spectrum sweep — it must read as "this is rarer than gold" at a glance. Because the
+renderer is deterministic/seek-safe, the gradient phase is driven by composition/UI time (no
+`Date.now()`); see Section 2.
 
 `#34a8ff` is also the brand's house **neon blue** (it doubles as the pod/LED accent). This is
 intentional: Rare reads as "this belongs to the elite machine layer of the game." Backgrounds for
@@ -72,6 +84,7 @@ a given plant. The visual system must therefore be **stable for a cultivar acros
 | **Rare** | Clean stabilization of a desirable trait; a cross that surfaces a wanted terpene/THC band; first appearance of an anthocyanin (purple) bias. | A pleasant surprise. "Oh, nice — this one's worth keeping." |
 | **Epic** | A rare **mutation** expressed and preserved (deep-purple / pink-pistil from `knowledge/mutation-system.md`'s ladder), or multiple high-value traits stacked in one genome. | Excitement, pride. "I made something unusual." |
 | **Legendary** | A fully stabilized, high-stability (mintable: `stability ≥ 0.85`, non-common — see `StrainCard.tsx`) cultivar that also carries a top-tier mutation or trait stack; the rarest derived-rarity outcome. | Awe + ownership. "I grew a legend." This is the moment built around `SCREENSHOT_MOMENTS_GUIDE.md`. |
+| **Mythic** | The apex outcome: a Legendary-grade genome that *also* lands a top-rung mutation (e.g. `Pink Pistils`/`Albino` from the ladder) **and** a near-perfect trait stack at max stability — the rarest result the breeding system can produce. Should be vanishingly rare by design. | Disbelief + bragging rights. "This shouldn't exist." The endgame trophy above the trophy. |
 
 > **Genetics tie-in, explicit:** the mutation ladder
 > `Green → Lime → Deep Green → Purple → Black Purple → Pink Pistils → Albino`
@@ -131,14 +144,37 @@ Glow values use CSS box-shadow / radial-gradient terms. Radii are in px at 1920-
   ~4.5s (left→right, 900ms, ease-out). Aura breathes 0.45↔0.55 over ~3.5s. This is the system's
   signature motion; reserve it strictly for Legendary so it stays special.
 
+### Mythic — *animated multi-spectrum gradient*
+- **Aura/glow:** the largest in the system — radius ≈52px, box-shadow `0 0 56px` whose **color
+  animates** through the spectrum sweep (`#34a8ff → #b45cff → #ff6ad5 → #f5c542 → #34a8ff`). The
+  glow itself shifts hue, so a Mythic card visibly *cycles color* while every other tier holds steady.
+- **Frame/border:** 3px **animated gradient border** running the full spectrum, rotating phase
+  continuously (a conic/linear gradient whose angle advances over time). Inner 1px white highlight.
+- **Badge:** text `#060a14` on the animated gradient fill (or white text on dark for inline). Icon:
+  ✸ / a small rotating prism glyph, or "M".
+- **Card stock:** `#060a14` with a faint moving iridescent caustic across the upper third.
+- **Particles:** 8–12 motes whose color samples the current gradient phase (so they shimmer through
+  the spectrum), within card bounds, opacity ≤30%.
+- **Animation:** the **defining trait** — a continuous spectrum phase advance, full cycle ≈6s,
+  linear. **DETERMINISTIC:** the phase is `(uiTimeSeconds / 6) mod 1` (or composition time in a
+  rendered context) — never `Date.now()`/`Math.random()` — so it is seek-safe and renders identically
+  for a given timestamp. Reserve all spectrum-cycling motion for Mythic exclusively; Legendary keeps
+  its single-color gold shimmer so the two never blur.
+
+> **Why Mythic is motion-defined:** every fixed-color tier can be ranked by brightness, but Mythic
+> must read as *categorically* beyond gold. A living, color-cycling chrome is unmistakable at the
+> 2-second glance and impossible to confuse with any static tier or with the plant's own colors.
+
 ### Intensity ladder (the through-line)
 Glow radius, border weight, and motion all climb monotonically:
 `Common (0px / 1px / none) < Rare (18px / 1.5px / none) < Epic (28px / 2px / breathe) <
-Legendary (44px / 2.5px / shimmer)`. A player should rank two cards by **brightness and motion
+Legendary (44px / 2.5px / gold shimmer) < Mythic (52px / 3px / spectrum cycle)`. A player should rank two cards by **brightness and motion
 alone**, before reading any text.
 
 > **Reduced motion:** `prefers-reduced-motion` (already honored in `Constellation.tsx`) disables the
-> Epic breathe and Legendary shimmer — render a single bright static frame at the breathe's peak.
+> Epic breathe, Legendary shimmer, and the **Mythic spectrum cycle** — render a single bright static
+> frame (for Mythic, freeze the gradient at a balanced phase showing all four spectrum stops) so the
+> tier is still unmistakable without motion.
 
 ---
 
@@ -146,6 +182,7 @@ alone**, before reading any text.
 
 | Surface zoom | 1920×1080 | 1440×900 | 1366×768 | Mobile (secondary) |
 |---|---|---|---|---|
+| Mythic aura radius | 52px | 46px | 40px | 26px |
 | Legendary aura radius | 44px | 40px | 36px | 24px |
 | Epic aura radius | 28px | 26px | 24px | 16px |
 | Rare aura radius | 18px | 16px | 16px | 12px |
@@ -264,7 +301,9 @@ color stories never touch.
 
 **Non-color secondary signal is mandatory.** Every rarity indicator carries **(a) a hue, (b) a
 distinct shape icon, and (c) a text label**. Color is never the sole carrier. Icon set:
-Common ● · Rare ◆ · Epic ✦ · Legendary ♛. Single-letter fallbacks: C / R / E / L.
+Common ● · Rare ◆ · Epic ✦ · Legendary ♛ · Mythic ✸. Single-letter fallbacks: C / R / E / L / M.
+Mythic's animated spectrum is a fourth cue, but it must still carry the ✸ icon + label so it reads
+under reduced-motion and for colorblind players.
 
 ### Contrast on charcoal (`#060a14` / `#0b1424`)
 | Tier | Hex | As text on `#0b1424` | Guidance |
@@ -297,6 +336,7 @@ Common ● · Rare ◆ · Epic ✦ · Legendary ♛. Single-letter fallbacks: C 
 | **Rare** | `#34a8ff` | ◆ / R | 18px | 1.5px @70% | none / fade-in | clean stabilization, wanted trait band |
 | **Epic** | `#b45cff` (acc. `#ff6ad5`) | ✦ / E | 28px | 2px gradient | aura breathe | rare mutation expressed, trait stack |
 | **Legendary** | `#f5c542` | ♛ / L | 44px | 2.5px + shimmer | gold shimmer sweep | stabilized trophy + top mutation, mintable |
+| **Mythic** | *spectrum gradient* `#34a8ff→#b45cff→#ff6ad5→#f5c542` | ✸ / M | 52px | 3px animated gradient | spectrum cycle (~6s, deterministic) | apex: Legendary genome + top-rung mutation + perfect trait stack |
 
 **Backgrounds:** deep `#060a14` · panel `#0b1424`. **House neon blue:** `#34a8ff` (= Rare).
 **Type:** Inter (UI/labels), JetBrains Mono (instrument readouts / NODES counters / hex tags).

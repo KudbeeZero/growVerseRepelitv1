@@ -65,7 +65,8 @@ sole one. This keeps health legible at a glance even before color is parsed. See
 Hue is the **rarity language**, applied consistently across plants, accessory tiers, UI chrome, and
 card frames. The ladder is fixed:
 **Common = green `#4faf5a` · Rare = blue `#34a8ff` · Epic = purple/pink `#b45cff` (alt `#ff6ad5`) ·
-Legendary = gold `#f5c542`.**
+Legendary = gold `#f5c542` · Mythic = animated multi-spectrum gradient** (ratified by ART-004; the
+apex tier is defined by *motion* — a deterministic spectrum cycle — not a single hex).
 *Implementation meaning:* a rarity color owns the glow, the frame stroke, and the accent — it is never
 spent on unrelated decoration. The premium-accessories board already shows this (gold-trim deluxe tier
 vs. blue/violet standard tier). Note the deliberate overlap: Rare-blue **is** the brand neon `#34a8ff`,
