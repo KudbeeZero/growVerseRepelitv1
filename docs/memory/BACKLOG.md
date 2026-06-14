@@ -33,8 +33,14 @@ once they appear here. Last reconciled: **2026-06-10**.
 - 🎨 ⬜ **Macro Bud Polish II** (future; *not launch-blocking*) — sharper calyx ridges, denser calyx
   nesting, reduce the smooth-oval appearance on the Purple Diddy Punch *macro* bud, improve chunky
   calyx definition. Macro ("Detailed Bud View") only — the whole-plant chamber is signed off.
+> **⏸️ FROZEN — concept-only until post-MVP (ART-004 director recommendation, 2026-06-14).** The two
+> art-direction implementation items below are specced and ratified but **must not start** (and no
+> further Higgsfield credits spent) until the launch-critical path is done: Feature Flags → BE-004 e2e
+> Grow Loop → Playtesting → Retention validation → MVP Launch Candidate. Post-MVP order: Plant Engine
+> visual implementation → Asset Team production → reconciliation decisions (frost determinism → frost
+> timing → rarity retint) → marketing asset expansion. Specs live in `docs/art-direction/`.
 - 🎨 ⬜ **Plant Engine: chase the AI frost/fade target (70–80% emotional impact)** (owner-approved
-  2026-06-14; ADR same date) — tune the procedural plant against the reference boards in
+  2026-06-14; ADR same date; **post-MVP, frozen per ART-004**) — tune the procedural plant against the reference boards in
   `docs/research/visual-reference/` (study notes in the catalog). Ranked by impact-per-effort:
   **(1) frost density + specular sparkle** (Frost Explosion — the signature; biggest awe per unit
   work, texture/particle problem not geometry) → **(2) per-strain fade color ramp** (green→yellow→
