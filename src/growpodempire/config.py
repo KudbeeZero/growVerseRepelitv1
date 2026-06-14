@@ -55,6 +55,25 @@ class Settings:
 
         self.sql_echo: bool = os.environ.get("SQL_ECHO", "false").lower() == "true"
 
+        # --- Deployment environment ---------------------------------------
+        # Names the running environment. "production"/"prod" hard-disables every
+        # dev-only affordance (currently the simulation test clock below),
+        # regardless of any other flag. Defaults to "development" so local runs
+        # and CI stay unlocked without extra config.
+        self.app_env: str = os.environ.get("APP_ENV", "development").strip().lower()
+        self.is_production: bool = self.app_env in {"production", "prod"}
+
+        # --- Simulation test clock (DEV/TEST ONLY) ------------------------
+        # A controllable clock that lets developers/testers fast-forward grow
+        # time without touching the economy or real players. OFF by default and
+        # FORCE-DISABLED in production: enabling it requires GROW_TEST_CLOCK=true
+        # AND a non-production APP_ENV. When on, it registers the /api/dev/clock
+        # endpoints and makes the engine read an advanceable offset clock.
+        _test_clock_requested = (
+            os.environ.get("GROW_TEST_CLOCK", "false").strip().lower() == "true"
+        )
+        self.test_clock_enabled: bool = _test_clock_requested and not self.is_production
+
         # --- Security / hardening -----------------------------------------
         # Allowed browser origins for CORS. Comma-separated; defaults to the
         # local web dev server. Set to the deployed web origin in production.
@@ -118,6 +137,11 @@ class Settings:
         self.enable_auto_care: bool = (
             os.environ.get("ENABLE_AUTO_CARE", "true").lower() == "true"
         )
+
+        # NOTE: Feature flags are NOT defined here. The single source of truth is
+        # balance.yaml `feature_flags:` (data-driven, per the tuning-surface
+        # convention), resolved by growpodempire.feature_flags with per-env
+        # `FEATURE_<NAME>` overrides. See that module + GET /api/game/flags.
 
 
 @lru_cache(maxsize=1)

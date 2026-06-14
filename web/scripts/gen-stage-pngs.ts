@@ -33,11 +33,15 @@ const W = 600;
 const H = 760;
 const SCALE = 2; // device-pixel-ratio equivalent for crisp output
 
-// The three curated strains (indica_ratio mirrors src/growpodempire/data/strains.yaml).
+// The curated launch strains (indica_ratio mirrors src/growpodempire/data/strains.yaml).
 const STRAINS = [
   { name: "G13", indica: 0.7 },
   { name: "Purple Diddy Punch", indica: 0.8 },
   { name: "Animal Mints", indica: 0.75 },
+  { name: "White Rhino", indica: 0.85 },
+  { name: "White Fire OG", indica: 0.55 },
+  { name: "Gelato", indica: 0.55 },
+  { name: "Wedding Cake", indica: 0.6 },
 ];
 
 // Nominal-day scale matches devParams thresholds (buds 34→66, ripe 40→62, etc.),

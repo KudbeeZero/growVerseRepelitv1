@@ -240,6 +240,23 @@ was ported into `chamberCore` on merge to avoid regressing it. Output dir `web/c
 gitignored (regenerable artifact; the generator is the committed deliverable). Future card/NFT image
 pipelines (ROADMAP Sprint 4) can build on this headless renderer.
 
+### 2026-06-14 — MVP feature-flag layer (gate non-MVP systems off)
+**Decision:** Five non-MVP systems — marketplace, on-chain wallet/minting (`chain`), the Cup,
+the University, and NPC contracts — are gated behind boolean flags that default **OFF**. Backend
+flags live in `config.Settings` (env `ENABLE_*`), are copied into `app.config["FEATURE_*"]` at
+`create_app`, and are enforced per-route by a `require_feature` decorator (`api/feature_gates.py`)
+applied above `require_player` so a gated route returns **404** before auth — a hidden system is
+indistinguishable from an absent one. The web client mirrors them via `NEXT_PUBLIC_ENABLE_*`
+(`web/src/lib/features.ts`): the nav filters gated entries, a `RequireFeature` guard wraps the
+`/market`, `/cup`, `/university` route segments, and in-page bits (Market→Contracts tab, Profile
+wallet section) hide too. **Why:** the MVP launch ships only the core grow loop; fail-closed
+defaults mean a system can never leak by forgetting to set an env var. **Consequences:** the test
+harness enables all five flags (`tests/conftest.py`) so the subsystem suites keep exercising real
+behavior, with a dedicated `tests/test_feature_gates.py` proving OFF→404 / ON→reachable, gate-
+before-auth, and core-loop-unaffected. The services and routes are untouched (hidden, not removed),
+so flipping a flag on at deploy time restores the full system. First slice of PR #31 (MVP Launch
+Candidate).
+
 ### 2026-06-14 — Flat `/state` wire is canonical; no `GameState` wire object (PR #30)
 **Decision:** The dashboard/PDP/encyclopedia keep reading the **flat** `GET …/plants/<id>/state`
 payload (`PlantState` = `Plant` + server-computed `metrics` + `forecast` + `recent_events`) as the
@@ -285,3 +302,199 @@ repudiation of the pillar — the knob exists precisely so the long-game pace ca
 green: backend `make test` 224 passed / 80.84%, `make lint`, `make check-memory`; web `tsc`,
 `next lint`, `next build`, `vitest` 119. The pixels (buds/frost surfacing in week one) remain
 owner-device-verifiable — no headless browser screenshots the live chamber in CI.
+**Reconciled onto `main` (PR #66, 2026-06-14):** the paired fan-leaf renderer change (the original
+session's Priority #1) was **dropped as superseded by the Engines 1–4 renderer** already on `main`;
+only the `time_scale` pacing knob, the stage-progress dev wiring (`nominalGrowDay`→`previewDev`), and
+the `forecast.hours_to_harvest` readout landed. Gates re-run on the merge — see the PR #66 evidence.
+
+### 2026-06-14 — Phyllotaxy & pseudo-3-D depth for the whole-plant chamber (Engines 3 & 4)
+**Decision:** The chamber whole-plant skeleton no longer places every node hard-left/hard-right in one
+flat picture plane. A new pure module `web/src/lib/chamber/phyllotaxy.ts` assigns each node an
+**azimuth** around the stem — decussate (~180° alternation) at the base, easing into the **137.5°
+golden-angle spiral** toward the apex as the plant matures — and `chamberCore` projects that azimuth
+into pseudo-3-D: signed horizontal foreshortening (`lateral = cos·az`), front/back **depth**
+(`sin·az`) that drives back→front draw order, an atmospheric lightness shade, and a per-node **leaf
+yaw** that turns fans edge-on when their branch winds toward the camera (Engine 4) plus a small
+per-node roll. A per-plant `phase` (seeded) rotates the whole pattern so no two plants of a strain
+align. **Why:** the PBSA charter's two most explicit "do not" items were "billboard all leaves toward
+the camera" and "leaves must never all face the camera"; the flat alternation read as a decorative
+diagram, not a living organism. This is the highest-leverage believability + "no two plants identical"
+win, and is renderer-only (no economy/chain/db/api). **Why this shape:** the azimuth is built by
+*cumulative* angular steps lerping 180°→137.5°, so at the seedling/veg end (steps≈180°) it reproduces
+the **legacy flat alternation exactly** — the signed-off veg/seedling silhouettes are preserved — and
+only blooms into spiral depth with maturity; strain silhouette knobs (spread/shorten/density/cola)
+are untouched, so G13 stays a slim spear and PDP/White Rhino stay chunky. **Consequences:** the
+`Node` carries `depth/litAdj/leafYaw/leafRoll`; `drawFan` gained optional `litAdj`/`yaw`; `drawPlant`
+sorts nodes by depth before painting. `phyllotaxy.ts` is unit-tested (the maturity-0 case asserts
+byte-equivalence to the old left/right alternation). Verified against the headless `gen:stages` PNGs
+across all seven curated strains × stage matrix. Pointer/physics indexing is unchanged (draw order is
+cosmetic; `phys.nodes[i]` still keyed by real node index). Next builds on this: branch azimuth can
+later feed true light-seeking pitch and circadian leaf motion (PR #28, parked).
+
+### 2026-06-14 — Apical dominance / multi-cola architecture (Engines 1 & 2)
+**Decision:** The whole-plant chamber no longer always grows exactly one top cola. A new pure module
+`web/src/lib/chamber/apicalDominance.ts` (`colaTops`) turns a strain's new `Silhouette.apicalDominance`
+(0..1) into how many tops compete with the leader (1 → 4) and how the flower mass splits between them
+(`leaderShare` + `secondaryShares`, conserved to 1). `chamberCore.buildPlant` promotes the highest
+`count−1` nodes — **only in flower** — into upright **co-colas**: it straightens their tilt toward
+vertical and extends their length so they race the leader to the canopy, builds each a scaled-down
+sibling of the leader cola sized by its mass share, and suppresses their node-buds/branchlets so they
+read as clean colas; the central leader cola is scaled by `leaderShare` (floored at 0.62× so it stays
+*the* main cola). **Why:** the PBSA charter (Engines 1 & 2) and `knowledge/whole-plant-architecture.md`
+call apical dominance "the highest-impact" identity knob — a single cola + side branches (spear, G13)
+vs. several competing tops (bush, Purple Diddy Punch / White Rhino) is what makes strains read as
+*different plants*, not recolours of one model. **Why this shape:** `apicalDominance = 1` ⇒ `count = 1`,
+`leaderShare = 1` ⇒ byte-identical to the old single-cola path, so high-dominance spear strains and all
+veg/seedling plants are unchanged (co-colas exist only in flowering); mass is conserved so a multi-top
+plant doesn't gain total bud. Authored per curated strain (G13 0.85, White Fire OG 0.72, Animal
+Mints 0.6, Gelato 0.55, Wedding Cake 0.5, PDP 0.42, White Rhino 0.4) and derived `lerp(0.72,0.58,r)`
+for others. **Consequences:** `Silhouette` gained a required `apicalDominance` field (all 7 authored
+silhouettes + the derived fallback updated; `colaTops` unit-tested incl. mass-conservation + the
+single-cola degenerate case). Verified across the 7-strain × stage PNG matrix. Built on the same
+PBSA branch as Engines 3 & 4 (carried in PR #58).
+
+### 2026-06-14 — Simulation test clock is an offset on the existing compute-on-read seam (BE-002, STEP 3)
+**Decision:** The dev/test-only "simulation test clock" is built as an **`OffsetClock`** layered on the
+engine's existing `Clock` seam — not a new code path through the engine. The engine is already
+compute-on-read driven by `clock.now()`; the new clock is a wall-clock shifted by a mutable,
+**forward-only** offset, so advancing it makes the *next* read of any plant catch up through the
+normal `engine.catch_up`. A process-wide singleton (`get_test_clock`/`reset_test_clock`) holds the
+offset; `active_clock()` returns it **only** when `settings.test_clock_enabled`, else a plain
+`SystemClock`. `SimulationService`'s default clock now resolves through `active_clock()` (explicit
+injection still wins), so every read endpoint picks up the shift with no per-call-site changes.
+A dev-only blueprint `api/dev_api.py` (`/api/dev/clock`, `/clock/advance`, `/clock/reset`) is
+**registered only when enabled** and re-guards per request. **Why:** STEP 4 (e2e grow-loop testing)
+and launch-readiness need to drive a full grow → harvest in seconds; the cleanest, lowest-risk way is
+to move the clock, because the engine already treats `now` as the only input. Reusing the seam means
+zero new simulation logic and no drift from production behaviour. **Safe boundaries (constraints
+honoured):** the flag is **force-disabled in production** — `test_clock_enabled = GROW_TEST_CLOCK=true
+AND APP_ENV ∉ {production,prod}` (new `APP_ENV` setting) — so a live deployment can never register the
+routes or hand the engine a fast-forwardable clock. Advancing time triggers **only** compute-on-read
+catch-up, which posts **no ledger entries** and changes no prices/faucets/sinks (covered by
+`test_advance_does_not_touch_the_economy`). The clock is **forward-only** (a backward jump would
+desync `last_tick_at`); a single advance is capped at one catch-up window (`MAX_ADVANCE_HOURS=8760`).
+**Consequences:** `reset` rewinds the *clock*, not the plants — time already simulated is persisted
+(compute-on-read really advanced them), so a full reset means reseeding the dev DB; documented in
+`docs/SIMULATION_TEST_CLOCK.md`. No production behaviour changes when disabled (`active_clock()` →
+`SystemClock`, identical to before). New tests in `tests/test_test_clock.py` (15) cover the primitive,
+the config gating, the selector, and the endpoints; full suite 246 green, coverage 81.9% ≥ 79%.
+
+### 2026-06-14 — e2e grow loop is test-only; the cure-clock fix is deferred (BE-004, STEP 4)
+**Decision:** STEP 4 validates the core loop **seed → plant → grow → flower → harvest → sell**
+end-to-end through the public HTTP API, fast-forwarded with the STEP 3 dev clock, as **test-only
+additions** (`tests/test_e2e_grow_loop.py`, `tests/test_http_boundary.py`) with **no source
+changes** — honouring the directive's "test-only / no production behaviour changes" rule. The
+HTTP-boundary coverage for the value-bearing routes (withdraw/deposit/mint/nft) was added here,
+partially closing RISK #8 on the backend side. **Finding surfaced:** `GameService` (harvest/cure/sell
+and market/auction expiry) defaults to `SystemClock`, **not** `active_clock()`
+(`services/game_service.py:82`), so the dev clock does **not** fast-forward cure or auction timing at
+the HTTP boundary — the directive's loop (no cure) didn't need it, so cure was excluded from the e2e.
+**Why deferred:** closing it is a one-line change mirroring STEP 3 (`self.clock = clock or
+active_clock()`), production-behaviour identical (`active_clock()` → `SystemClock` whenever the clock
+is disabled, i.e. always in prod), but it edits a production-path file — so under a "test-only"
+directive the owner explicitly chose (2026-06-14) to **defer it to the next chat** rather than slip it
+in here. **Consequence:** STEP 4 ships on the **same branch as PR #47** (the STEP 3 clock is not yet
+in `main`, so a STEP 4 PR based on `main` is impossible without first merging #47); PR #47 therefore
+carries clock **+** its first real consumer. NEXT ACTION (owner-approved): STEP 4.5 — the
+`active_clock()` one-liner + cure/auction e2e. Suite 262 green, coverage 83.6% ≥ 79%.
+
+### 2026-06-14 — FTUE is orchestration on existing rails; tutorial time is a per-plant fiction (FTUE epic: PR #34/#35/#39)
+**Decision:** The first-time-user experience is built as **pure orchestration over existing game
+actions** — no new economy, no Phase-2 systems. A guarded deterministic step machine on
+`Player.ftue_step` (`welcome → plant → water → environment → grow → harvest → completed`) drives the
+**real** services (`grant_starter_items`, `plant_seed`, `water`, `set_environment`,
+`harvest_plant`+sell); each `advance` is rejected if out-of-sync or already completed (no replay).
+The AI Master Grower's tutorial voice is **deterministic and scripted** (`ai/ftue_coach.py`, per-step
+static `AdvisorReport`s through the real advisor schema) rather than a live AI call, so it works in CI
+with no key and reads identically every time. **Why two sub-choices matter:** (1) *Time-compression* —
+a real first grow is days long; the `grow` step backdates the tutorial plant's `planted_at` (so the
+chamber renders a mature flowering plant) and sets `last_tick_at = now` so the authoritative catch-up
+does **not** retro-decay it. Chosen over (a) running the full hour-by-hour sim across the gap — which
+would drought-kill the un-watered plant and spam event rows — and (b) giving the starter pod
+auto-water/feed, which is a paid-tier **economy** change. The fiction is scoped to the single tutorial
+plant; global sim/time and the `max_catchup_hours` knob are untouched (general dormancy RISK #9
+unchanged). (2) *No auto-divert of existing players* — the migration backfills `ftue_step='welcome'`
+(`server_default`), so the web only routes **freshly created** accounts into `/ftue`; returning
+sign-ins and pre-existing players are never swept into the tutorial. **Consequences:** the epic is
+additive (3 nullable-safe `Player` columns + a new service/coach/route + endpoints; one-shot starter
+grant via a `grant_claims` unique index); the core loop and ledger are untouched; the "come back
+tomorrow" hook points at the existing daily stipend rather than minting a new reward. Migrations
+`c7ecd7523cc8` (grant rail) and `9d669edf48a8` (FTUE columns) keep a single Alembic head.
+
+### 2026-06-14 — Mobile-first navigation: native bottom tab bar over a hamburger drawer (PR #36)
+**Decision:** On small screens the web client uses a **native-app bottom tab bar** (primary
+destinations + a "More" sheet for secondaries) rather than a hamburger/drawer; the desktop header
+takes over at the `lg` breakpoint. Touch targets are ≥44px, with `env(safe-area-inset-*)` padding for
+notches/home bars and focus-visible rings for keyboard a11y. **Why:** thumb-reach + muscle memory on
+phones, and the grow chamber is the emotional core — it should feel like a native app, not a desktop
+site shrunk down. **Consequences:** shipped in `web/src/components/layout/` (tab bar + responsive
+shell); the chamber became responsive; remaining player surfaces (dashboard / PDP / `/ftue`) still
+need a small-screen sweep (open PRs #40 bottom-nav follow-through, #41 care feedback). Visual-only;
+no API/economy change.
+
+### 2026-06-14 — Adopt the OMNI Charter v1.0 as the organizational constitution (PR #38)
+**Decision:** Add `docs/OMNI_CHARTER.md` as the **governance** layer (who decides, who builds, what
+each team may touch, how work crosses boundaries) sitting beside — not replacing — the technical
+memory system (`CLAUDE.md` + `docs/memory/`, which governs the *code*). Codifies the chain of command
+(Owner → Director Chat → Department Leads → Specialist Agents → Monitoring), department roster, the
+work-order system for cross-department changes, and canonical principles (off-chain MVP first; polish
+over features; no Phase-2 leakage into Phase-1; CI/audits before merges; emotional attachment as a
+first-class metric). **Why:** work is fanning out across many specialized AI sessions; clear authority
+and boundaries prevent scope creep and duplicate work. **Consequences:** the charter's "no autonomous
+merges / no repository mutations without approval" rule aligns with the existing delegation charter in
+`CLAUDE.md`; the Records-Department reconciliation function (this sweep, REC-004) and
+`docs/memory/CANONICAL_STATE.md` are governance artifacts under the Operations department.
+
+### 2026-06-14 — GameService reads the active clock too (BE-004.5 / STEP 4.5)
+**Decision:** `GameService` now defaults its clock to `active_clock()` (was `SystemClock()`),
+mirroring the STEP 3 change in `SimulationService`. **Why:** STEP 4 surfaced RISK #1 — harvest/**cure**/
+sell and market/auction expiry all live in `GameService`, which used wall time, so the dev/test clock
+(`/api/dev/clock/advance`) could fast-forward *growth* but not *cure or auction* timing over HTTP. A
+committed cure could never be exercised end-to-end without waiting real days. **Consequences:**
+production behaviour is byte-identical — `active_clock()` returns `SystemClock` whenever the test clock
+is disabled (always in prod; default in tests where no clock is injected), so the full suite is
+unaffected. The dev-clock path now drives cure + auction expiry. New e2e
+`test_e2e_grow_loop.py::test_cure_advances_under_dev_clock` proves a cure can't finish before the dev
+clock passes its window and that finishing then raises quality. Test-only otherwise; one-line source
+change. Suite 273 green, coverage 84.46% ≥ 79%. RISK #1 cleared.
+
+### 2026-06-14 — Feature flags are data-driven (balance.yaml), config-authoritative for exposure
+**Decision:** Player-facing surfaces are gated by a feature-flag layer whose definitions/defaults
+live in `balance.yaml` (`feature_flags:`), resolved by `feature_flags.py` with per-environment
+`FEATURE_<NAME>` env overrides, served read-only at `GET /api/game/flags`, and guarded server-side
+via `require_feature`/`feature_required`. Flags fail closed (unknown → off); no per-player table.
+**Why:** Mirrors the existing "tuning surface" convention (data over code) so launch surfaces (FTUE,
+chamber, marketplace, …) can be kill-switched without a deploy. DB stays authoritative for gameplay;
+flags govern *exposure* only. Per-player/cohort targeting is deferred until a real need (would be an
+additive table, not a rewrite). **Consequences:** Backend core ships first (this PR); web route/nav
+gating is a separate surface-claimed PR. Defaults are ON, so adding a flag changes no behaviour until
+a surface is explicitly gated.
+
+### 2026-06-14 — Collapse to ONE feature-flag system (balance.yaml canonical) — supersedes the #42 config path
+**Decision:** Two feature-flag systems landed on `main` ~1 minute apart, out of the agreed order:
+**#42** (env `ENABLE_*` in `config.Settings` → `app.config["FEATURE_*"]`, `api/feature_gates.py`
+decorator gating ~25 routes, defaults **OFF**) and **#55** (the balance.yaml resolver above, defaults
+**ON**, `GET /api/game/flags`). They contradicted each other (routes gated OFF by #42 while `/flags`
+reported ON from #55). Per the BE-003 decision, **#55/balance.yaml is canonical**; the #42 path is
+**removed**. The route decorators now use `feature_required` from `growpodempire.feature_flags`
+(→ `FeatureDisabledError` → 404 via the blueprint handler); `api/feature_gates.py`, the `config.py`
+`ENABLE_*` block, and the `app.config["FEATURE_*"]` mirror are deleted; `balance.yaml feature_flags:`
+gained `chain` + `contracts` and the `cup` decorators were renamed to `cup_competitions` so every
+gated surface maps to exactly one canonical flag. **Why:** the `balance.yaml` data-over-code invariant,
+and one source of truth (no divergence). **Consequences:** gated routes now follow balance.yaml
+defaults (**ON**) — the launch build turns non-MVP surfaces (marketplace/chain/cup_competitions/
+university/contracts) OFF via `FEATURE_*` env, *not* a code default. A regression test asserts each
+route's gate state equals its `/flags` value so the two can never diverge again. Web route/nav gating
+(still on `NEXT_PUBLIC_ENABLE_*`) is re-pointed to `GET /api/game/flags` in the separate Web Gating PR.
+
+### 2026-06-14 — CEO ratifies PR #63 as the single feature-flag system; #61 closed (FF-RECON-001 EXECUTED)
+**Decision:** With two chats having driven **opposite** flag reconciliations in parallel — **PR #63**
+(keep `balance.yaml`/`feature_flags.py`, delete #42's `feature_gates.py`/config `FEATURE_*`) and
+**PR #61** (the reverse) — the CEO **ratified #63** as canonical and **closed #61 as superseded**.
+No revert of #63; no rebuild of the #42 path; no recreating duplicate flag infrastructure.
+**Why:** #63 already achieved the goal (one source of truth), is green, and aligns with the
+`balance.yaml`-as-tuning-surface invariant; reverting would be pure rework against launch momentum.
+**Consequences:** `balance.yaml`/`feature_flags.py` is the sole canonical flag system; feature-flag
+infra is a single-writer protected surface (registry). The web build-time `NEXT_PUBLIC_ENABLE_*`
+mirror remains as a deferred (non-defect) follow-up. The flag architecture is **not to be reopened**
+absent a production defect; focus returns to Playtesting → Retention Validation → MVP Launch Candidate.

@@ -180,7 +180,8 @@ function ApiKeyReveal({ player, apiKey }: { player: Player; apiKey: string }) {
 
   function enter() {
     login(player.id, apiKey);
-    router.replace("/dashboard");
+    // Brand-new accounts begin in the guided first-grow tutorial.
+    router.replace("/ftue");
   }
 
   return (

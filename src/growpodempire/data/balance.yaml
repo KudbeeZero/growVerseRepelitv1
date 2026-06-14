@@ -394,3 +394,23 @@ chain:
     # Harvests at/above this rarity, or stabilized strains at/above it, can mint.
     mint_min_rarity: rare
     strain_min_stability: 0.85
+
+# --- Feature flags -------------------------------------------------------
+# Data-driven launch gates / kill-switches for player-facing surfaces. Each is a
+# boolean default; override per-environment WITHOUT a deploy via a FEATURE_<NAME>
+# env var (e.g. FEATURE_FTUE_TUTORIAL=false). Resolved map is served read-only at
+# GET /api/game/flags. Defaults are ON, so a flag is a pure safety lever. The
+# marketplace/chain/cup_competitions/university/contracts surfaces are gated on
+# their API routes (require_feature); flip one OFF per-environment for launch.
+# No per-player targeting.
+feature_flags:
+  ftue_tutorial: true          # guided first-grow onboarding (/ftue)
+  grow_chamber: true           # whole-plant grow-chamber view
+  master_grower_advisor: true  # AI care advisor
+  marketplace: true            # player-to-player listings (gated)
+  breeding_lab: true           # strain crossbreeding
+  cup_competitions: true       # the Cup / hall of fame (gated)
+  university: true             # courses / transcript (gated)
+  daily_stipend: true          # login retention faucet
+  chain: true                  # on-chain wallet / NFT minting (gated)
+  contracts: true              # NPC contracts (gated)

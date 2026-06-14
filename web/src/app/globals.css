@@ -18,6 +18,15 @@ body {
   font-family: var(--font-sans), system-ui, sans-serif;
 }
 
+/* Keyboard-only focus ring. `:focus-visible` keeps mouse/touch taps clean while
+   giving keyboard and screen-reader users a clearly visible target on every
+   interactive element (links, buttons, inputs, the mobile tab bar). */
+:focus-visible {
+  outline: 2px solid theme("colors.grow.400");
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
 /* ---- Plant body animations (intensity scaled via --stress 0..1) ---- */
 @keyframes gpe-sway {
   0%,
@@ -113,12 +122,98 @@ body {
   animation: gpe-sheen 3.5s ease-in-out infinite;
 }
 
+/* ---- Care feedback: the burst of delight when you tend a plant ---- */
+@keyframes gpe-care-float {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 6px) scale(0.6);
+  }
+  18% {
+    opacity: 1;
+    transform: translate(calc(-50% + var(--dx, 0px) * 0.4), -6px) scale(1.05);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--dx, 0px)), -52px) scale(0.9);
+  }
+}
+/* Reduced-motion fallback: a gentle, drift-free fade (opacity only). */
+@keyframes gpe-care-fade {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 0) scale(0.9);
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+.gpe-care-float {
+  animation: gpe-care-float ease-out forwards;
+}
+.gpe-care-fade {
+  animation: gpe-care-fade 900ms ease-out forwards;
+}
+@keyframes gpe-care-glow {
+  0% {
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.gpe-care-glow {
+  animation: gpe-care-glow 1s ease-out forwards;
+}
+
+/* ---- Celebration: harvest moment (sparkle ring + pop-in) ---- */
+@keyframes gpe-celebrate-ring {
+  0% {
+    opacity: 0.65;
+    transform: scale(0.35);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.4);
+  }
+}
+.gpe-celebrate-ring {
+  animation: gpe-celebrate-ring 1.4s ease-out forwards;
+}
+@keyframes gpe-celebrate-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  45% {
+    opacity: 1;
+    transform: scale(1.12);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.gpe-celebrate-pop {
+  animation: gpe-celebrate-pop 0.5s ease-out both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .gpe-anim-sway,
   .gpe-anim-droop,
   .gpe-bug,
   .gpe-mildew,
   .gpe-sheen,
+  .gpe-care-float,
+  .gpe-care-glow,
+  .gpe-celebrate-ring,
+  .gpe-celebrate-pop,
   .animate-spin,
   .animate-twinkle,
   .animate-pulse-ring,

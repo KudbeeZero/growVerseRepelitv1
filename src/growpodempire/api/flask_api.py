@@ -41,6 +41,11 @@ def create_app(init_database: bool = True):
     app.config["RATELIMIT_STORAGE_URI"] = settings.ratelimit_storage_uri
     init_limiter(app)
 
+    # Feature flags are resolved data-driven from balance.yaml `feature_flags:`
+    # (growpodempire.feature_flags), with per-env `FEATURE_<NAME>` overrides — no
+    # app.config mirror needed. Gated routes use the `feature_required` decorator;
+    # GET /api/game/flags serves the resolved map.
+
     # Ensure the persistent game schema exists (no-op for already-migrated DBs).
     if init_database:
         init_db()
@@ -56,6 +61,13 @@ def create_app(init_database: bool = True):
 
     # DB-backed game layer (players, economy, strains, breeding, market).
     app.register_blueprint(game_bp)
+
+    # DEV/TEST ONLY: the simulation test clock (/api/dev/clock/*). Registered
+    # only when explicitly enabled on a non-production environment, so it can
+    # never exist on a live deployment.
+    if settings.test_clock_enabled:
+        from .dev_api import dev_bp
+        app.register_blueprint(dev_bp)
 
     @app.route('/')
     def index():

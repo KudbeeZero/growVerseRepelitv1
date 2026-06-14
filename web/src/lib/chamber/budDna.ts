@@ -84,6 +84,30 @@ const AUTHORED: Record<string, BudDNA> = {
     calyxSizeMin: 7, calyxSizeMax: 15, overlap: 0.7, pistilChance: 0.33,
     sugarLeafChance: 0.12, trichomeDensity: 0.95, palette: pal([["green", 2.5], ["lime", 1.5], ["purple", 1.5], ["deepPurple", 1.5]]),
   },
+  // Heavy indica — the widest, chunkiest cola; dense green, very frosty.
+  "white-rhino": {
+    budHeight: 150, maxBudWidth: 100, rows: 16, calyxPerRowMin: 3, calyxPerRowMax: 8,
+    calyxSizeMin: 9, calyxSizeMax: 17, overlap: 0.73, pistilChance: 0.3,
+    sugarLeafChance: 0.12, trichomeDensity: 0.88, palette: pal([["green", 3], ["deepGreen", 2], ["lime", 1]]),
+  },
+  // Bright, frosty OG — slim-ish tall cola, the brightest lime-green, max frost.
+  "white-fire-og": {
+    budHeight: 168, maxBudWidth: 78, rows: 18, calyxPerRowMin: 3, calyxPerRowMax: 7,
+    calyxSizeMin: 7, calyxSizeMax: 14, overlap: 0.69, pistilChance: 0.32,
+    sugarLeafChance: 0.1, trichomeDensity: 0.97, palette: pal([["lime", 3], ["green", 2], ["deepGreen", 1]]),
+  },
+  // Purple dessert — high anthocyanin, colourful: purple/magenta-led with a green base.
+  gelato: {
+    budHeight: 160, maxBudWidth: 86, rows: 17, calyxPerRowMin: 3, calyxPerRowMax: 7,
+    calyxSizeMin: 7, calyxSizeMax: 15, overlap: 0.7, pistilChance: 0.33,
+    sugarLeafChance: 0.12, trichomeDensity: 0.85, palette: pal([["green", 1.5], ["lime", 1], ["purple", 3], ["magenta", 2], ["deepPurple", 1]]),
+  },
+  // Creamy purple dessert — high anthocyanin, tightest packing, heavy frost.
+  "wedding-cake": {
+    budHeight: 158, maxBudWidth: 88, rows: 18, calyxPerRowMin: 4, calyxPerRowMax: 8,
+    calyxSizeMin: 7, calyxSizeMax: 15, overlap: 0.74, pistilChance: 0.33,
+    sugarLeafChance: 0.13, trichomeDensity: 0.93, palette: pal([["green", 2], ["lime", 1], ["purple", 2.5], ["deepPurple", 1.5], ["magenta", 1]]),
+  },
 };
 
 /** Authored DNA for curated strains, else a default derived from the bud colour. */

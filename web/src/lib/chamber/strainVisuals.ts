@@ -22,6 +22,14 @@ const AUTHORED: Record<string, BudColor> = {
   "purple-diddy-punch": { anthocyanin: 0.95, calyxHue: 282, calyxSat: 60, pistilMagenta: 0 },
   // RARE — deep green base with ~40% purple-accent calyxes, orange pistils.
   "animal-mints": { anthocyanin: 0.3, calyxHue: 104, calyxSat: 46, pistilMagenta: 0, accentHue: 285, accentFrac: 0.4 },
+  // Frosty WHITE (the colour is trichome frost, not anthocyanin) — heavy indica.
+  "white-rhino": { anthocyanin: 0, calyxHue: 100, calyxSat: 40, pistilMagenta: 0 },
+  // Bright frosty WHITE — the "white" is all frost; orange pistils.
+  "white-fire-og": { anthocyanin: 0, calyxHue: 96, calyxSat: 46, pistilMagenta: 0 },
+  // Purple dessert — high anthocyanin, colourful: green base + heavy purple accents.
+  gelato: { anthocyanin: 0.6, calyxHue: 128, calyxSat: 56, pistilMagenta: 0.2, accentHue: 292, accentFrac: 0.5 },
+  // Creamy purple dessert — high anthocyanin, frosty; strong purple accents.
+  "wedding-cake": { anthocyanin: 0.5, calyxHue: 122, calyxSat: 50, pistilMagenta: 0.1, accentHue: 288, accentFrac: 0.42 },
 };
 
 /**
@@ -50,10 +58,20 @@ export function budColorForStrain(
 //     strong spear (stiff stems, light buds → least droop), Purple Diddy Punch is
 //     chunky (weak stems, heavy buds → most sag + a heavy leaning cola), Animal
 //     Mints sits balanced in the middle.
+//   • apicalDominance (Engines 1&2): spear strains keep a single dominant cola
+//     (G13, White Fire OG → high); chunky lateral-branching strains grow several
+//     competing tops (Purple Diddy Punch, White Rhino → low); the rest sit mid.
 const SILHOUETTES: Record<string, Silhouette> = {
-  g13: { nodeDensity: 1.16, vertStack: 1.22, branchletFrac: 0.4, lowerSpread: 0.95, upperShorten: 0.46, colaScale: 1.1, nodeLeaf: 0.95, branchStrength: 1.2, budWeightMul: 0.85 },
-  "purple-diddy-punch": { nodeDensity: 1.08, vertStack: 0.94, branchletFrac: 0.78, lowerSpread: 1.42, upperShorten: 0.16, colaScale: 1.22, nodeLeaf: 1.16, branchStrength: 0.82, budWeightMul: 1.28 },
-  "animal-mints": { nodeDensity: 1.3, vertStack: 1.08, branchletFrac: 0.64, lowerSpread: 1.12, upperShorten: 0.3, colaScale: 1.07, nodeLeaf: 1.12, branchStrength: 1.0, budWeightMul: 1.0 },
+  g13: { nodeDensity: 1.16, vertStack: 1.22, branchletFrac: 0.4, lowerSpread: 0.95, upperShorten: 0.46, colaScale: 1.1, nodeLeaf: 0.95, branchStrength: 1.2, budWeightMul: 0.85, apicalDominance: 0.85 },
+  "purple-diddy-punch": { nodeDensity: 1.08, vertStack: 0.94, branchletFrac: 0.78, lowerSpread: 1.42, upperShorten: 0.16, colaScale: 1.22, nodeLeaf: 1.16, branchStrength: 0.82, budWeightMul: 1.28, apicalDominance: 0.42 },
+  "animal-mints": { nodeDensity: 1.3, vertStack: 1.08, branchletFrac: 0.64, lowerSpread: 1.12, upperShorten: 0.3, colaScale: 1.07, nodeLeaf: 1.12, branchStrength: 1.0, budWeightMul: 1.0, apicalDominance: 0.6 },
+  // Launch Strain Integration Pack: White Rhino = heaviest indica (chunky → weak
+  // stems, heavy buds, most sag); White Fire OG = frosty balanced spear (sturdy,
+  // light); Gelato = colourful mid; Wedding Cake = dense indica-leaning chunk.
+  "white-rhino": { nodeDensity: 1.24, vertStack: 0.9, branchletFrac: 0.8, lowerSpread: 1.5, upperShorten: 0.16, colaScale: 1.28, nodeLeaf: 1.2, branchStrength: 0.85, budWeightMul: 1.3, apicalDominance: 0.4 },
+  "white-fire-og": { nodeDensity: 1.1, vertStack: 1.06, branchletFrac: 0.58, lowerSpread: 1.08, upperShorten: 0.32, colaScale: 1.08, nodeLeaf: 1.05, branchStrength: 1.05, budWeightMul: 0.95, apicalDominance: 0.72 },
+  gelato: { nodeDensity: 1.18, vertStack: 1.04, branchletFrac: 0.62, lowerSpread: 1.14, upperShorten: 0.3, colaScale: 1.1, nodeLeaf: 1.1, branchStrength: 0.95, budWeightMul: 1.05, apicalDominance: 0.55 },
+  "wedding-cake": { nodeDensity: 1.28, vertStack: 1.0, branchletFrac: 0.7, lowerSpread: 1.2, upperShorten: 0.26, colaScale: 1.16, nodeLeaf: 1.14, branchStrength: 0.9, budWeightMul: 1.15, apicalDominance: 0.5 },
 };
 
 /**
@@ -77,5 +95,8 @@ export function silhouetteFor(slugOrName: string | undefined, indicaRatio: numbe
     nodeLeaf: lerp(0.9, 1.15, r),
     branchStrength: lerp(0.9, 1.15, r), // indica = sturdier stems
     budWeightMul: lerp(0.85, 1.2, r), // indica = heavier buds
+    // Mid-high by default (most plants grow one clear leader); bushier indicas
+    // trend a touch lower (more lateral competition for the top).
+    apicalDominance: lerp(0.72, 0.58, r),
   };
 }
