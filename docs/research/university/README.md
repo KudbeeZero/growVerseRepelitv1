@@ -67,6 +67,6 @@ Optional: **Blocked · Observations · Recommendation.**
 - **Live code:** `src/growpodempire/services/university_service.py`,
   `src/growpodempire/services/lecturer_service.py`, `src/growpodempire/data/curriculum.yaml`.
 - **Governance:** `docs/OMNI_CHARTER.md` (Think Tank = research only) · `CLAUDE.md` (invariants).
-- **Start here:** **`GROWPOD_UNIVERSITY_MASTER_BIBLE.md`** — the canonical single source of truth
+- **Start here:** **`MASTER_BIBLE.md`** — the canonical single source of truth
   (academic structure + governance + pointers); then `UNI-A10-records-consolidation.md` for the
   conflict register, and any stream for depth.

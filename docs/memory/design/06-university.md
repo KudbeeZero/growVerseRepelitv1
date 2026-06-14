@@ -64,7 +64,7 @@ Public: `GET /university/catalog`. Authed: `GET /players/<id>/university` (trans
 > **Build-out research (Directive UNI-001, 2026-06-14):** the *how* for every ⬜ above — quizzes,
 > persona depth, more departments, Doctorate, community, diploma NFTs — is researched in
 > `docs/research/university/` (10-agent Think-Tank campaign; canonical front-door:
-> `GROWPOD_UNIVERSITY_MASTER_BIBLE.md`). Foundations ratified as **UNI-ADR-001** (`DECISIONS.md`).
+> `docs/research/university/MASTER_BIBLE.md`). Foundations ratified as **UNI-ADR-001** (`DECISIONS.md`).
 > Research only — no tags flip here until the work ships; build is parked post-MVP.
 
 ## Cross-links
