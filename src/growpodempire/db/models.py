@@ -56,6 +56,11 @@ class Player(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     cannabis_cup_title: Mapped[Optional[str]] = mapped_column(String(96), default=None)
     # Highest GrowPod University degree title earned (permanent).
     university_title: Mapped[Optional[str]] = mapped_column(String(96), default=None)
+    # First-time-user experience: which guided tutorial step the player is on
+    # ("welcome" → … → "completed"), the tutorial plant, and when they finished.
+    ftue_step: Mapped[str] = mapped_column(String(32), default="welcome", nullable=False)
+    ftue_plant_id: Mapped[Optional[str]] = mapped_column(String(32), default=None)
+    ftue_completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
 
     wallet: Mapped["Wallet"] = relationship(
         back_populates="player", uselist=False, cascade="all, delete-orphan"
