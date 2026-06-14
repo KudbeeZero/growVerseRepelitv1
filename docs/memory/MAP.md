@@ -59,6 +59,7 @@ repo-relative (under `src/growpodempire/` unless noted); every ✅ here is check
 | `design/04-honesty-and-trust.md` | `simulation/engine.py` (`_rng_for`) · `services/game_service.py` (`verify_strain`) · `api/game_api.py` (`/provenance`) · `economy/ledger.py` · `services/advisor_service.py` | 🔨 fairness shipped for breeding |
 | `design/05-events-and-competition.md` | `services/cup_service.py` · `economy/pricing.py` (`cup_score`) · `data/balance.yaml` (`cannabis_cup`) · `db/models.py` (`CannabisCup`/`CupEntry`) · `api/game_api.py` (`/cup/*`) | ✅ seasonal Cup + lifetime rewards |
 | `design/06-university.md` | `services/university_service.py` · `services/lecturer_service.py` · `data/curriculum.yaml` · `ai/lecturer_mock.py`/`lecturer_claude.py` · `db/models.py` (`CourseEnrollment`/`DegreeProgress`) · `api/game_api.py` (`/university/*`) | ✅ degrees + AI Professor |
+| `design/07-university-phase-2.md` | extends `06` — `services/university_service.py` · `services/lecturer_service.py` · `ai/provider.py` · `simulation/engine.py` (lab teaching-mode) · `web/src/app/university/` + `web/src/components/ui/`; long-form courses, labs, exams, narrated audio (greenfield) | ⬜ research/spec (UNI-001 v2) |
 
 **What the sim engine actually reads today** (`simulation/engine.py`): water, nutrient (single
 scalar), temperature, humidity, pH, **light (PPFD)**, **derived leaf VPD**, pest & disease levels;
