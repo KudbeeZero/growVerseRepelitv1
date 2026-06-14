@@ -67,13 +67,14 @@ Open / in-flight directives. One row per directive; update **Status** as it move
 
 | Directive | Dept | Lead | Workers | Branch | PR | Owned file surfaces | Deps | Status |
 |---|---|---|---|---|---|---|---|---|
-| DX-005 (FP-5 completion) | Design & Experience | DX-A00 | DX-A01–A10 | `claude/dx-fp5-care-feedback` | (this PR) | Plant-care only: `components/plant/PlantActionCTA.tsx` (+ docs registry) | — | 🟢 Open |
-| DX-006 (P4 Sticky One-Handed CTAs) | Design & Experience | DX-A00 | DX-A01–A10 | `claude/dx-sticky-one-handed-ctas` | #48 | Plant-care placement: `components/ui/StickyActionBar.tsx` (new), `app/dashboard/plants/[plantId]/page.tsx` | Reuses merged FP-3 `lib/plantAction.ts` + `PlantActionCTA` **read-only** (no logic change) | 🟢 Open |
+| DX-007 (P2 FTUE Coach-Marks) | Design & Experience | DX-A00 | DX-A01–A10 | `claude/dx-ftue-coach-marks` | (this PR) | FTUE/Onboarding (coach-mark layer): `components/onboarding/CoachMarks.tsx` (new), `lib/coachMarks.ts` (new), `lib/coachMarkStore.ts` (new), + `data-coach` tags & mount in `app/dashboard/page.tsx` | Builds **on top of** canonical FTUE (#35/#39) — does not modify the `/ftue` route. New layer; no overlap with the merged plant-care work. | 🟢 Open |
 
 ### Recently merged to `main` (for collision awareness)
 
 | PR | Title | Surfaces touched |
 |---|---|---|
+| #48 | DX-006 Sticky One-Handed CTA | Plant-care placement (`StickyActionBar`, plant detail) |
+| #49 | DX-005 FP-5 completion — primary CTA celebration | Plant-care (`PlantActionCTA`) |
 | #46 | Studio Agent Registry (REC-003) | docs (governance) |
 | #45 | Primary Plant CTA (FP-3, re-cut) | Plant-care |
 | #41 | Care Feedback & Celebration (DX-001 = **FP-5**) | Plant-care (`careFeedback`, `CareFeedback`, `haptics`, wired into `CareButtons`) |
