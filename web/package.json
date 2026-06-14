@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "echo 'playwright not installed in this environment'"
+    "test:e2e": "echo 'playwright not installed in this environment'",
+    "export:stages": "node scripts/export-stage-pngs.mjs"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.59.0",
@@ -26,6 +27,7 @@
     "autoprefixer": "^10.4.20",
     "eslint": "^9.18.0",
     "eslint-config-next": "^15.1.6",
+    "playwright": "^1.60.0",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.7.3",

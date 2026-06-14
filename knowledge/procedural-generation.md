@@ -41,3 +41,8 @@ BudSeed
 - Planned perf step before scaling texture: render the bud to an offscreen canvas
   keyed on (DNA signature + dev bucket) and blit with the sway each frame; gate the
   RAF loop on visibility (IntersectionObserver) for the always-mounted hero.
+
+## Canonical stills
+- The deterministic pipeline is also exported offline to canonical PNG stills (7
+  launch strains × 5 stages) for encyclopedia/dashboard/NFT art — see
+  `stage-png-generation.md`.

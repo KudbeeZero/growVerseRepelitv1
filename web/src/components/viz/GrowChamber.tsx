@@ -1507,6 +1507,12 @@ export function GrowChamber({
       buildScene();
       buildPlant();
       buildMacro();
+      // Resizing the canvas clears it. With motion enabled the RAF loop repaints
+      // next frame, but reduced-motion users (and the offline PNG exporter) have
+      // no loop — so the ResizeObserver's initial async refit would wipe the one
+      // static frame and leave the chamber blank. Repaint it here. (Same class of
+      // bug fixed in Constellation.tsx.)
+      if (!motionOK) draw(0);
     }
 
     fit();

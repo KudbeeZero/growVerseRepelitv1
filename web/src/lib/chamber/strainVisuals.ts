@@ -22,6 +22,14 @@ const AUTHORED: Record<string, BudColor> = {
   "purple-diddy-punch": { anthocyanin: 0.95, calyxHue: 282, calyxSat: 60, pistilMagenta: 0 },
   // RARE — deep green base with ~40% purple-accent calyxes, orange pistils.
   "animal-mints": { anthocyanin: 0.3, calyxHue: 104, calyxSat: 46, pistilMagenta: 0, accentHue: 285, accentFrac: 0.4 },
+  // Heavy-indica, frosty white-green; classic orange pistils (frost carried by budDna).
+  "white-rhino": { anthocyanin: 0, calyxHue: 100, calyxSat: 40, pistilMagenta: 0 },
+  // Bright, very frosty green; orange pistils — the "white" expression is all frost.
+  "white-fire-og": { anthocyanin: 0, calyxHue: 96, calyxSat: 46, pistilMagenta: 0 },
+  // Balanced + colourful — green base with ~45% purple-accent calyxes, orange pistils.
+  gelato: { anthocyanin: 0.35, calyxHue: 115, calyxSat: 50, pistilMagenta: 0, accentHue: 290, accentFrac: 0.45 },
+  // Dense, frosty green with a faint purple accent; orange pistils.
+  "wedding-cake": { anthocyanin: 0.2, calyxHue: 108, calyxSat: 44, pistilMagenta: 0, accentHue: 285, accentFrac: 0.2 },
 };
 
 /**
@@ -46,10 +54,18 @@ export function budColorForStrain(
 //   • G13 — slim spear / christmas-tree: tight nodes, short top, modest skirt.
 //   • Purple Diddy Punch — short, wide, chunky: heavy lateral branching, fat top.
 //   • Animal Mints — medium height, dense stacking, golf-ball clusters.
+//   • White Rhino — heaviest indica: short, very wide skirt, fat top, dense canopy.
+//   • White Fire OG — balanced OG: medium height, moderate spread, frosty cola.
+//   • Gelato — balanced + colourful: medium-dense, slightly fat top.
+//   • Wedding Cake — dense frosty: tight dense canopy, indica-leaning, chunky cola.
 const SILHOUETTES: Record<string, Silhouette> = {
   g13: { nodeDensity: 1.16, vertStack: 1.22, branchletFrac: 0.4, lowerSpread: 0.95, upperShorten: 0.46, colaScale: 1.1, nodeLeaf: 0.95 },
   "purple-diddy-punch": { nodeDensity: 1.08, vertStack: 0.94, branchletFrac: 0.78, lowerSpread: 1.42, upperShorten: 0.16, colaScale: 1.22, nodeLeaf: 1.16 },
   "animal-mints": { nodeDensity: 1.3, vertStack: 1.08, branchletFrac: 0.64, lowerSpread: 1.12, upperShorten: 0.3, colaScale: 1.07, nodeLeaf: 1.12 },
+  "white-rhino": { nodeDensity: 1.24, vertStack: 0.9, branchletFrac: 0.8, lowerSpread: 1.5, upperShorten: 0.16, colaScale: 1.28, nodeLeaf: 1.2 },
+  "white-fire-og": { nodeDensity: 1.1, vertStack: 1.06, branchletFrac: 0.58, lowerSpread: 1.08, upperShorten: 0.32, colaScale: 1.08, nodeLeaf: 1.05 },
+  gelato: { nodeDensity: 1.18, vertStack: 1.04, branchletFrac: 0.62, lowerSpread: 1.14, upperShorten: 0.3, colaScale: 1.1, nodeLeaf: 1.1 },
+  "wedding-cake": { nodeDensity: 1.28, vertStack: 1.0, branchletFrac: 0.7, lowerSpread: 1.2, upperShorten: 0.26, colaScale: 1.16, nodeLeaf: 1.14 },
 };
 
 /**
