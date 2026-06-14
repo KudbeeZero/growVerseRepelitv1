@@ -6,7 +6,7 @@
 > the same surface. It governs **coordination**; `CLAUDE.md` + `docs/memory/` govern the **code**.
 >
 > **Maintainer:** Records Department · **Authority:** Studio Director (Mission Control)
-> **Last updated:** 2026-06-14 (REC-003 activation, post-DIR-004 deconfliction)
+> **Last updated:** 2026-06-14 (DX-005 — ledger reconciled; FP-5 duplication caught)
 
 ---
 
@@ -23,13 +23,24 @@ surface is explicit.
 ## Pre-work checklist (every agent, before writing code)
 
 1. **Check this registry** — is any active directive already touching your file surfaces?
-2. **Claim your surfaces** — add a row to the Live Assignment Ledger (Directive, branch, surfaces).
-3. **Rebase onto `main`** — never build on a stale base; `main` moves under you.
-4. **Verify no active directive owns the same files** — if one does, STOP and escalate to the
+2. **Verify the feature doesn't already exist** — grep `main` and scan the *Recently merged* list
+   below before building. (DX-005 set out to build FP-5; it was already merged in #41 — this step is
+   why no duplicate shipped.)
+3. **Claim your surfaces** — add a row to the Live Assignment Ledger (Directive, branch, surfaces).
+4. **Rebase onto `main`** — never build on a stale base; `main` moves under you.
+5. **Verify no active directive owns the same files** — if one does, STOP and escalate to the
    Director. Do not build on a [Protected Surface](#protected-surfaces) without Director approval.
+6. **Keep PRs small; stop at PR creation / the natural checkpoint** — one responsibility per PR.
 
 > **No autonomous merges. No autonomous rebases of someone else's branch. No mutations without
 > approval.** (OMNI Charter, Core Rules.)
+
+### Operational note — workflow transition (2026-06-14)
+
+The studio is moving toward **desktop + terminal operations**: the Director will increasingly drive
+the repo through **Claude Code / terminal-based repo control**, while ChatGPT / Grok / Claude
+continue to act as specialized studio departments. Going forward every agent assumes terminal-first
+repo control and follows the pre-work checklist above before any new work.
 
 ---
 
@@ -56,13 +67,15 @@ Open / in-flight directives. One row per directive; update **Status** as it move
 
 | Directive | Dept | Lead | Workers | Branch | PR | Owned file surfaces | Deps | Status |
 |---|---|---|---|---|---|---|---|---|
-| DIR-004 (FP-3 re-cut) | Design & Experience | DIR-A00 | DIR-A01, A02 | `claude/dx-plant-cta` | #45 | Plant-care only: `lib/plantAction.ts`, `components/plant/PlantActionCTA.tsx`, `PlantCard.tsx`, `pod/PodCard.tsx`, `app/dashboard/plants/[plantId]/page.tsx` | — | 🟢 Open, awaiting review |
-| REC-003 (this registry) | Records | DIR-A00 | DIR-A05–A10, A03/A04 | `claude/records-agent-registry` | (this PR) | Docs only: `docs/STUDIO_AGENT_REGISTRY.md`, `docs/memory/BACKLOG.md`, `docs/OMNI_CHARTER.md` | — | 🟢 Open |
+| DX-005 (FP-5 completion) | Design & Experience | DX-A00 | DX-A01–A10 | `claude/dx-fp5-care-feedback` | (this PR) | Plant-care only: `components/plant/PlantActionCTA.tsx` (+ docs registry) | — | 🟢 Open |
 
 ### Recently merged to `main` (for collision awareness)
 
 | PR | Title | Surfaces touched |
 |---|---|---|
+| #46 | Studio Agent Registry (REC-003) | docs (governance) |
+| #45 | Primary Plant CTA (FP-3, re-cut) | Plant-care |
+| #41 | Care Feedback & Celebration (DX-001 = **FP-5**) | Plant-care (`careFeedback`, `CareFeedback`, `haptics`, wired into `CareButtons`) |
 | #39 | `/ftue` guided tutorial route | FTUE |
 | #38 | OMNI Charter v1.0 | docs (governance) |
 | #36 | DXD Mobile-first — responsive nav + chamber | **Navigation**, App Shell, Layout, chamber |
@@ -91,6 +104,7 @@ Open / in-flight directives. One row per directive; update **Status** as it move
 |---|---|---|
 | 2026-06-14 | Two mobile bottom-nav implementations (PR #40 `BottomNav` vs merged #36 `MobileTabBar`) on the **Navigation** surface | DIR-004: retire #40's FP-1; keep #36. |
 | 2026-06-14 | Two FTUE systems (PR #37 `GrowGuide` vs merged #35/#39 guided tutorial) on the **FTUE** surface | DIR-004: close #37; salvage ideas to backlog (below). |
+| 2026-06-14 | DX-005 set out to build FP-5 (Care Feedback & Celebration) — but the pre-work registry/flight-plan check found **#41 already shipped it**. | **Registry working as designed**: no duplicate built. DX-005 scoped down to wiring the new primary CTA (#45) into the existing #41 feedback system — the one surface #41 couldn't have known about. |
 
 **Salvaged from #37 (archived to `docs/memory/BACKLOG.md`):** persistent per-player tutorial state,
 non-nagging dismissal, and game-state-driven (auto-advancing) progression.

@@ -8,7 +8,9 @@
 
 import Link from "next/link";
 import { useCareActions } from "@/hooks/useCareActions";
+import { useCareFeedback } from "./CareFeedback";
 import { nextPlantAction } from "@/lib/plantAction";
+import type { CareKind } from "./careFeedback";
 import type { Plant, Pod } from "@/lib/types";
 
 const ACCENT: Record<"critical" | "due" | "calm", string> = {
@@ -27,13 +29,21 @@ export function PlantActionCTA({
   compact?: boolean;
 }) {
   const { care, harvest } = useCareActions(plant.id);
+  // Same delight burst the manual care buttons use — the primary CTA is the
+  // most-tapped care action, so it deserves the celebration too (DX-005).
+  const { fire, layer } = useCareFeedback();
   const action = nextPlantAction(plant, pod);
 
-  // Map the resolved action to a click handler + pending state.
+  // Map the resolved action to a click handler + pending state. Care/harvest
+  // taps fire the feedback burst the instant they're pressed (before the
+  // network round-trip), matching CareButtons.
   let onClick: (() => void) | null = null;
   let pending = false;
   if (action.kind === "harvest") {
-    onClick = () => harvest.mutate({ sell: true });
+    onClick = () => {
+      fire("harvest");
+      harvest.mutate({ sell: true });
+    };
     pending = harvest.isPending;
   } else if (
     action.kind === "water" ||
@@ -41,7 +51,11 @@ export function PlantActionCTA({
     action.kind === "treatPests" ||
     action.kind === "treatDisease"
   ) {
-    onClick = () => care.mutate(action.kind as "water" | "feed" | "treatPests" | "treatDisease");
+    const kind = action.kind as Exclude<CareKind, "harvest">;
+    onClick = () => {
+      fire(kind);
+      care.mutate(kind);
+    };
     pending = care.isPending && care.variables === action.kind;
   }
 
@@ -97,7 +111,8 @@ export function PlantActionCTA({
   // ---- Compact (inside PlantCard): a single full-width primary action. ----
   if (compact) {
     return (
-      <div className={`rounded-lg border p-2 ${ACCENT[action.urgency]}`}>
+      <div className={`relative rounded-lg border p-2 ${ACCENT[action.urgency]}`}>
+        {layer}
         <div className="mb-1.5 text-center text-[11px] text-gray-300">{action.reason}</div>
         <div className="[&>*]:w-full">{button}</div>
       </div>
@@ -106,7 +121,10 @@ export function PlantActionCTA({
 
   // ---- Full (plant detail): a labelled "next step" banner. ----
   return (
-    <div className={`flex items-center gap-3 rounded-xl border p-3 ${ACCENT[action.urgency]}`}>
+    <div
+      className={`relative flex items-center gap-3 rounded-xl border p-3 ${ACCENT[action.urgency]}`}
+    >
+      {layer}
       <span aria-hidden className="text-2xl">
         {action.emoji}
       </span>
