@@ -6,7 +6,7 @@
 > the same surface. It governs **coordination**; `CLAUDE.md` + `docs/memory/` govern the **code**.
 >
 > **Maintainer:** Records Department · **Authority:** Studio Director (Mission Control)
-> **Last updated:** 2026-06-14 (DX-005 — ledger reconciled; FP-5 duplication caught)
+> **Last updated:** 2026-06-14 (BE-004.5 playtest — FF-RECON-001 claimed; PR #59 merged)
 
 ---
 
@@ -70,6 +70,7 @@ Open / in-flight directives. One row per directive; update **Status** as it move
 | BE-003 (Feature Flags — backend core) | Builder | BE-A00 | BE-A01–A10 | `claude/be-feature-flags-core` | (this PR) | Backend flag layer: `feature_flags.py`, `api/game_api.py` (+`/flags`), `data/balance.yaml` (`feature_flags:`), `.env.example` (+ docs) | — | 🟢 Open |
 | BE-003 (Feature Flags — **web gating**) | Builder / DX | — | — | (next chat) | (PR #2) | **Protected: Navigation + Layout** — route/nav/feature gating via a `useFlag` hook | backend core (this PR) | ⛔ Not started — claim protected surfaces + Director sign-off first |
 | DX-007 (P2 FTUE Coach-Marks) | Design & Experience | DX-A00 | DX-A01–A10 | `claude/dx-ftue-coach-marks` | (this PR) | FTUE/Onboarding (coach-mark layer): `components/onboarding/CoachMarks.tsx` (new), `lib/coachMarks.ts` (new), `lib/coachMarkStore.ts` (new), + `data-coach` tags & mount in `app/dashboard/page.tsx` | Builds **on top of** canonical FTUE (#35/#39) — does not modify the `/ftue` route. New layer; no overlap with the merged plant-care work. | 🟢 Open |
+| **FF-RECON-001 (Feature Flag Reconciliation)** | Builder / DX | — | — | (not started) | (next PR) | **Protected: Navigation + Layout** + flag layer: web `web/src/lib/features.ts` (System A, build-time `NEXT_PUBLIC_ENABLE_*`) → consume backend `GET /api/game/flags` via a `useFlag` hook; backend `feature_flags.py` + `data/balance.yaml` (`feature_flags:`) as the single registry; `require_feature` as the single gate | Backend core (BE-003 / #55) **merged**; this consolidates A→B | 🟦 **CLAIMED** — claim recorded; **do NOT implement in the playtesting chat**. Reconcile two overlapping systems (PR #42 System A + BE-003 #55 System B) onto one data-driven core. Director sign-off required (touches protected surfaces). |
 
 ### Recently merged to `main` (for collision awareness)
 
@@ -109,6 +110,7 @@ Open / in-flight directives. One row per directive; update **Status** as it move
 | 2026-06-14 | Two mobile bottom-nav implementations (PR #40 `BottomNav` vs merged #36 `MobileTabBar`) on the **Navigation** surface | DIR-004: retire #40's FP-1; keep #36. |
 | 2026-06-14 | Two FTUE systems (PR #37 `GrowGuide` vs merged #35/#39 guided tutorial) on the **FTUE** surface | DIR-004: close #37; salvage ideas to backlog (below). |
 | 2026-06-14 | DX-005 set out to build FP-5 (Care Feedback & Celebration) — but the pre-work registry/flight-plan check found **#41 already shipped it**. | **Registry working as designed**: no duplicate built. DX-005 scoped down to wiring the new primary CTA (#45) into the existing #41 feedback system — the one surface #41 couldn't have known about. |
+| 2026-06-14 | **Two feature-flag systems on `main`:** System A (PR #42 — web `features.ts`, build-time `NEXT_PUBLIC_ENABLE_*`, nav/route gating) and System B (BE-003 / #55 — `feature_flags.py` + `balance.yaml` + `GET /api/game/flags`, env-overridable, fail-closed). They overlap and must be reconciled. | **Logged as `FF-RECON-001`** (Live Assignment Ledger, status CLAIMED). Surfaced + claimed during the BE-004.5 playtest; **implementation deferred** (out of playtest scope). Consolidate A→B: single registry (`balance.yaml`), single API (`/api/game/flags`), single gate (`require_feature`), single web consumer (`useFlag`). |
 
 **Salvaged from #37 (archived to `docs/memory/BACKLOG.md`):** persistent per-player tutorial state,
 non-nagging dismissal, and game-state-driven (auto-advancing) progression.

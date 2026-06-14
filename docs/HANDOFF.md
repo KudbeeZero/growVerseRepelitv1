@@ -4,8 +4,16 @@
 > the end of every chat; read by `/handoff-audit` at the start of the next. If this file and
 > the code disagree, the code wins — fix the baton. See `docs/SESSION_PROTOCOL.md`.
 
-**Last rewritten:** 2026-06-14 · **By:** BE-004A reconciliation chat (landed PR #47 = STEP 3 clock **+** STEP 4 e2e)
-**Active branch:** `main` (post-merge — PR #47 just landed; no feature branch open from this chat)
+**Last rewritten:** 2026-06-14 · **By:** BE-004.5 playtesting chat (PR #59 confirmed merged; FF-RECON-001 claimed; playtest run)
+**Active branch:** `claude/growpod-playtesting-flags-ua1ikq` (docs-only: playtest report + registry/baton updates)
+**Confirmed this chat:** **PR #59 (STEP 4.5 — `GameService` on `active_clock()` + cure e2e) is MERGED** to
+`main` (commit `5d44d35`, merged 2026-06-14T12:40:34Z by KudbeeZero). **Carried RISK #1 → CLOSED**
+(cure/auction now dev-clock-drivable; verified live + by `test_cure_advances_under_dev_clock`).
+**Gates on `main`:** `make test` → **283 passed, 84.63%** (≥79 floor); `make lint` ✅; `make check-memory` ✅.
+**CI:** `main` **green** — the merge-commit (`5d44d35`) CI run completed **success**.
+**Playtest:** `docs/playtesting/BE-004.5-playtest-report.md` — core loop, economy invariants, fail-closed
+feature-gating, and error scenarios all pass over the live HTTP API; **zero product defects**. Device/web-only
+matrix (mobile viewport, safe-area, reduced-motion, keyboard a11y, screenshots, Playwright real-e2e) is **owner-verifiable, not run**.
 **Just merged to main (this chat):** **PR #47 — Simulation Test Clock (BE-002, STEP 3) + e2e Grow Loop
 (BE-004, STEP 4).** The dev/test-only `OffsetClock`/`active_clock()` seam, the `/api/dev/clock/*`
 endpoints (force-disabled in production), **plus** the full core-loop e2e (seed → plant → flower →
@@ -33,7 +41,23 @@ overlapping*. **PR #42** *MVP Feature Flag Layer* (the NEXT ACTION).
 
 ## NEXT ACTION (the one scoped item the next chat does)
 
-**Feature Flags — web gating (PR #2).** The **backend flag core shipped** (BE-003, PR pending review):
+**FF-RECON-001 — Feature Flag Reconciliation (the single next PR).** `main` carries **two**
+overlapping flag systems: **System A** (PR #42 — web `web/src/lib/features.ts`, build-time
+`NEXT_PUBLIC_ENABLE_*`, nav/route gating) and **System B** (BE-003 / #55 — `feature_flags.py` +
+`balance.yaml` `feature_flags:` + `GET /api/game/flags`, env-overridable, **fail-closed**, defaults ON).
+Consolidate **A → B**: single registry (`balance.yaml`), single API (`GET /api/game/flags`), single gate
+(`require_feature`), single web consumer (a runtime `useFlag` hook — does not exist yet), no duplicate
+definitions. **Claimed** in `docs/STUDIO_AGENT_REGISTRY.md` (status CLAIMED). Touches **protected
+Navigation + Layout** surfaces → Director sign-off first. *(Was: "Feature Flags — web gating"; the
+backend core has since merged via #55, so the work is now reconciliation, not greenfield gating.)*
+
+> **Also queued (owner/device):** the web playtest pass — run `cd web && npm i && npm run dev` and verify
+> the device-only matrix the headless playtest could not (mobile viewport/safe-area, reduced-motion,
+> keyboard a11y, refresh-mid-action, stale cache) + stand up the Playwright real-e2e (RISK #8 web side).
+
+<details><summary>Prior NEXT ACTION (superseded — kept for context): Feature Flags web gating</summary>
+
+The **backend flag core shipped** (BE-003, PR pending review):
 `balance.yaml` `feature_flags:` defaults + `feature_flags.py` (env-overridable `FEATURE_<NAME>`,
 fail-closed) + `GET /api/game/flags` + `require_feature`/`feature_required` guard. Defaults are ON, so
 nothing is gated yet. **Next chat:** the web-gating PR — a `useFlag`/`RequireFeature` hook reading
@@ -55,6 +79,12 @@ Layout surfaces**, so claim them in `STUDIO_AGENT_REGISTRY.md` and get Director 
 > fast-forward under the dev clock, plus `test_cure_advances_under_dev_clock`. Production-behaviour
 > identical (`active_clock()` → `SystemClock` when the test clock is off). Awaiting review/merge; clears
 > RISK #1. After it lands, the path is Playtesting → Retention Validation → MVP Launch Candidate.
+
+</details>
+
+> **✅ Update (BE-004.5 playtest chat):** STEP 4.5 **merged as PR #59** (`5d44d35`); **RISK #1 closed**;
+> Playtesting **done** (this chat — see report). The path is now **FF-RECON-001 → web/device playtest pass →
+> Retention Validation → MVP Launch Candidate.**
 
 ---
 
@@ -105,7 +135,7 @@ Shipped by PR #47 (authored across the BE-002 + BE-004 sessions):
 
 | # | Sev | Risk | Evidence | Status |
 |---|-----|------|----------|--------|
-| 1 | MED | **Cure/auction not dev-clock-drivable.** `GameService` defaulted to `SystemClock`, so the dev clock couldn't fast-forward cure/auction over HTTP. | `services/game_service.py:82` | **FIXED in the open STEP 4.5 PR** (`GameService` → `active_clock()`, + cure e2e). Clears on merge. |
+| 1 | MED | **Cure/auction not dev-clock-drivable.** `GameService` defaulted to `SystemClock`, so the dev clock couldn't fast-forward cure/auction over HTTP. | `services/game_service.py` (now `active_clock()`) | ✅ **CLOSED** — STEP 4.5 merged as **PR #59** (`5d44d35`); verified live in the BE-004.5 playtest + `test_cure_advances_under_dev_clock`. |
 | 3 | HIGH | Idempotency on mutations — general `Idempotency-Key` header (duplicate → original response, not a 409). | `api/game_api.py` | PARTIAL — concurrency core + one-shot grants shipped (`grant_claims`, harvest-once index); FTUE `advance` replay-guarded. General header absent (WIP PR #16 closed unmerged). |
 | 4/7 | HIGH | **Chain settlement not real** — deposit trusts no on-chain proof; treasury-drain path; no txid replay protection / reconciliation / address validation. | `services/settlement_service.py`, `db/models.py` | OPEN — blocks any real value moving (Sprint 4 gate). |
 | 8 | HIGH | **Safety net** — **backend HTTP boundary now covered (PR #47: withdraw/deposit/mint/nft, `tests/test_http_boundary.py`)**; **web** Playwright real e2e still a stub; treasury-cap + chain-failure-rollback UI tests absent. | `web/package.json`, `.github/workflows/ci.yml`, `tests/test_http_boundary.py` | PARTIAL (backend ↑; relates to open PR #32). |
