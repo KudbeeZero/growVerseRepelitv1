@@ -1,9 +1,52 @@
 # Backlog (Layer 3) — single source of priority
 
 Status: `⬜ todo · 🔨 doing · ✅ done · ❄️ parked`. Standups may *propose* items; they're only real
-once they appear here. Last reconciled: **2026-06-10**.
+once they appear here. Last reconciled: **2026-06-14** (REC-004 full repository memory sweep).
 
-## 🎨 Graphics Phase II/III (active track — visual polish to MVP launch; no scope expansion)
+> **Reconciliation note (REC-004, 2026-06-14):** the Graphics Phase + Dashboard wiring are done and
+> signed off; the studio is on the **New-Player / Launch-Readiness** track below. The full ledger of
+> PRs / branches / directives + the launch critical path + department status live in
+> `docs/memory/CANONICAL_STATE.md`.
+
+## 🚀 New-Player / Launch-Readiness (ACTIVE track — onboarding → MVP launch)
+> Player-facing, additive work on existing rails toward a launchable MVP — **no economy / chain /
+> breeding / factions / combat / new crop families, no new Phase-2 systems.** Off-chain MVP first.
+- 🚀 ✅ **FTUE Epic — guided first grow** (merged 2026-06-14) — **PR #34** starter-grant rail
+  (one-shot/idempotent via `grant_claims` unique index, migration `c7ecd7523cc8`), **PR #35** tutorial
+  backend (`services/ftue_service.py` — a guarded deterministic step machine on `Player.ftue_step`,
+  per-step scripted AI Master Grower coaching `ai/ftue_coach.py`, tutorial-only time-compression,
+  `/ftue` endpoints, migration `9d669edf48a8`), **PR #39** web `/ftue` guided route. New signups walk
+  plant → water → climate → grow → harvest → "come back tomorrow". ADR in `DECISIONS.md` (2026-06-14);
+  5 FTUE tests in `tests/test_ftue.py`.
+- 🚀 ✅ **Launch Strain Integration Pack** (PR #33, merged 2026-06-13) — White Rhino, White Fire OG,
+  Gelato, Wedding Cake added to `data/strains.yaml` + `data/strain_knowledge.yaml` (catalog now
+  **29 strains**, 1:1 KB sync test green) with authored chamber visuals + per-strain physics knobs.
+- 🚀 ✅ **Mobile-first navigation** (PR #36, merged 2026-06-14) — native bottom tab bar (primary +
+  "More" sheet), `env(safe-area-inset-*)` handling, focus-visible rings, thumb-zone CTA targets
+  (≥44px), responsive Grow Chamber. ADR in `DECISIONS.md` (2026-06-14). (PR #40's competing bottom-nav
+  was retired — FP-1 superseded by #36; see `docs/STUDIO_AGENT_REGISTRY.md` collision log.)
+- 🚀 ✅ **DX-001 Care Feedback & Celebration** (PR #41, merged 2026-06-14) — rewarding care actions +
+  a harvest moment (`web/src/components/plant/CareFeedback.tsx`, `web/src/components/plant/careFeedback.ts`,
+  `web/src/lib/haptics.ts`, `web/src/hooks/usePrefersReducedMotion.ts`); reduced-motion safe. Addresses
+  #37's FP-5/FP-9 friction.
+- 🚀 ✅ **FP-3 Primary Plant CTA** (PR #45, "DIR-004", merged 2026-06-14) — the next action is always
+  visually primary on the dashboard for a new grower (`web/src/lib/plantAction.ts`,
+  `web/src/components/plant/PlantActionCTA.tsx`). The re-cut of #37's FP-3.
+- 🚀 ⬜ **Salvaged from PR #37 (Grow Guide, closed)** — backend work orders the closed coach needed,
+  not yet built: **WO-1** per-action "last cared at" / care-acknowledged signals (so a tutorial can
+  gate discrete Water/Feed/Check steps without guessing from decaying levels); **WO-2** a lightweight
+  "session delta / welcome-back" endpoint (what changed since last seen — stage advances, new buds,
+  frost) to power a return-moment. Both are backend (WO-gated); design only until approved.
+- 🚀 ⬜ **Feature Flags** (NEXT — open **PR #42**, audit & land, don't rebuild) — data-driven launch
+  gate / kill-switch surface (config `flags` section, or a `feature_flags` table only if
+  per-player/cohort targeting is needed) + a server-authoritative read endpoint + a web hook to gate
+  routes/components. Mirror the `balance.yaml` tuning-surface convention.
+- 🚀 ⬜ **Playtesting → Retention Validation → MVP Launch Candidate** — the launch critical-path tail.
+- 🚀 ❄️ **OMNI Charter v1.0** (PR #38, merged 2026-06-14) — organizational constitution
+  (`docs/OMNI_CHARTER.md`): chain of command, departments, work-order system, canonical principles.
+  Governance layer; no further backlog action.
+
+## 🎨 Graphics Phase II/III (COMPLETE — signed off 2026-06-14; no scope expansion)
 > The game's emotional core is the whole-plant chamber view. This track is **visual-only** —
 > no economy / chain / breeding / factions / combat / new crop families. Canon lives in
 > `knowledge/` (botanical-bible, macro-bud-rules, whole-plant-architecture, strain-dna,
@@ -27,9 +70,12 @@ once they appear here. Last reconciled: **2026-06-10**.
   (output `web/canonical-stages/`, gitignored). De-grape ported into `chamberCore` on merge.
 - 🎨 ⬜ **PR #27 — Phenotype Generator Foundation** — *PARKED* (open PR, green). Do not modify.
 - 🎨 ⬜ **PR #28 — Circadian Leaf Motion** — *PARKED* (open PR, green). Do not modify.
-- 🎨 ⬜ **PR #30 — Dashboard / GameState Wiring Polish** — next actual build PR. Unify the
-  chamber/dashboard state wiring.
-- 🎨 ⬜ **PR #31 — MVP Launch Candidate.**
+- 🎨 ✅ **PR #29/#30 — Dashboard / GameState Wiring Polish** (merged 2026-06-14) — consumption polish
+  on the flat `GET …/plants/<id>/state` wire (it stays canonical; no aggregate `GameState` object —
+  see `DECISIONS.md` 2026-06-14). Added a global `AuthErrorListener` (401/403 → session teardown,
+  clears prior RISK #10) and `usePods` refresh-on-interval/focus.
+- MVP Launch Candidate now lives on the 🚀 New-Player / Launch-Readiness track above (after Feature
+  Flags → Mobile Polish → Playtesting → Retention Validation).
 - 🎨 ⬜ **Macro Bud Polish II** (future; *not launch-blocking*) — sharper calyx ridges, denser calyx
   nesting, reduce the smooth-oval appearance on the Purple Diddy Punch *macro* bud, improve chunky
   calyx definition. Macro ("Detailed Bud View") only — the whole-plant chamber is signed off.
