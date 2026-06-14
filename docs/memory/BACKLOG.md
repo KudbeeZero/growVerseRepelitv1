@@ -34,6 +34,16 @@ once they appear here. Last reconciled: **2026-06-10**.
   nesting, reduce the smooth-oval appearance on the Purple Diddy Punch *macro* bud, improve chunky
   calyx definition. Macro ("Detailed Bud View") only — the whole-plant chamber is signed off.
 
+## 🚀 Launch-Readiness path (Builder Dept — STEP sequence)
+> Feature Flags → **STEP 3 Simulation Test Clock** → STEP 4 e2e Grow Loop → Launch Readiness.
+- 🚀 ✅ **STEP 3 — Simulation Test Clock** (BE-002, 2026-06-14) — dev/test-only `OffsetClock` on the
+  existing compute-on-read seam: `/api/dev/clock/{,advance,reset}`, registered only when
+  `GROW_TEST_CLOCK=true` on a non-production `APP_ENV` (force-disabled in prod). Advancing time posts
+  **no ledger entries** (economy untouched), forward-only, capped at 8760h. ADR in `DECISIONS.md`
+  (2026-06-14); usage in `docs/SIMULATION_TEST_CLOCK.md`; `tests/test_test_clock.py` (15).
+- 🚀 ⬜ **STEP 4 — e2e Grow Loop** — drive grow → care → harvest → sell end-to-end (uses the STEP 3
+  clock to fast-forward); add the HTTP-boundary coverage RISK #8 calls for.
+
 ## 🔴 Immediate (do now — correctness, truth, or unblocks others)
 - 🔴 🔨 **Concurrency + idempotency hardening** (RISK #6) — *core landed 2026-06-10*: wallet
   optimistic locking (`version_id_col`) + `CHECK(cached_balance >= 0)` + harvest-once unique index

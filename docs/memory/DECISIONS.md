@@ -255,3 +255,29 @@ fixes, not a state rewrite. A global 401/403 handler (`AuthErrorListener`) now t
 on a rejected key (RISK #9); `usePods` refreshes on an interval + focus so the chamber bud phenotype
 reflects committed pod environment. The knowledge doc's `GameState/EnvironmentState/UIState` section
 is documentation aspiration, not a build target, until a future PR proves a need.
+
+### 2026-06-14 — Simulation test clock is an offset on the existing compute-on-read seam (BE-002, STEP 3)
+**Decision:** The dev/test-only "simulation test clock" is built as an **`OffsetClock`** layered on the
+engine's existing `Clock` seam — not a new code path through the engine. The engine is already
+compute-on-read driven by `clock.now()`; the new clock is a wall-clock shifted by a mutable,
+**forward-only** offset, so advancing it makes the *next* read of any plant catch up through the
+normal `engine.catch_up`. A process-wide singleton (`get_test_clock`/`reset_test_clock`) holds the
+offset; `active_clock()` returns it **only** when `settings.test_clock_enabled`, else a plain
+`SystemClock`. `SimulationService`'s default clock now resolves through `active_clock()` (explicit
+injection still wins), so every read endpoint picks up the shift with no per-call-site changes.
+A dev-only blueprint `api/dev_api.py` (`/api/dev/clock`, `/clock/advance`, `/clock/reset`) is
+**registered only when enabled** and re-guards per request. **Why:** STEP 4 (e2e grow-loop testing)
+and launch-readiness need to drive a full grow → harvest in seconds; the cleanest, lowest-risk way is
+to move the clock, because the engine already treats `now` as the only input. Reusing the seam means
+zero new simulation logic and no drift from production behaviour. **Safe boundaries (constraints
+honoured):** the flag is **force-disabled in production** — `test_clock_enabled = GROW_TEST_CLOCK=true
+AND APP_ENV ∉ {production,prod}` (new `APP_ENV` setting) — so a live deployment can never register the
+routes or hand the engine a fast-forwardable clock. Advancing time triggers **only** compute-on-read
+catch-up, which posts **no ledger entries** and changes no prices/faucets/sinks (covered by
+`test_advance_does_not_touch_the_economy`). The clock is **forward-only** (a backward jump would
+desync `last_tick_at`); a single advance is capped at one catch-up window (`MAX_ADVANCE_HOURS=8760`).
+**Consequences:** `reset` rewinds the *clock*, not the plants — time already simulated is persisted
+(compute-on-read really advanced them), so a full reset means reseeding the dev DB; documented in
+`docs/SIMULATION_TEST_CLOCK.md`. No production behaviour changes when disabled (`active_clock()` →
+`SystemClock`, identical to before). New tests in `tests/test_test_clock.py` (15) cover the primitive,
+the config gating, the selector, and the endpoints; full suite 246 green, coverage 81.9% ≥ 79%.
