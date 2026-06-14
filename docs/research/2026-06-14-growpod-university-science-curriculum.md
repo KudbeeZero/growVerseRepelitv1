@@ -459,6 +459,109 @@ harvest, and explain every decision.** Education, disguised as a game, that actu
 
 ---
 
-*Prepared by Worker Agent UNI-A02 under Lead UNI-A00, Directive UNI-002 (2026-06-14). Research only —
-no code, monetization, or token systems. Submit to Records Dept (UNI-A10) for consolidation into the
-GrowPod University Master Bible, beside the 2026-06-08 degree-structure research.*
+## 11. UNI-005 canonical framework reconciliation (Lead consolidation, 2026-06-14)
+
+> Directive **UNI-005** (Lead UNI-A00, Science Curriculum Research Division UNI-A01–A10) consolidated
+> this research and **promoted a canonical academic framework** that refines the working structure in
+> §§1–10: a 19-domain canon, an 8-tier thematic degree ladder, and an 8-faculty organization. This
+> section integrates that canon so the documentation matches the consolidated record (closing the
+> "Memory: ✅ Integrated" claim). It **refines, not replaces** §§1–10 — the three curricula, lesson
+> hierarchy, ordering, references, and recommendations all stand; this is the official top-level
+> taxonomy they hang under. **Research only — still no code.**
+
+### 11.1 Canonical 19 science domains (supersedes the §1 working list)
+The §1 map was framed around the original UNI-002 topic list; the UNI-005 canon below is the official
+naming. The two are the same body of science — §1's coverage check still holds (all teaching content
+maps), but **cite these names going forward**:
+
+| # | Canonical domain | Where it's taught (§§3–5) | Faculty (§11.3) |
+|---|------------------|---------------------------|-----------------|
+| 1 | Cannabis Botany | B1.1, B1.2, I7.1 | Plant Sciences |
+| 2 | Plant Anatomy & Morphology | B1.1, A2.1 | Plant Sciences |
+| 3 | Plant Physiology | B3.1, I1.2, A1.1–A1.2 | Plant Sciences |
+| 4 | Genetics & Heredity | I7.1–I7.2, A3.1 | Genetics & Breeding |
+| 5 | Breeding & Phenohunting | I7.2, A3.1–A3.3 | Genetics & Breeding |
+| 6 | Chemotypes & Cannabinoids | A2.1, A2.3 | Chemistry |
+| 7 | Terpenes & Aromatic Science | A2.2, A5.2 | Chemistry |
+| 8 | Plant Nutrition | B3.3, I3, A4.3 | Cultivation Sciences |
+| 9 | Soil Science | I3.2, I6.1 | Cultivation Sciences |
+| 10 | Hydroponics & Soilless Systems | I6.1 | Cultivation Sciences |
+| 11 | Environmental Science | I1.1, I1.3, A1.2 | Cultivation Sciences |
+| 12 | Lighting Science (PPFD, DLI, VPD) | I1.2, I2, A1.2 | Cultivation Sciences |
+| 13 | Irrigation Science | B3.2, I3.3, A1.1 | Cultivation Sciences |
+| 14 | Integrated Pest Management | B5.2, I5, A4.1 | Plant Health |
+| 15 | Plant Pathology | I5.3, A4.2 | Plant Health |
+| 16 | Harvest Science | B6.1, A5.1 | Post-Harvest Sciences |
+| 17 | Drying & Curing Science | B6.2, A5.2 | Post-Harvest Sciences |
+| 18 | Analytical & Laboratory Methods | A2.3, A6.1 | Research & Methods |
+| 19 | Cannabis Industry, Regulation & Ethics | *(new track — §11.4)* | Industry & Ethics |
+
+**Scope change vs. §§3–5:** the working curriculum deferred Lab Analytics, Business/Law/Compliance,
+and Pharmacology/Medical as "out of scope." UNI-005 **promotes two of those into the science canon** —
+**Analytical & Laboratory Methods** (domain 18) and **Cannabis Industry, Regulation & Ethics**
+(domain 19) — as the Research & Methods and Industry & Ethics faculties. They become first-class, not
+deferred. (Pharmacology/Medical remains a separate future directive.)
+
+### 11.2 Canonical degree ladder (8 thematic tiers) ↔ credential tiers
+UNI-005 sets the player-facing progression as a thematic 8-tier ladder. It maps onto the real
+credential tiers from the 2026-06-08 structure research and the §§3–5 curricula:
+
+| Thematic tier (UNI-005) | Credential analog | Curriculum tier (§§3–5) | Unlocks |
+|-------------------------|-------------------|--------------------------|---------|
+| **Seedling** | Orientation | B1 (Meet the Plant) | Anatomy, life cycle, the five inputs |
+| **Grower** | Certificate | B2–B6 | Seed-to-jar; the Beginner's Five |
+| **Cultivator** | Associate | I1–I6 | Environment by numbers; feed; train; IPM |
+| **Breeder** | Bachelor | I7 + A3 | Genetics, crosses, stabilization |
+| **Researcher** | Master (coursework) | A1–A2, A4 | Steering, chemistry, diagnostics |
+| **Professor** | Master (teaching) | A2.3, A5, quizzes | Reads CoAs; can teach it back |
+| **Master Grower** | Master (capstone) | A5, A6.1–A6.2 | Quality science; data-driven cultivation |
+| **Doctorate** | Doctorate | A6.3 capstone | Documented end-to-end project, defended |
+
+Each tier progressively unlocks deeper domains, lab methods, and research requirements — consistent
+with the prereq chains in §7 and `curriculum.yaml`'s `prereqs[]`/`level_req`.
+
+### 11.3 Canonical 8-faculty organization ↔ the 6 shipped departments
+UNI-005's faculties refine `curriculum.yaml`'s six departments. Crosswalk:
+
+| Faculty (UNI-005) | Covers domains | `curriculum.yaml` department | Status |
+|-------------------|----------------|------------------------------|--------|
+| 🌱 **Plant Sciences** | Botany, Morphology, Physiology (1–3) | `cultivation` (split out) | refine existing |
+| 🧬 **Genetics & Breeding** | Genetics, Breeding, Phenohunting, **Mutations** (4–5) | `genetics` | refine existing |
+| 🧪 **Chemistry** | Cannabinoids, Terpenes, Chemotypes (6–7) | `chemistry` | existing |
+| 🌎 **Cultivation Sciences** | Nutrition, Soil, Hydroponics, Environment, Lighting, Irrigation (8–13) | `cultivation` + `nutrients` | merge/refine |
+| 🦠 **Plant Health** | IPM, Pathology (14–15) | `ipm` | refine (split pathology) |
+| 🏆 **Post-Harvest Sciences** | Harvest, Drying, Curing (16–17) | `postharvest` | existing |
+| 🔬 **Research & Methods** | Analytics, Lab Methods, Research Design (18) | *(planned: Lab Analytics & QA)* | **promoted** |
+| ⚖️ **Industry & Ethics** | Regulation, Ethics, Industry Systems (19) | *(planned: Business/Law/Compliance)* | **promoted** |
+
+Note: the **Mutations** sub-track under Genetics & Breeding links the curriculum to existing canon in
+`knowledge/mutation-system.md` and `knowledge/genetics-system.md` — a clean tie-in for the breeding
+faculty.
+
+### 11.4 New canonical tracks to author (domains 18–19, previously deferred)
+Because UNI-005 promotes these into the canon, the build track should plan lessons for them (content
+sketch only — no code):
+
+- **🔬 Research & Methods (Researcher+ tiers):** sampling & representative testing; GC vs. HPLC and
+  what each measures; reading/auditing a CoA (extends A2.3); experimental design, single-variable
+  testing, and data logging (extends A6.1); basic statistics for grow data. *Proofs:* `research`
+  depth, documented A/B (reuse A6.1's hook).
+- **⚖️ Industry, Regulation & Ethics (Professor+ tiers):** seed-to-sale tracking & compliance
+  concepts; testing/labeling standards; responsible-use and harm-reduction ethics; sustainability
+  (energy/water footprint of indoor grows). *Proofs:* knowledge-quiz/`level` gates (no real-money or
+  chain mechanics — honors the economy invariants).
+
+### 11.5 What stands unchanged
+The three curricula (§§3–5), the lesson hierarchy (§§2, 6), module ordering (§7), references (§8), and
+implementation recommendations (§9) are all consistent with this canon and **require no rework** —
+UNI-005 is a taxonomy promotion layered on top, not a redesign. The §9 recommendations (reuse the
+shipped spine, attach a proof to every lesson, Grow-Along default, spiral the tiers, lesson-level
+Professor grounding, beat-level quizzes, truth-in-simulation guardrail) apply unchanged to the
+expanded 8-faculty / 19-domain canon.
+
+---
+
+*Prepared by Worker Agent UNI-A02 under Lead UNI-A00 — Directive **UNI-002**, reconciled to the
+**UNI-005** consolidation (2026-06-14). Research only — no code, monetization, or token systems.
+Held by Records Dept (UNI-A10) as the science-content layer of the GrowPod University Master Bible,
+beside the 2026-06-08 degree-structure research.*
