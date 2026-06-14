@@ -239,3 +239,32 @@ branch (single-branch dev rule) and merged together with it, so #25's de-grape `
 was ported into `chamberCore` on merge to avoid regressing it. Output dir `web/canonical-stages/` is
 gitignored (regenerable artifact; the generator is the committed deliverable). Future card/NFT image
 pipelines (ROADMAP Sprint 4) can build on this headless renderer.
+
+### 2026-06-14 — Desktop-readiness visual/data polish: canonical renderer reuse, genetics card, dev-only clock
+**Decision (3 parts, all visual/UX + dev-tooling — no economy/chain/pacing change):**
+1. **One canonical plant renderer everywhere.** The old `PlantVisual.tsx` SVG cartoon (used by plant
+   cards + the plant detail page) is deleted. A shared prop-builder `web/src/lib/chamber/props.ts`
+   (`chamberPropsForStrain` / `chamberPropsForPlant` / `chamberPropsForPreviewDay`) and a thin wrapper
+   `web/src/components/plant/PlantPreview.tsx` route plant cards, the plant detail page, strain catalog
+   cards, and the strain hero **to the same `GrowChamber` → `chamberCore` ("Engines 1–4") renderer**.
+   No renderer logic is forked — the builders only assemble inputs (morphology/silhouette/budDna/dev)
+   that the chamber page already computed inline. Big Bud (macro) view stays where it is.
+2. **Scientist-grade genetics card.** `GeneticsCard.tsx` + pure mapper `lib/strainGenetics.ts` replace
+   the plain Stat-grid on the strain detail page with cannabinoid % bars, an indica/sativa genotype
+   split bar, difficulty/stability meters, a flowering timeline bar, a yield range bar, and colour-coded
+   effect/flavor/aroma/terpene tag clouds. **No backend fields invented:** THC/CBD/genotype/yield/
+   flowering/stability/difficulty/terpenes come off the `Strain`; CBG/THCV + effects/flavor/aroma come
+   from the existing encyclopedia (`strain_knowledge.yaml`) when present and are omitted otherwise.
+3. **Dev/test-ONLY growth acceleration (supersedes PR #66).** A new `ScaledClock` + `dev_clock()` in
+   `simulation/clock.py` is gated entirely behind the `GROW_DEV_TIME_SCALE` env var. Unset (production)
+   ⇒ canonical `SystemClock`, real cadence, nothing changed. Set ⇒ perceived `now` advances `scale×`
+   so a grow/breed loop runs in minutes. `GameService` defaults its clock to `dev_clock()`; an injected
+   clock (tests' `FrozenClock`) still wins. The active scale is exposed read-only at `GET /api/game/meta`
+   and rendered as an OBVIOUS amber "TEST MODE — growth accelerated N×" banner (`DevModeBanner`).
+**Why not PR #66's approach:** PR #66 tried a *global* `simulation.time_scale=0.075` default baked in
+for launch — that permanently distorts production cadence and the economy tuned to it. The Director
+ruling is explicit: production cadence must remain protected. This implementation keeps the change
+opt-in, env-gated, engine-pure (the engine just sees a faster clock; balance.yaml untouched), and
+visibly flagged. **PR #66 should be closed/superseded.** **Consequences:** all gates green — backend
+234 passed / 80.97% cov; web tsc + lint + build clean + 125 vitest. Pixels remain owner-device-
+verifiable (no headless browser screenshots in CI).

@@ -7,7 +7,7 @@ import { RequireAuth } from "@/components/layout/RequireAuth";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { LoadingBlock } from "@/components/ui/Spinner";
 import { ErrorState } from "@/components/ui/States";
-import { PlantVisual } from "@/components/plant/PlantVisual";
+import { PlantPreview } from "@/components/plant/PlantPreview";
 import { StatBars } from "@/components/plant/StatBars";
 import { ConditionBadges } from "@/components/plant/ConditionBadges";
 import { CareButtons } from "@/components/plant/CareButtons";
@@ -73,9 +73,13 @@ function PlantDetail({ plantId }: { plantId: string }) {
             }
             subtitle={`${titleCase(plant.growth_stage)} · ${num(plant.height, 1)} cm`}
           />
-          <div className="flex items-center justify-center rounded-lg bg-ink-900/60 py-4">
-            <PlantVisual stage={plant.growth_stage} flags={plant.condition_flags} size={200} />
-          </div>
+          <Link
+            href={`/dashboard/plants/${plantId}/chamber`}
+            className="block h-72 overflow-hidden rounded-lg bg-ink-900/60"
+            aria-label="Open grow chamber"
+          >
+            <PlantPreview plant={plant} strain={strain} className="h-full w-full" />
+          </Link>
           <div className="mt-3">
             <ConditionBadges flags={plant.condition_flags} />
           </div>

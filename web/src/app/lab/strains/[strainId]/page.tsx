@@ -24,14 +24,13 @@ import { useSession } from "@/lib/session";
 import { queryKeys } from "@/lib/queryKeys";
 import { num, titleCase, dateTime } from "@/lib/format";
 import type { Strain } from "@/lib/types";
-import { GrowChamber } from "@/components/viz/GrowChamber";
-import { morphologyFor, devParams, seedForPlant } from "@/lib/chamber/morphology";
-import { budColorForStrain, silhouetteFor } from "@/lib/chamber/strainVisuals";
-import { budDnaFor } from "@/lib/chamber/budDna";
+import { PlantPreview } from "@/components/plant/PlantPreview";
+import { GeneticsCard } from "@/components/strain/GeneticsCard";
 
 function StrainInner({ strainId }: { strainId: string }) {
   const { playerId } = useSession();
   const strain = useStrain(strainId);
+  const knowledge = useStrainKnowledge(strainId);
   const [tab, setTab] = useState("encyclopedia");
 
   const buy = useApiMutation(() => api.seeds.buy(playerId!, strainId, 1), {
@@ -68,28 +67,7 @@ function StrainInner({ strainId }: { strainId: string }) {
 
       <StrainHero strain={s} />
 
-      <Card>
-        <div className="grid grid-cols-2 gap-x-6 sm:grid-cols-3">
-          <Stat label="THC" value={`${num(s.thc_range[0], 1)}–${num(s.thc_range[1], 1)}%`} />
-          <Stat label="CBD" value={`${num(s.cbd_range[0], 1)}–${num(s.cbd_range[1], 1)}%`} />
-          <Stat label="Indica" value={`${Math.round(s.indica_ratio * 100)}%`} />
-          <Stat label="Yield" value={`${num(s.yield_range[0])}–${num(s.yield_range[1])} g`} />
-          <Stat label="Flowering" value={`${num(s.flowering_days[0])}–${num(s.flowering_days[1])} d`} />
-          <Stat label="Stability" value={`${Math.round(s.stability * 100)}%`} />
-        </div>
-        {s.terpenes && s.terpenes.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {s.terpenes.map((t) => (
-              <span
-                key={t}
-                className="rounded-full border border-violet-500/40 bg-violet-500/10 px-2 py-0.5 text-xs text-violet-300"
-              >
-                {titleCase(t)}
-              </span>
-            ))}
-          </div>
-        )}
-      </Card>
+      <GeneticsCard strain={s} knowledge={knowledge.data?.knowledge ?? null} />
 
       <Tabs
         active={tab}
@@ -111,25 +89,10 @@ function StrainInner({ strainId }: { strainId: string }) {
 }
 
 function StrainHero({ strain }: { strain: Strain }) {
-  const morphology = morphologyFor(strain.indica_ratio);
-  const silhouette = silhouetteFor(strain.slug ?? strain.name, strain.indica_ratio);
-  const budColor = budColorForStrain(strain.slug ?? strain.name, morphology.hue, seedForPlant(strain.id));
-  const budDna = budDnaFor(strain.slug ?? strain.name, budColor);
+  // Canonical whole-plant renderer (macro bud view) via the shared PlantPreview.
   return (
     <div className="h-[420px] w-full overflow-hidden rounded-xl border border-ink-700 bg-[#050b12]">
-      <GrowChamber
-        seed={seedForPlant(strain.slug ?? strain.id)}
-        day={62}
-        stage="flowering"
-        morphology={morphology}
-        silhouette={silhouette}
-        dev={devParams(62)}
-        budColor={budColor}
-        budDna={budDna}
-        climate={{ fan: 45, temp: 24, hum: 50, co2: 900 }}
-        conditionFlags={[]}
-        view="macro"
-      />
+      <PlantPreview strain={strain} view="macro" className="h-full w-full" />
     </div>
   );
 }

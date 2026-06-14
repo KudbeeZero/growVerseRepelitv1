@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Spinner } from "@/components/ui/Spinner";
-import { PlantVisual } from "./PlantVisual";
+import { PlantPreview } from "./PlantPreview";
 import { StatBars } from "./StatBars";
 import { ConditionBadges } from "./ConditionBadges";
 import { CareButtons } from "./CareButtons";
@@ -61,9 +61,13 @@ export function PlantCard({ playerId, plantId }: { playerId: string; plantId: st
         )}
       </div>
 
-      <div className="flex items-center justify-center rounded-lg bg-ink-900/60 py-2">
-        <PlantVisual stage={plant.growth_stage} flags={plant.condition_flags} size={120} />
-      </div>
+      <Link
+        href={`/dashboard/plants/${plant.id}/chamber`}
+        className="block h-40 overflow-hidden rounded-lg bg-ink-900/60"
+        aria-label="Open grow chamber"
+      >
+        <PlantPreview plant={plant} strain={strain} className="h-full w-full" />
+      </Link>
 
       {plant.forecast && (
         <div className="rounded-md border border-ink-700 bg-ink-900/50 px-2.5 py-2">

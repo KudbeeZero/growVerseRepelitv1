@@ -31,7 +31,7 @@ from ..enums import (
 from ..genetics.breeding import cross, derive_strain_fields, assign_rarity
 from ..genetics.traits import express_terpenes, normalize_genome
 from ..simulation import engine, curing
-from ..simulation.clock import Clock, SystemClock
+from ..simulation.clock import Clock, dev_clock
 from . import leveling_service
 from ..db.models import (
     Player,
@@ -78,7 +78,11 @@ class GameService:
     ):
         self.session = session
         self.cfg = config or get_economy_config()
-        self.clock = clock or SystemClock()
+        # Default clock honours the DEV/TEST-ONLY GROW_DEV_TIME_SCALE env gate via
+        # dev_clock(): unset ⇒ canonical SystemClock (real cadence, production);
+        # set ⇒ accelerated ScaledClock for local/test grow-loop iteration. An
+        # explicitly-injected clock (tests' FrozenClock) always wins.
+        self.clock = clock or dev_clock()
 
     def _research(self, player_id: str) -> dict:
         """Aggregated player perks = research-tree effects + earned-degree effects

@@ -246,6 +246,17 @@ def strain_effects(strain_id):
         return _error(str(e), 404)
 
 
+@game_bp.get("/meta")
+def meta():
+    """Public, read-only deployment metadata. Surfaces the DEV/TEST-ONLY growth
+    acceleration so the client can render an OBVIOUS banner when test pacing is
+    active. In production GROW_DEV_TIME_SCALE is unset ⇒ dev_time_scale is null
+    and the canonical real-time cadence is in effect (no economy/pacing change)."""
+    from ..simulation.clock import dev_time_scale
+
+    return jsonify({"dev_time_scale": dev_time_scale()})
+
+
 @game_bp.get("/economy/health")
 def economy_health():
     """Public faucet-vs-sink transparency view over the ledger: money supply,

@@ -10,6 +10,7 @@ import { useSession } from "@/lib/session";
 import { useToast } from "@/components/ui/Toast";
 import { queryKeys } from "@/lib/queryKeys";
 import { RARITY_STYLES, titleCase, num } from "@/lib/format";
+import { PlantPreview } from "@/components/plant/PlantPreview";
 import type { Strain } from "@/lib/types";
 
 export function StrainCard({
@@ -77,6 +78,14 @@ export function StrainCard({
           {isFavorite ? "⭐" : "☆"}
         </button>
       </div>
+
+      <Link
+        href={`/lab/strains/${strain.id}`}
+        className="block h-36 overflow-hidden rounded-lg border border-ink-700 bg-[#050b12]"
+        aria-label={`Preview ${strain.name}`}
+      >
+        <PlantPreview strain={strain} view="chamber" className="h-full w-full" />
+      </Link>
 
       <div className="flex flex-wrap gap-1.5">
         <Badge className={RARITY_STYLES[strain.rarity]}>{titleCase(strain.rarity)}</Badge>

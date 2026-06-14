@@ -12,8 +12,10 @@ import { advisor } from "./advisor";
 import { harvests } from "./harvests";
 import { cup } from "./cup";
 import { university } from "./university";
+import { meta } from "./meta";
 
 export const api = {
+  meta,
   players,
   strains,
   seeds,
