@@ -28,6 +28,18 @@ only and the row is cleared when the sub-agent finishes.
 |---|---|---|---|---|
 |  |  |  |  |  |
 
+## Completed Sub-Agent Results Log
+
+A lightweight handoff trail: when a sub-agent finishes, its parent employee logs a one-line result
+here so the output can be picked up later. Sub-agents stay one-and-done — this is the only trace
+they leave once their live row is cleared.
+
+| SA-# | Parent Employee | One-line Summary | Status |
+|---|---|---|---|
+|  |  |  |  |
+
+_WO-013 complete._
+
 ## Work Order Log
 
 One row per Work Order. Update **Status** as it moves (`🟢 Open` / `🔨 Doing` / `✅ Done`).
@@ -44,6 +56,11 @@ One row per Work Order. Update **Status** as it moves (`🟢 Open` / `🔨 Doing
 | WO-008 | (employee) | Write the "Prompt for Employee Chat" field | 🟢 Open |
 | WO-009 | (employee) | Enforce the max-10 sub-agent cap | 🟢 Open |
 | WO-010 | (employee) | One-and-done sub-agent logging | 🟢 Open |
+| WO-011 | REC-A01 | Populate the Employee Roster | ✅ Done |
+| WO-012 | REC-A01 + DX-A01 | UI Surface Integration note | ✅ Done |
+| WO-013 | REC-A01 | Completed Sub-Agent Results Log | ✅ Done |
+| WO-014 | REC-A01 | Quick-start: spawn your first sub-agent | ✅ Done |
+| WO-015 | REC-A01 + MON-A01 | Weekly Orchestration Health Check | ✅ Done |
 
 ## Employee Roster
 
@@ -51,7 +68,16 @@ One row per persistent employee chat (a long-term role with cross-session memory
 
 | Employee ID | Role | Persistent memory? | Notes |
 |---|---|---|---|
-|  |  |  |  |
+| REC-A01 | Records — maintains the registry + this ledger | Yes | Orchestration maintainer (REC-004). |
+| DX-A01 | Design & Experience — UX / mobile | Yes | Owns DX directives w/ DX-A00 lead. |
+| DX-A02 | Design & Experience — art / tutorial | Yes | FTUE / visual surfaces. |
+| DX-A03 | Design & Experience — accessibility | Yes | A11y review of UI surfaces. |
+| BE-A01 | Backend — API / economy / ledger | Yes | WO-gated; touches `services/`. |
+| MON-A01 | Monitoring — read-only observe → report | Yes | Runs the weekly health check (below). |
+| QA-A01 | QA — tests / playtests / performance | Yes | Gate keeper for green CI. |
+| DOC-A01 | Documentation / Ops — docs + memory | Yes | Memory-layer upkeep. |
+
+_WO-011 complete._
 
 ---
 
@@ -73,6 +99,20 @@ WO-002 complete.
 
 ---
 
+## Quick Start: Spawn Your First Sub-Agent
+
+New here? Spawning a sub-agent takes four steps. First, check the **Employee Self-Deployment Log** —
+confirm you have fewer than 10 sub-agents live (the [hard cap](#employee-vs-sub-agent-rules)). Second,
+grab the next free `SA-XXX` number and add a row to the **Active Sub-Agent Registry** with the task,
+*before* the sub-agent runs. Third, hand it a clear task using the 5-field
+[Mandatory Work Order Format](#mandatory-work-order-format), ending the prompt with a `complete` line.
+Fourth, when it finishes, log a one-line result in the **Completed Sub-Agent Results Log**, mark it
+done, and clear its live row. That's the whole loop — see WO-006…WO-010 for the standing protocol.
+
+WO-014 complete.
+
+---
+
 ## Mandatory Work Order Format
 
 Every Work Order in GrowPod Empire uses this exact 5-field structure:
@@ -87,6 +127,20 @@ Every Work Order in GrowPod Empire uses this exact 5-field structure:
 All future work orders in GrowPod Empire must use this format.
 
 WO-003 complete – format locked.
+
+---
+
+## UI Surface Integration
+
+Orchestration does **not** override surface ownership. The Grow dashboard and pod views run on the
+[Protected Surfaces](STUDIO_AGENT_REGISTRY.md#protected-surfaces) listed in the Studio Agent Registry —
+especially **Navigation**, **App Shell**, **FTUE / Onboarding**, and **Global State** — which remain
+single-writer. Any employee (or sub-agent) doing dashboard/pod UI work must first **claim those
+surfaces in the main Registry's Live Assignment Ledger**, then log the Work Order here. Claiming a WO
+in this ledger is never a substitute for the Registry's
+[pre-work checklist](STUDIO_AGENT_REGISTRY.md#pre-work-checklist-every-agent-before-writing-code).
+
+WO-012 complete.
 
 ---
 
@@ -133,3 +187,18 @@ The standing protocol every employee follows to deploy and log its own sub-agent
   WO-010 complete."
 
 WO-005 complete – deployment protocol drafted.
+
+---
+
+## Weekly Orchestration Health Check
+
+A standing, lightweight sweep owned by the **MON department** (read-only observe → report;
+MON-A01). Run it weekly to keep the ledger honest:
+
+- **Count live `SA-#`** rows in the Active Sub-Agent Registry vs the Self-Deployment Log totals.
+- **Clear finished rows** — move done sub-agents to the Completed Sub-Agent Results Log.
+- **Verify ≤10** active sub-agents per employee (the hard cap holds for every roster row).
+- **Flag stale WOs** — any `🟢 Open` / `🔨 Doing` Work Order with no movement gets surfaced.
+- **Report, don't mutate** — MON files findings; the owning employee makes the fixes.
+
+WO-015 complete.
