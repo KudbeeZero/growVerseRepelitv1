@@ -16,11 +16,10 @@ Also pins the load-bearing economy invariant from the directive (BE-A08):
 fast-forwarding time posts NO ledger entries — only player actions (feeding) and
 the sale itself ever touch money.
 
-NOTE (carried finding): the curing step is intentionally not exercised here.
-`GameService` (which owns harvest/cure/sell) defaults to `SystemClock`, not
-`active_clock()`, so the dev clock does not fast-forward cure timing through the
-HTTP boundary. The directive's loop (seed -> ... -> sell) does not require curing;
-see the STEP 4 validation report for the one-line follow-up that would close it.
+STEP 4.5 (directive BE-004.5): `GameService` now defaults to `active_clock()`
+(like `SimulationService`), so harvest/cure/sell — and market/auction expiry —
+also advance under the dev clock. `test_cure_advances_under_dev_clock` exercises
+the curing step over the HTTP boundary, closing the RISK #1 carried finding.
 """
 
 import os
@@ -228,3 +227,75 @@ def test_growth_advance_posts_no_ledger_entries(clock_client):
     with session_scope() as s:
         after = s.query(LedgerEntry).filter(LedgerEntry.player_id == pid).count()
     assert after == before
+
+
+def test_cure_advances_under_dev_clock(clock_client):
+    """STEP 4.5 (BE-004.5): cure timing is dev-clock-drivable over HTTP.
+
+    `GameService` now defaults to `active_clock()` (like `SimulationService`), so a
+    committed cure can be fast-forwarded with `POST /api/dev/clock/advance`: the cure
+    cannot finish until the dev clock has advanced past its target window, and
+    finishing then raises quality. This closes RISK #1 for the cure path.
+    """
+    client = clock_client
+    pid, key = _new_grower(client, "curing_grower")
+    hdr = {"X-API-Key": key}
+
+    pod_id, plant_id = _seed_plant(client, pid, key)
+    _grow_to_flowering(client, pid, key, pod_id, plant_id)
+
+    # Harvest and keep it (sell=False) so we can cure it.
+    harvest = client.post(
+        f"/api/game/players/{pid}/plants/{plant_id}/harvest",
+        json={"sell": False},
+        headers=hdr,
+    ).get_json()
+    harvest_id = harvest["id"]
+    quality_before = harvest["quality"]
+
+    # Start a committed 72h cure.
+    started = client.post(
+        f"/api/game/players/{pid}/harvests/{harvest_id}/cure",
+        json={"target_hours": 72},
+        headers=hdr,
+    )
+    assert started.status_code == 200
+    assert started.get_json()["cure_status"] == "curing"
+
+    # Before the dev clock advances, the cure is not finished yet -> 400.
+    early = client.post(
+        f"/api/game/players/{pid}/harvests/{harvest_id}/cure/finish",
+        json={"sell": False},
+        headers=hdr,
+    )
+    assert early.status_code == 400  # "Cure not finished yet (...)"
+
+    # Fast-forward past the cure window. The STEP 4.5 fix means GameService's
+    # cure path reads this dev-clock advance (it previously used wall time).
+    adv = client.post("/api/dev/clock/advance", json={"hours": 80})
+    assert adv.status_code == 200
+
+    # Now the cure finishes and quality rises by the cure bonus.
+    finished = client.post(
+        f"/api/game/players/{pid}/harvests/{harvest_id}/cure/finish",
+        json={"sell": False},
+        headers=hdr,
+    )
+    assert finished.status_code == 200
+    body = finished.get_json()
+    assert body["cure_status"] == "cured"
+    assert body["cure_quality_bonus"] > 0
+    assert body["quality"] > quality_before
+
+    # BE-A08: the cure path (start + finish, no sale) and the clock advance post
+    # NO ledger entries — curing is not a faucet.
+    with session_scope() as s:
+        sale_rows = (
+            s.query(LedgerEntry)
+            .filter(
+                LedgerEntry.player_id == pid,
+                LedgerEntry.entry_type == LedgerEntryType.HARVEST_SALE.value,
+            )
+            .count()
+        )
+    assert sale_rows == 0
