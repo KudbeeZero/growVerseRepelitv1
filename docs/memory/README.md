@@ -41,6 +41,12 @@ is recorded in DECISIONS.
 6. When you finish a unit of work, ask: *did this change an invariant?* If yes, update Layer 0/1
    in the **same** change so memory never lies.
 
+## Related: the AI Studio Framework (meta)
+This memory system + the Session Relay Protocol are the live substrate that the **AI Studio
+Framework** concept generalizes (roles-as-agents, machine-readable state, a skills marketplace).
+That's a *process/meta* vision — about how we build, not about the game — so it lives in
+[`../AI_STUDIO_FRAMEWORK.md`](../AI_STUDIO_FRAMEWORK.md), not in the game Design Codex.
+
 ## What "LUT report" means
 The **LUT report** is this project's daily round-table standup: every specialty (backend, sim,
 economy, genetics, chain, AI, web, QA, DevOps, security, docs, product) reports what shipped the
