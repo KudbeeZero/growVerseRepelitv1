@@ -3,17 +3,21 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "@/lib/session";
+import { FEATURES, type FeatureName } from "@/lib/features";
 import { PlayerBadge } from "./PlayerBadge";
 
-const LINKS = [
+// `feature` gates a link behind an MVP flag; links without one are always shown.
+const LINKS: { href: string; label: string; feature?: FeatureName }[] = [
   { href: "/dashboard", label: "Grow" },
   { href: "/lab", label: "Lab" },
-  { href: "/market", label: "Market" },
-  { href: "/cup", label: "Cup" },
-  { href: "/university", label: "University" },
+  { href: "/market", label: "Market", feature: "marketplace" },
+  { href: "/cup", label: "Cup", feature: "cup" },
+  { href: "/university", label: "University", feature: "university" },
   { href: "/leaderboards", label: "Leaderboards" },
   { href: "/profile", label: "Profile" },
 ];
+
+const VISIBLE_LINKS = LINKS.filter((l) => !l.feature || FEATURES[l.feature]);
 
 export function NavBar() {
   const pathname = usePathname();
@@ -29,7 +33,7 @@ export function NavBar() {
           </Link>
           {isAuthed && (
             <nav className="flex flex-wrap items-center gap-1">
-              {LINKS.map((l) => {
+              {VISIBLE_LINKS.map((l) => {
                 const active = pathname === l.href || pathname.startsWith(l.href + "/");
                 return (
                   <Link

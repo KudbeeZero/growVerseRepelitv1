@@ -119,6 +119,20 @@ class Settings:
             os.environ.get("ENABLE_AUTO_CARE", "true").lower() == "true"
         )
 
+        # --- MVP feature flags ---------------------------------------------
+        # Non-MVP systems are gated OFF by default so the launch build exposes
+        # only the core grow loop (grow → care → harvest → cure → breed). Flip
+        # a flag on (env=true) to surface that system's API + UI. The web
+        # client mirrors these via NEXT_PUBLIC_ENABLE_* (web/src/lib/features.ts).
+        def _feature(name: str) -> bool:
+            return os.environ.get(name, "false").lower() == "true"
+
+        self.enable_marketplace: bool = _feature("ENABLE_MARKETPLACE")
+        self.enable_chain: bool = _feature("ENABLE_CHAIN")
+        self.enable_cup: bool = _feature("ENABLE_CUP")
+        self.enable_university: bool = _feature("ENABLE_UNIVERSITY")
+        self.enable_contracts: bool = _feature("ENABLE_CONTRACTS")
+
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:

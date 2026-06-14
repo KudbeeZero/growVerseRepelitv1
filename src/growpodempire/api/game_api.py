@@ -23,6 +23,7 @@ from ..services.research_service import ResearchService
 from ..services import leveling_service
 from ..economy.ledger import InsufficientFundsError
 from .auth import require_player
+from .feature_gates import require_feature
 from .ratelimit import limiter
 from .validation import positive_int, bounded_int, positive_money, number
 from . import serialize as S
@@ -707,6 +708,7 @@ def set_environment(player_id, pod_id):
 
 # ----- Marketplace -------------------------------------------------------
 @game_bp.get("/market")
+@require_feature("marketplace")
 def market():
     with session_scope() as s:
         listings = GameService(s).list_market()
@@ -715,6 +717,7 @@ def market():
 
 
 @game_bp.post("/players/<player_id>/market/list")
+@require_feature("marketplace")
 @require_player
 def create_listing(player_id):
     data = request.get_json(force=True, silent=True) or {}
@@ -738,6 +741,7 @@ def create_listing(player_id):
 
 
 @game_bp.post("/players/<player_id>/market/auction")
+@require_feature("marketplace")
 @require_player
 def create_auction(player_id):
     data = request.get_json(force=True, silent=True) or {}
@@ -762,6 +766,7 @@ def create_auction(player_id):
 
 
 @game_bp.post("/players/<player_id>/market/<listing_id>/bid")
+@require_feature("marketplace")
 @require_player
 def place_bid(player_id, listing_id):
     data = request.get_json(force=True, silent=True) or {}
@@ -778,6 +783,7 @@ def place_bid(player_id, listing_id):
 
 
 @game_bp.post("/players/<player_id>/market/<listing_id>/settle")
+@require_feature("marketplace")
 @require_player
 def settle_auction(player_id, listing_id):
     try:
@@ -790,6 +796,7 @@ def settle_auction(player_id, listing_id):
 
 
 @game_bp.post("/players/<player_id>/market/<listing_id>/buy")
+@require_feature("marketplace")
 @require_player
 def buy_listing(player_id, listing_id):
     try:
@@ -835,6 +842,7 @@ def claim_achievement(player_id, key):
 
 # ----- Contracts ---------------------------------------------------------
 @game_bp.get("/players/<player_id>/contracts")
+@require_feature("contracts")
 @require_player
 def list_contracts(player_id):
     with session_scope() as s:
@@ -844,6 +852,7 @@ def list_contracts(player_id):
 
 
 @game_bp.post("/players/<player_id>/contracts/offer")
+@require_feature("contracts")
 @require_player
 @limiter.limit("60 per hour")
 def offer_contract(player_id):
@@ -859,6 +868,7 @@ def offer_contract(player_id):
 
 
 @game_bp.post("/players/<player_id>/contracts/<contract_id>/fulfill")
+@require_feature("contracts")
 @require_player
 def fulfill_contract(player_id, contract_id):
     try:
@@ -871,6 +881,7 @@ def fulfill_contract(player_id, contract_id):
 
 # ----- Seasonal Cannabis Cup --------------------------------------------
 @game_bp.get("/cup/current")
+@require_feature("cup")
 def cup_current():
     """The current season's Cup (auto-judges any closed window). Public."""
     with session_scope() as s:
@@ -883,6 +894,7 @@ def cup_current():
 
 
 @game_bp.get("/cup/<cup_id>/standings")
+@require_feature("cup")
 def cup_standings(cup_id):
     try:
         with session_scope() as s:
@@ -894,6 +906,7 @@ def cup_standings(cup_id):
 
 
 @game_bp.get("/cup/hall-of-fame")
+@require_feature("cup")
 def cup_hall_of_fame():
     """Every season's champions — the lifetime record. Public."""
     with session_scope() as s:
@@ -902,6 +915,7 @@ def cup_hall_of_fame():
 
 
 @game_bp.post("/players/<player_id>/cup/enter")
+@require_feature("cup")
 @require_player
 @limiter.limit("30 per hour")
 def cup_enter(player_id):
@@ -918,6 +932,7 @@ def cup_enter(player_id):
 
 # ----- GrowPod University -------------------------------------------------
 @game_bp.get("/university/catalog")
+@require_feature("university")
 def university_catalog():
     """Public course/degree catalog."""
     with session_scope() as s:
@@ -926,6 +941,7 @@ def university_catalog():
 
 
 @game_bp.get("/players/<player_id>/university")
+@require_feature("university")
 @require_player
 def university_transcript(player_id):
     """A player's transcript: courses (status/progress), degrees, and title."""
@@ -938,6 +954,7 @@ def university_transcript(player_id):
 
 
 @game_bp.post("/players/<player_id>/courses/<course_key>/enroll")
+@require_feature("university")
 @require_player
 @limiter.limit("60 per hour")
 def university_enroll(player_id, course_key):
@@ -951,6 +968,7 @@ def university_enroll(player_id, course_key):
 
 
 @game_bp.post("/players/<player_id>/courses/<course_key>/complete")
+@require_feature("university")
 @require_player
 def university_complete(player_id, course_key):
     try:
@@ -962,6 +980,7 @@ def university_complete(player_id, course_key):
 
 
 @game_bp.post("/players/<player_id>/degrees/<degree_key>/claim")
+@require_feature("university")
 @require_player
 def university_claim_degree(player_id, degree_key):
     try:
@@ -973,6 +992,7 @@ def university_claim_degree(player_id, degree_key):
 
 
 @game_bp.get("/players/<player_id>/courses/<course_key>/lecture")
+@require_feature("university")
 @require_player
 @limiter.limit("30 per minute")
 def university_lecture(player_id, course_key):
@@ -996,6 +1016,7 @@ def university_lecture(player_id, course_key):
 
 # ----- On-chain: wallet linking, NFT minting, metadata -------------------
 @game_bp.post("/players/<player_id>/wallet/link")
+@require_feature("chain")
 @require_player
 def link_wallet(player_id):
     data = request.get_json(force=True, silent=True) or {}
@@ -1011,6 +1032,7 @@ def link_wallet(player_id):
 
 
 @game_bp.post("/players/<player_id>/wallet/withdraw")
+@require_feature("chain")
 @require_player
 def asa_withdraw(player_id):
     data = request.get_json(force=True, silent=True) or {}
@@ -1026,6 +1048,7 @@ def asa_withdraw(player_id):
 
 
 @game_bp.post("/players/<player_id>/wallet/deposit")
+@require_feature("chain")
 @require_player
 def asa_deposit(player_id):
     data = request.get_json(force=True, silent=True) or {}
@@ -1041,6 +1064,7 @@ def asa_deposit(player_id):
 
 
 @game_bp.post("/players/<player_id>/harvests/<harvest_id>/mint")
+@require_feature("chain")
 @require_player
 def mint_harvest(player_id, harvest_id):
     try:
@@ -1053,6 +1077,7 @@ def mint_harvest(player_id, harvest_id):
 
 
 @game_bp.post("/players/<player_id>/strains/<strain_id>/mint")
+@require_feature("chain")
 @require_player
 def mint_strain(player_id, strain_id):
     try:
@@ -1065,6 +1090,7 @@ def mint_strain(player_id, strain_id):
 
 
 @game_bp.get("/nft/<kind>/<obj_id>.json")
+@require_feature("chain")
 def nft_metadata(kind, obj_id):
     """Serve ARC-3 metadata JSON referenced by a minted asset's URL."""
     try:

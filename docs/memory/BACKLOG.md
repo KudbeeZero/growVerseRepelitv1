@@ -29,7 +29,12 @@ once they appear here. Last reconciled: **2026-06-10**.
 - 🎨 ⬜ **PR #28 — Circadian Leaf Motion** — *PARKED* (open PR, green). Do not modify.
 - 🎨 ⬜ **PR #30 — Dashboard / GameState Wiring Polish** — next actual build PR. Unify the
   chamber/dashboard state wiring.
-- 🎨 ⬜ **PR #31 — MVP Launch Candidate.**
+- 🎨 🔨 **PR #31 — MVP Launch Candidate.**
+  - ✅ **Feature-flag layer** (2026-06-14) — non-MVP systems (marketplace, on-chain, cup,
+    university, contracts) gated OFF by default; `require_feature` decorator (`api/feature_gates.py`)
+    + `config.Settings` flags backend, `web/src/lib/features.ts` + `RequireFeature` on the web.
+    Tests: `tests/test_feature_gates.py`. See `DECISIONS.md` 2026-06-14.
+  - ⬜ Remaining: sim test-clock, e2e grow-loop in CI, FTUE (+ fresh `grant_claims`).
 - 🎨 ⬜ **Macro Bud Polish II** (future; *not launch-blocking*) — sharper calyx ridges, denser calyx
   nesting, reduce the smooth-oval appearance on the Purple Diddy Punch *macro* bud, improve chunky
   calyx definition. Macro ("Detailed Bud View") only — the whole-plant chamber is signed off.
