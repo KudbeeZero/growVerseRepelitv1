@@ -273,6 +273,40 @@ on a rejected key (RISK #9); `usePods` refreshes on an interval + focus so the c
 reflects committed pod environment. The knowledge doc's `GameState/EnvironmentState/UIState` section
 is documentation aspiration, not a build target, until a future PR proves a need.
 
+### 2026-06-14 — Launch time-compression: a single `time_scale` pacing knob
+**Decision (Director-approved, Player-Obsession Lab):** Compress the whole grow lifecycle for launch
+via one new balance knob, `simulation.time_scale` (default 1.0 = canonical real-time; launch value
+**0.075**), multiplied into **every** stage duration in `engine._stage_duration_hours` — the
+pre-flower `stages.*_days` knobs *and* the genetic `flowering_time` window alike. A 60-day-flower
+strain now runs ~7.8 real days seed→harvest (flowering ~day 3.3, trichome frost reads ~day 5), so a
+new $25-pod player experiences the full emotional arc — growth → branching → pre-flower → buds →
+frost → phenotype colour → harvest — inside week one instead of ~7 weeks out. Paired with a renderer
+fix: the live chamber now derives its developmental day from the **authoritative** server stage +
+`forecast.stage_progress_pct` (`morphology.nominalGrowDay` → `previewDev`) instead of wall-clock
+`ageDays`, and the "to harvest" readout reads `forecast.hours_to_harvest`. Without this the compressed
+plant would flip to *flowering* while the renderer (whose bud/frost ramps key off absolute nominal
+days, buds from ~day 34) still drew a flowerless plant — i.e. the magic would not surface.
+**Why:** the obsession research scored the MVP 6/10, capped by *week-1 silence* — every
+screenshot-worthy moment the renderer can already produce was gated ~44+ days out, past the 72-hour
+window in which retention is decided. This is pure tuning + visual-surfacing-timing: no new systems,
+no genetics change, no economy *rate* change. It also reinforces the PR #30 ADR (web stage timing
+defers to `plant.forecast`, never wall-clock).
+**Consequences:** (1) `time_scale` is the launch dial — set back toward 1.0 to lengthen the cycle
+without code changes; canonical real-time `stages.*_days` stay documented for that reversal. (2) The
+harvest faucet is **gated by grow time**, so compressing the cycle accelerates that faucet's *cadence*
+(no rate/price changed, but harvests arrive ~13× sooner) — a deliberate, owner-approved launch trade;
+watch realized GROW inflation and treat the canonical pace as the post-launch target. (3) This stands
+in tension with the moat pillar "grows take real days; time is the gate / anti-whale"
+(`design/00-game-vision.md` §6, `03-grower-skills.md`): it is a **launch-pacing** decision, not a
+repudiation of the pillar — the knob exists precisely so the long-game pace can return. (4) All gates
+green: backend `make test` 224 passed / 80.84%, `make lint`, `make check-memory`; web `tsc`,
+`next lint`, `next build`, `vitest` 119. The pixels (buds/frost surfacing in week one) remain
+owner-device-verifiable — no headless browser screenshots the live chamber in CI.
+**Reconciled onto `main` (PR #66, 2026-06-14):** the paired fan-leaf renderer change (the original
+session's Priority #1) was **dropped as superseded by the Engines 1–4 renderer** already on `main`;
+only the `time_scale` pacing knob, the stage-progress dev wiring (`nominalGrowDay`→`previewDev`), and
+the `forecast.hours_to_harvest` readout landed. Gates re-run on the merge — see the PR #66 evidence.
+
 ### 2026-06-14 — Phyllotaxy & pseudo-3-D depth for the whole-plant chamber (Engines 3 & 4)
 **Decision:** The chamber whole-plant skeleton no longer places every node hard-left/hard-right in one
 flat picture plane. A new pure module `web/src/lib/chamber/phyllotaxy.ts` assigns each node an

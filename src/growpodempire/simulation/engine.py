@@ -45,17 +45,25 @@ def _gene(plant: Plant, trait: str, default: float = 0.5) -> float:
 def _stage_duration_hours(plant: Plant, stage: GrowthStage, sim: Dict) -> float:
     stages = sim.get("stages", {})
     if stage == GrowthStage.SEED:
-        return stages.get("seed_days", 3) * 24
-    if stage == GrowthStage.GERMINATION:
-        return stages.get("germination_days", 5) * 24
-    if stage == GrowthStage.SEEDLING:
-        return stages.get("seedling_days", 10) * 24
-    if stage == GrowthStage.VEGETATIVE:
-        return stages.get("vegetative_days", 26) * 24
-    if stage == GrowthStage.FLOWERING:
+        base = stages.get("seed_days", 3) * 24
+    elif stage == GrowthStage.GERMINATION:
+        base = stages.get("germination_days", 5) * 24
+    elif stage == GrowthStage.SEEDLING:
+        base = stages.get("seedling_days", 10) * 24
+    elif stage == GrowthStage.VEGETATIVE:
+        base = stages.get("vegetative_days", 26) * 24
+    elif stage == GrowthStage.FLOWERING:
         # Flowering length is genetic.
-        return _gene(plant, "flowering_time", 60) * 24
-    return 0.0
+        base = _gene(plant, "flowering_time", 60) * 24
+    else:
+        return 0.0
+    # Launch pacing: a single global multiplier compresses (or expands) the whole
+    # lifecycle uniformly — pre-flower knobs *and* the genetic flowering window —
+    # so new players reach buds/frost/harvest inside their first days without
+    # touching genetics or the economy's *rates*. 1.0 = canonical real-time pace;
+    # set <1 in balance.yaml for a compressed launch. Relative stage proportions
+    # and per-strain flowering differences are preserved.
+    return base * float(sim.get("time_scale", 1.0))
 
 
 def stage_forecast(plant: Plant, cfg, now: datetime) -> Dict:

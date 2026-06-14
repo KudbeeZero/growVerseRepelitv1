@@ -7,6 +7,9 @@ import {
   climateModel,
   devParams,
   effectiveDev,
+  previewDev,
+  nominalGrowDay,
+  cycleDays,
   daysToHarvest,
   ageDays,
 } from "../morphology";
@@ -125,6 +128,48 @@ describe("daysToHarvest", () => {
     expect(daysToHarvest("flowering", fl, 40)).toBeGreaterThan(
       daysToHarvest("flowering", fl, 100),
     );
+  });
+});
+
+describe("nominalGrowDay", () => {
+  it("places pre-flower stages below the flowering threshold (no buds)", () => {
+    // VEG_END is 44 nominal days; pre-flower stages must land under it so the
+    // live render shows no flowers, whatever the wall-clock pace.
+    expect(nominalGrowDay("seed", 0)).toBe(0);
+    expect(nominalGrowDay("vegetative", 50)).toBeLessThan(44);
+    // 100% through veg lands exactly at the flowering threshold (VEG_END=44);
+    // the plant hasn't flipped to flowering yet, so still no buds.
+    expect(nominalGrowDay("vegetative", 100)).toBeLessThanOrEqual(44);
+    // previewDev (the live dev mapper) yields zero buds for any pre-flower day.
+    expect(previewDev(nominalGrowDay("vegetative", 50), 60).budDev).toBe(0);
+    expect(previewDev(nominalGrowDay("vegetative", 100), 60).budDev).toBe(0);
+  });
+
+  it("maps flowering progress onto rising bud development", () => {
+    const early = nominalGrowDay("flowering", 10, 60);
+    const late = nominalGrowDay("flowering", 90, 60);
+    expect(late).toBeGreaterThan(early);
+    // A plant deep in flowering renders meaningfully more bud + frost than one
+    // that just flipped — even though both could be only days old in real time.
+    const earlyDev = previewDev(early, 60);
+    const lateDev = previewDev(late, 60);
+    expect(lateDev.budDev).toBeGreaterThan(earlyDev.budDev);
+    expect(lateDev.trich).toBeGreaterThan(earlyDev.trich);
+  });
+
+  it("treats harvest as fully mature (end of the nominal cycle)", () => {
+    expect(nominalGrowDay("harvest", 100, 60)).toBeCloseTo(cycleDays(60), 5);
+    expect(previewDev(nominalGrowDay("harvest", 100, 60), 60).budDev).toBe(1);
+  });
+
+  it("respects the strain's flowering window length", () => {
+    // Same 50% flowering progress sits further along the cycle for a longer
+    // flowering strain, but both surface buds (past VEG_END).
+    const shortFl = nominalGrowDay("flowering", 50, 45);
+    const longFl = nominalGrowDay("flowering", 50, 90);
+    expect(longFl).toBeGreaterThan(shortFl);
+    expect(previewDev(shortFl, 45).budDev).toBeGreaterThan(0);
+    expect(previewDev(longFl, 90).budDev).toBeGreaterThan(0);
   });
 });
 

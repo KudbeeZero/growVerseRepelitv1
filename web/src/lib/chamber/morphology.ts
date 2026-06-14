@@ -270,6 +270,34 @@ export function cycleDays(floweringDays = 60): number {
   return STAGE_DAYS.seed + STAGE_DAYS.germination + STAGE_DAYS.seedling + STAGE_DAYS.vegetative + floweringDays;
 }
 
+/**
+ * The NOMINAL grow day implied by the authoritative server stage + how far the
+ * plant is through it. This decouples the live render from wall-clock age: under
+ * launch time-compression a plant flowers in days, so real elapsed time would
+ * never reach devParams' nominal bud/frost ramps (buds from ~day 34) and the
+ * chamber would show a flowering plant with no flowers. Mapping (stage, progress)
+ * back onto the nominal cycle keeps the visuals — leaf count, stretch, bud swell,
+ * frost, ripeness — in lock-step with the real (compressed) stage, at any pace.
+ *
+ * Feed the result to `previewDev`/`stageForDay`, which already remap flowering
+ * *progress* onto the dev ramps. A plant in HARVEST returns the full cycle length
+ * (fully mature). Pre-flower stages land below VEG_END, so no buds render.
+ */
+export function nominalGrowDay(
+  stage: GrowthStage,
+  stageProgressPct: number,
+  floweringDays = 60,
+): number {
+  const lenOf = (s: GrowthStage): number =>
+    s === "flowering" ? floweringDays : (STAGE_DAYS[s as keyof typeof STAGE_DAYS] ?? 0);
+  let day = 0;
+  for (const s of STAGE_ORDER) {
+    if (s === stage) return day + (clamp(stageProgressPct, 0, 100) / 100) * lenOf(s);
+    day += lenOf(s);
+  }
+  return day; // harvest / unknown -> full nominal cycle (fully mature)
+}
+
 const VEG_END =
   STAGE_DAYS.seed + STAGE_DAYS.germination + STAGE_DAYS.seedling + STAGE_DAYS.vegetative; // 44
 

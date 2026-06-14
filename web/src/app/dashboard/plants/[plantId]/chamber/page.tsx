@@ -19,13 +19,13 @@ import { queryKeys } from "@/lib/queryKeys";
 import {
   ageDays,
   morphologyFor,
-  effectiveDev,
   daysToHarvest,
   climateModel,
   clamp,
   seedForPlant,
   stageForDay,
   previewDev,
+  nominalGrowDay,
   cycleDays,
 } from "@/lib/chamber/morphology";
 import { budColorForStrain, silhouetteFor } from "@/lib/chamber/strainVisuals";
@@ -173,13 +173,29 @@ function ChamberScreen({ plantId }: { plantId: string }) {
     humidity: pod?.humidity ?? 50,
     water: plant.water_level,
   });
-  const liveDay = ageDays(plant.planted_at);
+  // Live development is driven by the AUTHORITATIVE server stage + progress, not
+  // wall-clock age. Under launch time-compression a plant flowers in days, so a
+  // raw age would never reach the nominal bud/frost ramps; mapping stage-progress
+  // onto the nominal grow day keeps buds, frost and ripeness surfacing in lock-
+  // step with the real (compressed) stage. previewDev does the progress→ramp map.
+  const liveNominalDay = plant.forecast
+    ? nominalGrowDay(plant.growth_stage, plant.forecast.stage_progress_pct, flMid)
+    : ageDays(plant.planted_at);
   const previewing = previewDay !== null;
-  const day = previewing ? previewDay : liveDay;
+  const day = previewing ? previewDay : liveNominalDay;
   const renderStage = previewing ? stageForDay(day, flMid) : plant.growth_stage;
-  const dev = previewing ? previewDev(day, flMid) : effectiveDev(plant.growth_stage, liveDay);
+  const dev = previewing ? previewDev(day, flMid) : previewDev(liveNominalDay, flMid);
   const maxPreviewDay = Math.round(cycleDays(flMid) + 8);
-  const harvestDays = strain ? Math.round(daysToHarvest(plant.growth_stage, strain.flowering_days, plant.health)) : null;
+  // "To harvest" is the authoritative, pace-aware countdown from the server
+  // forecast (so it tracks the compressed cycle); the client estimate is only a
+  // pre-forecast fallback. Count whole days down, never showing 0 until ready.
+  const harvestDays = plant.forecast
+    ? plant.forecast.is_harvest_ready
+      ? 0
+      : Math.max(1, Math.ceil(plant.forecast.hours_to_harvest / 24))
+    : strain
+      ? Math.round(daysToHarvest(plant.growth_stage, strain.flowering_days, plant.health))
+      : null;
   const c = climateModel({ fan: climate.fan, temp: climate.temperature, hum: climate.humidity, co2: climate.co2_level });
   const health = clamp(plant.health, 0, 100);
   const ended = !plant.is_alive || plant.harvested;
