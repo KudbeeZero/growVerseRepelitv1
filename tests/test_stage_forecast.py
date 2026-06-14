@@ -9,6 +9,8 @@ import os
 import sys
 from datetime import datetime, timedelta
 
+import pytest
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from growpodempire.enums import GrowthStage
@@ -30,11 +32,14 @@ def test_seed_start_has_full_remaining_lifecycle(session):
     assert f["next_stage"] == GrowthStage.GERMINATION.value
     assert f["stage_progress_pct"] == 0.0
     assert f["is_harvest_ready"] is False
-    # seed_days (3) * 24h at full health.
-    assert f["stage_base_hours"] == 72.0
-    assert f["stage_total_hours"] == 72.0
-    # Harvest is many days out and dated absolutely.
-    assert f["hours_to_harvest"] > 1056  # 72+120+240+624 fixed stages, + flowering
+    # seed_days (3) * 24h at full health, scaled by the launch pacing multiplier
+    # (the engine rounds the reported hours to 0.1).
+    scale = float(CFG.raw["simulation"].get("time_scale", 1.0))
+    assert f["stage_base_hours"] == round(72.0 * scale, 1)
+    assert f["stage_total_hours"] == round(72.0 * scale, 1)
+    # Harvest is the whole lifecycle out: the fixed pre-flower stages
+    # (72+120+240+624) plus flowering, all under the same pacing scale.
+    assert f["hours_to_harvest"] > 1056 * scale
     eta = datetime.fromisoformat(f["harvest_eta"])
     assert abs((eta - BASE).total_seconds() / 3600.0 - f["hours_to_harvest"]) < 0.1
 
@@ -43,8 +48,12 @@ def test_progress_advances_and_eta_shrinks_over_time(session):
     _, _, plant = _plant(session)
     plant.health = 100.0
     session.flush()
-    early = engine.stage_forecast(plant, CFG, BASE + timedelta(hours=12))
-    later = engine.stage_forecast(plant, CFG, BASE + timedelta(hours=48))
+    # Sample two moments *within* the seed stage (its length scales with the
+    # launch pacing knob, so derive the deltas from it rather than hardcoding).
+    scale = float(CFG.raw["simulation"].get("time_scale", 1.0))
+    seed_h = 72.0 * scale
+    early = engine.stage_forecast(plant, CFG, BASE + timedelta(hours=seed_h * 0.2))
+    later = engine.stage_forecast(plant, CFG, BASE + timedelta(hours=seed_h * 0.6))
     assert 0 < early["stage_progress_pct"] < later["stage_progress_pct"]
     assert early["hours_to_harvest"] > later["hours_to_harvest"]
     # next-stage ETA is a fixed wall-clock moment, not a sliding window.
@@ -59,8 +68,11 @@ def test_poor_health_stretches_durations(session):
     plant.health = 50.0
     session.flush()
     sick = engine.stage_forecast(plant, CFG, BASE)
-    # health 50 -> multiplier 1.25 on every stage.
-    assert sick["stage_total_hours"] == healthy["stage_total_hours"] * 1.25
+    # health 50 -> multiplier 1.25 on every stage (reported hours are rounded to
+    # 0.1, so compare within that tolerance rather than exactly).
+    assert sick["stage_total_hours"] == pytest.approx(
+        healthy["stage_total_hours"] * 1.25, abs=0.1
+    )
     assert sick["hours_to_harvest"] > healthy["hours_to_harvest"]
     # base (ideal) duration is unaffected by health.
     assert sick["stage_base_hours"] == healthy["stage_base_hours"]

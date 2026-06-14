@@ -54,6 +54,33 @@ def test_catch_up_advances_growth_stage(session):
     assert plant.height > 0 or plant.growth_stage != "seed"
 
 
+def test_time_scale_compresses_every_stage_uniformly(session):
+    # The launch pacing knob scales pre-flower stages AND the genetic flowering
+    # window by the same factor, preserving their proportions. A plant's genetics
+    # (flowering_time) are untouched — only the wall-clock pace changes.
+    import copy
+    from growpodempire.economy.config import EconomyConfig
+    from growpodempire.enums import GrowthStage
+
+    _, _, plant = _plant(session)
+    full = copy.deepcopy(CFG.raw)
+    full["simulation"]["time_scale"] = 1.0
+    half = copy.deepcopy(CFG.raw)
+    half["simulation"]["time_scale"] = 0.5
+    full_sim = EconomyConfig(raw=full).raw["simulation"]
+    half_sim = EconomyConfig(raw=half).raw["simulation"]
+
+    for stage in (
+        GrowthStage.SEED,
+        GrowthStage.VEGETATIVE,
+        GrowthStage.FLOWERING,  # genetic — must scale too
+    ):
+        f = engine._stage_duration_hours(plant, stage, full_sim)
+        h = engine._stage_duration_hours(plant, stage, half_sim)
+        assert f > 0
+        assert h == f * 0.5
+
+
 def test_overwatering_triggers_root_rot(session):
     _, _, plant = _plant(session)
     plant.water_level = 99.0

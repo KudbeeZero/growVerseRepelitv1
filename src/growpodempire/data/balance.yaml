@@ -150,7 +150,20 @@ simulation:
     pest_weight: 0.45                 # health target penalty per pest_level point
     disease_weight: 0.55
 
-  # Stage durations in days (flowering comes from the strain's genome).
+  # Launch pacing multiplier on EVERY stage's duration — the pre-flower stage
+  # knobs below *and* the strain's genetic flowering window. 1.0 = canonical
+  # real-time pace (~104 days for a 60-day-flower strain). For the launch window
+  # we compress so a new $25-pod player experiences the full emotional arc —
+  # visible growth → branching → pre-flower → buds → trichome frost → phenotype
+  # colour → harvest payoff — inside their first week, instead of ~7 weeks out.
+  # 0.075 -> a 60-day-flower strain runs ~7.8 days seed→harvest (flowering begins
+  # ~day 3.3, frost reads ~day 5). Dial back toward 1.0 to lengthen the cycle.
+  # Tuning only: no genetics, prices, or faucet/sink *rates* change here.
+  time_scale: 0.075
+
+  # Canonical stage durations in days (flowering comes from the strain's genome).
+  # These are the REAL-TIME reference lengths; time_scale above scales them for
+  # the live cycle, so reverting launch pacing is a one-line change.
   stages:
     seed_days: 3
     germination_days: 5
