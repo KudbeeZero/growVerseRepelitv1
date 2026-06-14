@@ -4,7 +4,7 @@
 > the end of every chat; read by `/handoff-audit` at the start of the next. If this file and
 > the code disagree, the code wins — fix the baton. See `docs/SESSION_PROTOCOL.md`.
 
-**Last rewritten:** 2026-06-14 · **By:** BE-003 feature-flag reconciliation chat (PR #63 — collapsed the dual flag system)
+**Last rewritten:** 2026-06-14 · **By:** records chat — CEO ratified PR #63; #61 closed; FF-RECON-001 EXECUTED
 **Active branch:** `main` (PR #63 squash-merged this chat).
 **Just merged (this chat): PR #63 — BE-003 feature-flag reconciliation.** `main` had carried **two**
 contradictory flag systems (#42's `config.py ENABLE_*` / `feature_gates.py` gating routes OFF while
@@ -45,20 +45,21 @@ overlapping*. **PR #42** *MVP Feature Flag Layer* (the NEXT ACTION).
 
 ## NEXT ACTION (the one scoped item the next chat does)
 
-**FF-RECON-001 (web half) — single runtime flag consumer.** The **backend reconciliation shipped
-(PR #63)**: one balance.yaml-canonical source, gated routes via `feature_required`, `GET
-/api/game/flags`, route-gate==`/flags` regression test. **Remaining:** the web layer still reads
-build-time `NEXT_PUBLIC_ENABLE_*` (`web/src/lib/features.ts`, `RequireFeature`, nav filtering) — a
-*second* source that can drift. Replace it with a runtime `useFlag`/`RequireFeature` hook reading
-`GET /api/game/flags` (deploy-free), then gate routes + nav from that single source. Touches
-**protected Navigation + Layout** surfaces → claim in `docs/STUDIO_AGENT_REGISTRY.md` + Director
-sign-off first.
-- **Launch polarity:** gated routes now default **ON** (balance.yaml). The launch build sets the
-  non-MVP surfaces (`FEATURE_MARKETPLACE/CHAIN/CUP_COMPETITIONS/UNIVERSITY/CONTRACTS=false`) per-env —
+**Playtesting → Retention Validation → MVP Launch Candidate.** **Feature Flags are DONE** — one
+canonical `balance.yaml`/`feature_flags.py` system (**PR #63, CEO-ratified 2026-06-14**): gated routes
+via `feature_required`, `GET /api/game/flags`, a route-gate==`/flags` regression test; #42's
+`feature_gates.py` + config `FEATURE_*` removed. The competing **PR #61** (delete #55) was **closed as
+superseded**. **Do NOT reopen the flag architecture** unless a production defect appears (CEO). Next
+chat resumes the launch path: the web/device playtest pass, then Retention Validation, then MVP Launch
+Candidate.
+- **Launch polarity:** gated routes default **ON** (balance.yaml); the launch build turns non-MVP
+  surfaces OFF per-env (`FEATURE_MARKETPLACE/CHAIN/CUP_COMPETITIONS/UNIVERSITY/CONTRACTS=false`) —
   deploy config, not code.
+- **Deferred (not now, no defect):** the web layer still uses build-time `NEXT_PUBLIC_ENABLE_*`; a
+  future runtime `useFlag` over `/api/game/flags` could unify it — **out of scope per CEO** ("no
+  additional refactors").
 - **Owner-pending (REC-004):** the §3 branch prune still has **not** run (destructive git is
   owner-only). After the owner prunes, refresh `CANONICAL_STATE.md` §3.
-- **After the web consumer:** web/device playtest pass → Retention Validation → MVP Launch Candidate.
 
 > **Also queued (owner/device):** the web playtest pass — run `cd web && npm i && npm run dev` and verify
 > the device-only matrix the headless playtest could not (mobile viewport/safe-area, reduced-motion,
@@ -82,9 +83,9 @@ sign-off first.
 
 </details>
 
-> **✅ Update (BE-004.5 playtest chat):** STEP 4.5 **merged as PR #59** (`5d44d35`); **RISK #1 closed**;
-> Playtesting **done** (this chat — see report). The path is now **FF-RECON-001 → web/device playtest pass →
-> Retention Validation → MVP Launch Candidate.**
+> **✅ Update:** STEP 4.5 **merged as PR #59** (`5d44d35`); **RISK #1 closed**; Playtesting **done**.
+> **Feature Flags EXECUTED** — #63 canonical (`balance.yaml`), #61 closed (CEO-ratified). The path is now
+> **web/device playtest pass → Retention Validation → MVP Launch Candidate.**
 
 ---
 

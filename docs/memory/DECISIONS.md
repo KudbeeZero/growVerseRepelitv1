@@ -452,3 +452,15 @@ defaults (**ON**) — the launch build turns non-MVP surfaces (marketplace/chain
 university/contracts) OFF via `FEATURE_*` env, *not* a code default. A regression test asserts each
 route's gate state equals its `/flags` value so the two can never diverge again. Web route/nav gating
 (still on `NEXT_PUBLIC_ENABLE_*`) is re-pointed to `GET /api/game/flags` in the separate Web Gating PR.
+
+### 2026-06-14 — CEO ratifies PR #63 as the single feature-flag system; #61 closed (FF-RECON-001 EXECUTED)
+**Decision:** With two chats having driven **opposite** flag reconciliations in parallel — **PR #63**
+(keep `balance.yaml`/`feature_flags.py`, delete #42's `feature_gates.py`/config `FEATURE_*`) and
+**PR #61** (the reverse) — the CEO **ratified #63** as canonical and **closed #61 as superseded**.
+No revert of #63; no rebuild of the #42 path; no recreating duplicate flag infrastructure.
+**Why:** #63 already achieved the goal (one source of truth), is green, and aligns with the
+`balance.yaml`-as-tuning-surface invariant; reverting would be pure rework against launch momentum.
+**Consequences:** `balance.yaml`/`feature_flags.py` is the sole canonical flag system; feature-flag
+infra is a single-writer protected surface (registry). The web build-time `NEXT_PUBLIC_ENABLE_*`
+mirror remains as a deferred (non-defect) follow-up. The flag architecture is **not to be reopened**
+absent a production defect; focus returns to Playtesting → Retention Validation → MVP Launch Candidate.
