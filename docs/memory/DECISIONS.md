@@ -255,3 +255,23 @@ fixes, not a state rewrite. A global 401/403 handler (`AuthErrorListener`) now t
 on a rejected key (RISK #9); `usePods` refreshes on an interval + focus so the chamber bud phenotype
 reflects committed pod environment. The knowledge doc's `GameState/EnvironmentState/UIState` section
 is documentation aspiration, not a build target, until a future PR proves a need.
+
+### 2026-06-14 — Simulation test clock: a gated, economy-neutral time seam (STEP 3 / BE-002)
+**Decision:** Formalize the existing `Clock`/`FrozenClock` seam into a documented **test clock
+system** rather than inventing a new time abstraction. `simulation/clock.py` now exposes a
+canonically-named `TestClock` (with `advance_hours`/`advance_days`; `FrozenClock` kept as an alias so
+the 65+ existing call sites are untouched), a **gated factory** `new_test_clock()` that fails closed
+with `TestClockDisabled` unless `ENABLE_TEST_CLOCK` is on (default **off**), reusable backend test
+support in `tests/helpers/clock.py`, and a usage doc at `docs/testing/simulation-test-clock.md`.
+**Why:** STEP 3 needed a *safe* way for QA/tests to advance simulated time for grow-loop testing. The
+seam already existed (the compute-on-read engine reads `clock.now()`), so the real gap was a **safe
+config boundary** and documentation — not new machinery. Direct `TestClock` construction stays free
+(that is how the suite injects clocks per-service); only the sanctioned runtime/tooling entry point is
+gated, so a production process can never mint a time-warping clock through it. **Consequences:**
+production behavior is byte-identical (flag off → `SystemClock` everywhere; no service wiring changed);
+`tests/test_simulation_test_clock.py` proves determinism, the fail-closed boundary, and the mission
+invariant that advancing time posts **no ledger entries and changes no balance** (time travel cannot
+mint money). A *running-server* time-travel HTTP endpoint that injects a shared clock app-wide is
+deliberately **out of scope** (touches every service construction path + adds API surface) and flagged
+as the next checkpoint needing owner sign-off; the boundary is built so such an endpoint still cannot
+function in production without the flag.

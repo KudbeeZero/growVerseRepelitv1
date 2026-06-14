@@ -119,6 +119,16 @@ class Settings:
             os.environ.get("ENABLE_AUTO_CARE", "true").lower() == "true"
         )
 
+        # --- Simulation test clock (dev/test only) -------------------------
+        # Safe config boundary for STEP 3's test clock. OFF by default so a
+        # production process can never mint a time-warping clock through the
+        # sanctioned factory (simulation.clock.new_test_clock). Flip on only in
+        # dev/QA to advance simulated time for grow-loop testing; it never alters
+        # wall-clock timing or the economy. See docs/testing/simulation-test-clock.md.
+        self.enable_test_clock: bool = (
+            os.environ.get("ENABLE_TEST_CLOCK", "false").lower() == "true"
+        )
+
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:

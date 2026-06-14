@@ -41,6 +41,11 @@ def create_app(init_database: bool = True):
     app.config["RATELIMIT_STORAGE_URI"] = settings.ratelimit_storage_uri
     init_limiter(app)
 
+    # Safe config boundary for the simulation test clock (dev/test only). Off in
+    # production so no time-warping clock can be minted through the sanctioned
+    # factory. Surfaced here for parity/visibility; no route consumes it yet.
+    app.config["ENABLE_TEST_CLOCK"] = settings.enable_test_clock
+
     # Ensure the persistent game schema exists (no-op for already-migrated DBs).
     if init_database:
         init_db()

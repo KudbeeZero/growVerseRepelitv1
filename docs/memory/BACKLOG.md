@@ -94,6 +94,13 @@ once they appear here. Last reconciled: **2026-06-10**.
   (185 total). ADR in `DECISIONS.md`. *Remaining (⬜): background materialization for bursts of
   first-reads at scale.*
 - 🟠 ⬜ **Idempotency keys on mutations** — protect ledger/economy from double-submits & retries.
+- 🟠 ✅ **Simulation test clock** (2026-06-14, STEP 3 / BE-002) — gated, economy-neutral time seam for
+  grow-loop testing. `TestClock` + `FrozenClock` alias + fail-closed factory `new_test_clock`
+  (`ENABLE_TEST_CLOCK`, default off) in `src/growpodempire/simulation/clock.py`; reusable helpers in
+  `tests/helpers/clock.py`; usage doc `docs/testing/simulation-test-clock.md`; proven by
+  `tests/test_simulation_test_clock.py`. ADR in `DECISIONS.md`. *Remaining (⬜): a dev-only
+  runtime time-travel HTTP endpoint that injects a shared clock app-wide — needs owner sign-off
+  (touches every service construction path + adds API surface).*
 - 🟠 ⬜ **Anti-bot / fair-play framework (spec)** (owner request, 2026-06-11) — defense-in-depth
   against automation farming the faucets, layered so honest players never feel it:
   (1) **humanity gates** — lightweight proof-of-humanity challenges only at high-value moments
