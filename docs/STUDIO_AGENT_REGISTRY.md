@@ -68,6 +68,7 @@ Open / in-flight directives. One row per directive; update **Status** as it move
 | Directive | Dept | Lead | Workers | Branch | PR | Owned file surfaces | Deps | Status |
 |---|---|---|---|---|---|---|---|---|
 | DX-005 (FP-5 completion) | Design & Experience | DX-A00 | DX-A01–A10 | `claude/dx-fp5-care-feedback` | (this PR) | Plant-care only: `components/plant/PlantActionCTA.tsx` (+ docs registry) | — | 🟢 Open |
+| DX-006 (P4 Sticky One-Handed CTAs) | Design & Experience | DX-A00 | DX-A01–A10 | `claude/dx-sticky-one-handed-ctas` | #48 | Plant-care placement: `components/ui/StickyActionBar.tsx` (new), `app/dashboard/plants/[plantId]/page.tsx` | Reuses merged FP-3 `lib/plantAction.ts` + `PlantActionCTA` **read-only** (no logic change) | 🟢 Open |
 
 ### Recently merged to `main` (for collision awareness)
 
