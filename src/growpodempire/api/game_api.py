@@ -50,6 +50,9 @@ def create_player():
         with session_scope() as s:
             svc = GameService(s)
             player = svc.create_player(data["username"], data.get("email"))
+            # On signup, hand the new player a starter pod + seed (idempotent,
+            # one-shot) so they can reach their first grow with zero setup.
+            svc.grant_starter_items(player.id)
             wallet = svc.get_wallet(player.id)
             payload = player_payload(player, wallet)
             # Returned exactly once — the client must store it to authenticate writes.

@@ -191,6 +191,31 @@ class SeedInventory(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
 
 
+class GrantClaim(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    """A one-shot grant ledger for non-currency faucets (starter pod/seed, etc.).
+
+    The unique index on (player_id, grant_type, grant_key) is the hard backstop
+    that makes a faucet idempotent: a raced double-signup or a re-run of the grant
+    path can never hand out a second starter pod or seed. Distinct from the money
+    ledger — this records *that* a one-time item grant happened, not a balance."""
+
+    __tablename__ = "grant_claims"
+
+    player_id: Mapped[str] = mapped_column(ForeignKey("players.id"), nullable=False)
+    grant_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    grant_key: Mapped[str] = mapped_column(String(64), nullable=False)
+
+    __table_args__ = (
+        Index(
+            "uq_grant_claims_player_type_key",
+            "player_id",
+            "grant_type",
+            "grant_key",
+            unique=True,
+        ),
+    )
+
+
 class ResearchProgress(UUIDPrimaryKeyMixin, Base):
     """A research-tree node a player has unlocked (Phase 2 expansion)."""
 

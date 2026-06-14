@@ -46,6 +46,7 @@ from ..db.models import (
     MarketListing,
     LedgerEntry,
     ConsumableInventory,
+    GrantClaim,
 )
 from ..db.seed import slugify
 
@@ -123,6 +124,56 @@ class GameService:
             LedgerEntryType.STARTING_GRANT,
         )
         return player
+
+    def grant_starter_items(self, player_id: str) -> None:
+        """Idempotently grant the starter pod + starter seed so the first-run loop
+        (plant → care → harvest → sell) is reachable with zero setup — the #1
+        onboarding blocker per the retention/QA review. Called on signup. Each item
+        is a one-shot claim in grant_claims, so re-running this (or a raced double
+        signup) can never hand out a second pod or seed."""
+        if self._claim_grant(player_id, "starter", "pod"):
+            self.create_pod(player_id, "Starter Pod", charge=False)
+        if self._claim_grant(player_id, "starter", "seed"):
+            strain = self._starter_strain()
+            if strain is not None:
+                stack = self._get_or_create_seed_stack(
+                    player_id, strain.id, SeedSource.STARTER
+                )
+                stack.quantity += 1
+                self.session.flush()
+
+    def _claim_grant(self, player_id: str, grant_type: str, grant_key: str) -> bool:
+        """Reserve a one-shot grant. Returns True if this call won the claim (the
+        caller should then grant), False if it was already claimed. The unique
+        index on (player_id, grant_type, grant_key) is the hard backstop against
+        races; the pre-check keeps the common path off the IntegrityError road."""
+        existing = (
+            self.session.query(GrantClaim)
+            .filter(
+                GrantClaim.player_id == player_id,
+                GrantClaim.grant_type == grant_type,
+                GrantClaim.grant_key == grant_key,
+            )
+            .first()
+        )
+        if existing is not None:
+            return False
+        self.session.add(
+            GrantClaim(player_id=player_id, grant_type=grant_type, grant_key=grant_key)
+        )
+        self.session.flush()
+        return True
+
+    def _starter_strain(self) -> Optional[Strain]:
+        """A beginner-friendly starter strain: the easiest common base-catalog
+        strain, chosen deterministically so every new player starts equal."""
+        base = self.session.query(Strain).filter(Strain.is_base_catalog.is_(True))
+        return (
+            base.filter(Strain.rarity == "common")
+            .order_by(Strain.difficulty.asc(), Strain.slug.asc())
+            .first()
+            or base.order_by(Strain.difficulty.asc(), Strain.slug.asc()).first()
+        )
 
     def get_player(self, player_id: str) -> Player:
         player = self.session.get(Player, player_id)
