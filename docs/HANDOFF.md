@@ -4,73 +4,68 @@
 > the end of every chat; read by `/handoff-audit` at the start of the next. If this file and
 > the code disagree, the code wins — fix the baton. See `docs/SESSION_PROTOCOL.md`.
 
-**Last rewritten:** 2026-06-14 · **By:** bud-weight-physics + canonical-PNG chat
-**Active branch:** `claude/bud-weight-physics-polish-7daxpa` (PR #26, base `main`)
-**Just merged to main:** **PR #25** (De-Grape, 2026-06-14). **Merging now:** **PR #26** (Bud Weight
-Physics) — which carries **PR #29** (Canonical Stage PNG Generation) on the same branch; both land
-together. Owner gave visual sign-off on #25/#26 via the canonical stage stills (2026-06-14).
-**Parked (open PRs, green — do NOT modify):** **PR #27** Phenotype Generator Foundation, **PR #28**
-Circadian Leaf Motion.
+**Last rewritten:** 2026-06-14 · **By:** simulation-test-clock chat (BE-002, STEP 3)
+**Active branch:** `claude/simulation-test-clock-u4ounm` (**PR #47**, base `main`) — awaiting review.
+**Just shipped (this chat):** **PR #47** — the dev/test-only Simulation Test Clock (STEP 3 of the
+Builder Dept Launch-Readiness path). Backend-only, off by default, force-disabled in production.
+**Recent main (per git log, NOT the old baton):** FTUE work landed — #34 starter-grant rail, #35/#39
+guided tutorial, #36 mobile-first responsive, #38 OMNI Charter. The graphics-phase PRs (#25/#26/#29)
+referenced by the previous baton are in history; **the code is the truth — git log won.**
 
-> **⚠️ Baton was stale before this chat.** This file had been frozen at the 2026-06-10 *backend*
-> phase (idempotency/concurrency) while the entire **Graphics Phase** (PRs ~#13–#25: grow-chamber
-> renderer, macro-bud system, whole-plant architecture, per-strain leaf morphology, stage-reference
-> grid) landed without updating it. This chat rewrote the baton to the graphics track. The
-> inherited **backend OPEN RISKS below were NOT re-audited** during the graphics phase — they are
-> carried forward verbatim and flagged as such. A chat returning to backend work must re-verify
-> them against current code (note: RISK #6's idempotency remainder appears to have shipped in the
-> still-open PR #16 — confirm before acting).
+> **Launch-Readiness path (Builder Dept):** Feature Flags → **STEP 3 Simulation Test Clock ✅ (this
+> chat, PR #47)** → **STEP 4 e2e Grow Loop (NEXT)** → Launch Readiness. The backend OPEN RISKS below
+> are still **inherited and NOT re-audited** — they predate both the graphics and FTUE phases. A chat
+> touching chain/economy/web-safety must re-verify them against current code before acting.
 
 ---
 
 ## NEXT ACTION (the one scoped item the next chat does)
 
-**PR #30 — Dashboard / GameState Wiring Polish.** With the whole-plant chamber visuals signed off
-(#25/#26) and the canonical-stage generator landed (#29), the next build PR unifies the
-chamber/dashboard game-state wiring (`GameState · PlantState · EnvironmentState · UIState · BudState`
-per `knowledge/whole-plant-architecture.md` § State). Then **PR #31 — MVP Launch Candidate**.
-- **Visual/UX-only track.** No economy / chain / breeding / factions / combat / tomato / crop
-  families. Do NOT start organic-geometry / mutation rendering yet.
-- **Do NOT modify PR #27 (Phenotype) or PR #28 (Circadian)** — both parked and green.
-- **Reuse, don't rebuild:** the chamber now renders through `web/src/lib/chamber/chamberCore.ts`
-  (shared by the live component and the headless `npm run gen:stages` generator). Keep that single
-  source intact.
-- **Macro Bud Polish II** (BACKLOG, *not launch-blocking*): sharper calyx ridges / denser nesting /
-  reduce the smooth-oval look on the PDP *macro* bud — macro view only; whole-plant is signed off.
+**STEP 4 — e2e Grow Loop.** Drive the full core loop end-to-end — grow → care → harvest → cure →
+sell — as an automated test/flow, using the **STEP 3 test clock** (`POST /api/dev/clock/advance`,
+enabled via `GROW_TEST_CLOCK=true APP_ENV=development`) to fast-forward through stages in seconds.
+- **Reuse the clock, don't rebuild it.** The seam is `OffsetClock`/`active_clock()` in
+  `simulation/clock.py` and the `/api/dev/clock/*` endpoints (`api/dev_api.py`). See
+  `docs/SIMULATION_TEST_CLOCK.md`.
+- **Backend/test track.** Add the HTTP-boundary coverage RISK #8 calls for (withdraw/deposit/mint
+  and the grow-loop happy path); `game_api.py` is thinly covered at the HTTP layer.
+- **Honour the invariants:** server-authoritative sim, ledger double-entry, money is `Decimal`.
+  Do NOT change economy balance/prices to make a test pass — tune `balance.yaml` data, not rules.
+- **Do NOT** modify any parked graphics PRs if still open; this is not a visual-track chat.
 
 ---
 
 ## What THIS chat did
 
-**PR #25 — De-Grape Whole Plant Buds** (visual-only). Chamber flower sites read as grapes (loose
-circles) because `drawFlowerSite` painted only a stem axis + discrete teardrop calyx pods, which
-are too small to overlap at chamber distance. Ported the macro renderer's solid-core idea down to
-the chamber:
-- Each `FlowerSite` now paints **one continuous bud-mass silhouette** behind its calyxes —
-  overlapping per-cluster blobs fused into a single fill, each reaching ~70% of the way to its
-  neighbour so the gaps close into a stacked solid column; calyxes/pistils/trichomes ride on top
-  as texture. Width follows the existing per-cluster width curve, so silhouettes stay
-  strain-recognisable (G13 slim spear cola; PDP / Animal Mints chunky stacked masses); top cola +
-  node/tip sites flow through the same path and merge near the apex.
-- Cluster placement is precomputed once and shared by the mass fill and the texture pass
-  (lock-step sway); cost is one gradient + one fill per site per frame. Pure logic
-  (`morphology`/`budDna`/`strainVisuals`) untouched.
-- Docs: ADR in `DECISIONS.md` (2026-06-13); `🎨 Graphics Phase II` tracker in `BACKLOG.md` (PR #25
-  ✅, PR #26–30 queued); standup `2026-06-13-lut-report.md`; kickoff audit receipt.
+**PR #47 — Simulation Test Clock (BE-002, STEP 3).** A dev/test-only clock that fast-forwards grow
+time so the grow loop can be tested in seconds, without touching the economy or real players. The
+engine is already **compute-on-read** (state = pure function of stored state + `clock.now()`), so the
+clock is just an `OffsetClock` (wall time + a mutable, **forward-only** offset) on the existing
+`Clock` seam — **zero new simulation logic**.
+- `simulation/clock.py`: `OffsetClock` + process singleton (`get_test_clock`/`reset_test_clock`) +
+  `active_clock()` selector. `config.py`: `APP_ENV`/`is_production` + `test_clock_enabled =
+  GROW_TEST_CLOCK AND not production` (**force-disabled in prod**).
+- `services/simulation_service.py` default clock now resolves through `active_clock()` (explicit
+  injection still wins) → reads pick up the shift centrally.
+- `api/dev_api.py`: `/api/dev/clock` {GET, `/advance`, `/reset`}, registered only when enabled
+  (`flask_api.py`) and re-guarded per request (404 otherwise). Advance is >0, ≤8760h, syncs living
+  plants.
+- Advancing time posts **NO ledger entries** (economy untouched) — proven by
+  `test_advance_does_not_touch_the_economy`. Docs: ADR (`DECISIONS.md`),
+  `docs/SIMULATION_TEST_CLOCK.md`, BACKLOG Launch-Readiness path, standup `2026-06-14-lut-report-be002.md`.
 
 ## Verification split (this chat)
 
 **Agent-verifiable (proven):**
-- Web: `tsc --noEmit` ✅ · `next lint` ✅ · `next build` ✅ · `vitest run` **100/100** ✅ (Constellation
-  sacred-render hashes untouched — that file not modified).
-- Backend (no Python changed): `make test` **223 passed, 80.83% ≥ 79** ✅ · `make lint` ✅ ·
-  `make check-memory` ✅.
+- Backend: `make test` **246 passed, 81.92% ≥ 79** ✅ · `make lint` ✅ · `make check-memory` ✅ (22 files).
+- New `tests/test_test_clock.py` (15): OffsetClock primitive, config gating (off by default / on in
+  dev / **force-off in prod**), `active_clock()` selector, endpoints (absent when disabled, advance
+  progresses a plant, **no economy mutation**, reset). Web untouched (no web gates run).
 
-**Device/human-verifiable (owner — the actual deliverable):**
-- The pixels. No headless browser in CI to screenshot the chamber. Open a flowering plant in the
-  chamber view for G13 / Purple Diddy Punch / Animal Mints and confirm the buds read as continuous
-  stacked colas, not grapes (spear cola for G13; chunky masses for PDP/Animal Mints; frost on
-  Animal Mints), silhouettes are continuous, and performance is stable.
+**Device/human-verifiable (owner):**
+- Run `GROW_TEST_CLOCK=true APP_ENV=development make serve`; `POST /api/dev/clock/advance {"days":40}`
+  and confirm a seed reaches flowering on the next `/state` read; confirm the `/api/dev/clock` routes
+  **404 when the flag is unset**.
 
 ---
 
