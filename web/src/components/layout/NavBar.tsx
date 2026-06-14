@@ -4,16 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "@/lib/session";
 import { PlayerBadge } from "./PlayerBadge";
-
-const LINKS = [
-  { href: "/dashboard", label: "Grow" },
-  { href: "/lab", label: "Lab" },
-  { href: "/market", label: "Market" },
-  { href: "/cup", label: "Cup" },
-  { href: "/university", label: "University" },
-  { href: "/leaderboards", label: "Leaderboards" },
-  { href: "/profile", label: "Profile" },
-];
+import { NAV_LINKS, isNavActive } from "./navLinks";
 
 export function NavBar() {
   const pathname = usePathname();
@@ -28,13 +19,16 @@ export function NavBar() {
             <span className="hidden sm:inline">GrowPod Empire</span>
           </Link>
           {isAuthed && (
-            <nav className="flex flex-wrap items-center gap-1">
-              {LINKS.map((l) => {
-                const active = pathname === l.href || pathname.startsWith(l.href + "/");
+            // Desktop only — on mobile the bottom tab bar (BottomNav) owns
+            // navigation, so the wrapping link row is hidden to keep the header clean.
+            <nav className="hidden flex-wrap items-center gap-1 sm:flex">
+              {NAV_LINKS.map((l) => {
+                const active = isNavActive(pathname, l.href);
                 return (
                   <Link
                     key={l.href}
                     href={l.href}
+                    aria-current={active ? "page" : undefined}
                     className={`rounded-md px-3 py-1.5 text-sm transition-colors ${
                       active
                         ? "bg-grow-700 text-white"
