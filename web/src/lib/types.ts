@@ -342,6 +342,24 @@ export interface AutoCareResult {
   remaining: number;
 }
 
+// ---- First-Time-User-Experience (guided tutorial) ----
+
+export type FtueStep =
+  | "welcome"
+  | "plant"
+  | "water"
+  | "environment"
+  | "grow"
+  | "harvest"
+  | "completed";
+
+export interface FtueStatus {
+  step: FtueStep;
+  plant_id: string | null;
+  completed: boolean;
+  completed_at: string | null;
+}
+
 // ---- Seasonal Cannabis Cup ----
 
 export interface Cup {
