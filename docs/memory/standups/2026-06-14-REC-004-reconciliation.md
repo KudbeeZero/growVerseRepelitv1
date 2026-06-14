@@ -1,10 +1,17 @@
 # 🛰️ LUT Report — 2026-06-14 · REC-004 Full Repository Memory Reconciliation Sweep
 
 **Directive:** REC-004 (Records Department) · **Lead:** REC-A00/REC-A10 · **Repo:**
-KudbeeZero/growVerseRepelitv1 · **Against:** `main` @ `15f9699` ·
-**Branch:** `claude/repo-memory-reconciliation-frcgap`
+KudbeeZero/growVerseRepelitv1 · **Against:** `main` (audited @ `15f9699`; rebased onto post-#46 `main`
+mid-sweep) · **Branch:** `claude/repo-memory-reconciliation-frcgap`
 **Mode:** one-time, read-only audit → documentation/memory reconciliation only. **No production code
 changed. No merges. No feature work.**
+
+> **Mid-sweep note:** while REC-004 ran, the owner merged #43 (FTUE-closeout docs), #41 (DX-001 care
+> feedback), #45 (DIR-004 / FP-3 plant CTA) and #46 (REC-003 Studio Agent Registry). Per the REC-003
+> registry's rebase rule, this sweep was rebased onto current `main`; the three hot docs
+> (HANDOFF/BACKLOG/DECISIONS) were reconciled to the REC-004 superset. Director decisions (2026-06-14):
+> REC-004 is authoritative; CANONICAL_STATE.md is the records source of truth; #43 merged (moot to
+> close); #37 closed (ideas salvaged); branch pruning approved (report only — owner executes).
 
 ---
 

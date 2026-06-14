@@ -23,8 +23,20 @@ once they appear here. Last reconciled: **2026-06-14** (REC-004 full repository 
   **29 strains**, 1:1 KB sync test green) with authored chamber visuals + per-strain physics knobs.
 - 🚀 ✅ **Mobile-first navigation** (PR #36, merged 2026-06-14) — native bottom tab bar (primary +
   "More" sheet), `env(safe-area-inset-*)` handling, focus-visible rings, thumb-zone CTA targets
-  (≥44px), responsive Grow Chamber. ADR in `DECISIONS.md` (2026-06-14). *Remaining mobile polish:
-  sweep dashboard / PDP / `/ftue` for small screens (open PRs #40 bottom-nav, #41 care feedback).*
+  (≥44px), responsive Grow Chamber. ADR in `DECISIONS.md` (2026-06-14). (PR #40's competing bottom-nav
+  was retired — FP-1 superseded by #36; see `docs/STUDIO_AGENT_REGISTRY.md` collision log.)
+- 🚀 ✅ **DX-001 Care Feedback & Celebration** (PR #41, merged 2026-06-14) — rewarding care actions +
+  a harvest moment (`web/src/components/plant/CareFeedback.tsx`, `web/src/components/plant/careFeedback.ts`,
+  `web/src/lib/haptics.ts`, `web/src/hooks/usePrefersReducedMotion.ts`); reduced-motion safe. Addresses
+  #37's FP-5/FP-9 friction.
+- 🚀 ✅ **FP-3 Primary Plant CTA** (PR #45, "DIR-004", merged 2026-06-14) — the next action is always
+  visually primary on the dashboard for a new grower (`web/src/lib/plantAction.ts`,
+  `web/src/components/plant/PlantActionCTA.tsx`). The re-cut of #37's FP-3.
+- 🚀 ⬜ **Salvaged from PR #37 (Grow Guide, closed)** — backend work orders the closed coach needed,
+  not yet built: **WO-1** per-action "last cared at" / care-acknowledged signals (so a tutorial can
+  gate discrete Water/Feed/Check steps without guessing from decaying levels); **WO-2** a lightweight
+  "session delta / welcome-back" endpoint (what changed since last seen — stage advances, new buds,
+  frost) to power a return-moment. Both are backend (WO-gated); design only until approved.
 - 🚀 ⬜ **Feature Flags** (NEXT — open **PR #42**, audit & land, don't rebuild) — data-driven launch
   gate / kill-switch surface (config `flags` section, or a `feature_flags` table only if
   per-player/cohort targeting is needed) + a server-authoritative read endpoint + a web hook to gate

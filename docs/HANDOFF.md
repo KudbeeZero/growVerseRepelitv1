@@ -6,26 +6,30 @@
 
 **Last rewritten:** 2026-06-14 · **By:** REC-004 — Full Repository Memory Reconciliation Sweep
 **Active branch:** `claude/repo-memory-reconciliation-frcgap` (docs/memory-only — see "Open PRs" below)
-**Just merged to main (head `15f9699`):** the **FTUE epic** — **PR #34** (starter-grant rail),
-**PR #35** (FTUE tutorial backend + Master Grower coaching), **PR #39** (web `/ftue` guided route).
-Also live since the prior baton: **PR #29** (Dashboard / GameState wiring polish — titled "PR #30"),
-**PR #33** (Launch Strain Integration Pack → 29-strain catalog), **PR #36** (mobile-first responsive
-nav + Grow Chamber), **PR #38** (OMNI Charter v1.0).
+**Just merged to main (head moved `15f9699` → post-#46 during this sweep):** the **FTUE epic** —
+**PR #34** (starter-grant rail), **PR #35** (FTUE tutorial backend + Master Grower coaching),
+**PR #39** (web `/ftue` guided route). Also live: **PR #29** (Dashboard / GameState wiring, titled
+"PR #30"), **PR #33** (Launch Strain Integration Pack → 29-strain catalog), **PR #36** (mobile-first
+responsive nav + Grow Chamber), **PR #38** (OMNI Charter v1.0), **PR #41** (DX-001 Care Feedback &
+Celebration), **PR #43** (FTUE-closeout docs — owner merged it 10:09 UTC), **PR #45** (DIR-004 / FP-3
+Primary Plant CTA), **PR #46** (REC-003 Studio Agent Registry — `docs/STUDIO_AGENT_REGISTRY.md`, the
+live coordination roster).
 **Parked (open PRs, green — do NOT modify):** **PR #27** Phenotype Generator Foundation,
 **PR #28** Circadian Leaf Motion.
-**Other open PRs (do NOT autonomously merge):** **PR #32** E2E grow-loop CI, **PR #37** FTUE Grow
-Guide (mobile — overlaps merged #34/#35/#39; reconcile), **PR #40** mobile bottom nav, **PR #41**
-care-feedback/celebration, **PR #42** *MVP Feature Flag Layer*, **PR #43** FTUE-closeout docs
-(**superseded by this sweep** — see NEEDS OWNER).
+**Other open PRs:** **PR #32** E2E grow-loop CI, **PR #42** *MVP Feature Flag Layer* (the NEXT ACTION).
+**Retired (closed without merge):** **PR #37** Grow Guide (superseded by the FTUE epic; backend ideas
+salvaged to BACKLOG), **PR #40** mobile bottom nav (FP-1 superseded by #36; FP-3 re-cut as #45).
 
-> **⚠️ This was a reconciliation sweep, not a feature chat.** Before REC-004, the baton was frozen at
-> the Graphics Phase (PR #26) while the entire **New-Player / Launch-Readiness** track — Dashboard
-> wiring (#29), the 4-strain launch pack (#33), mobile-first nav (#36), the OMNI Charter (#38), and
-> the full **FTUE epic** (#34/#35/#39) — landed on `main` without updating the higher memory layers.
-> This sweep reconciled the baton, BACKLOG, ROADMAP, DECISIONS, and MAP against `main` and produced a
-> consolidated Records ledger (`docs/memory/CANONICAL_STATE.md`: PR / Branch / Directive ledgers +
-> Critical Path + Department Status). **No production code was changed.** The backend OPEN RISKS below
-> were **not** re-audited here — they are carried forward and flagged as such.
+> **⚠️ This was a reconciliation sweep, not a feature chat — and `main` moved under it.** Before
+> REC-004 the baton was frozen at the Graphics Phase (PR #26) while the entire **New-Player /
+> Launch-Readiness** track landed on `main`; during the sweep the owner also merged the FTUE-closeout
+> docs (#43), DX-001 (#41), FP-3 (#45) and the REC-003 Studio Agent Registry (#46). This sweep was
+> rebased onto current `main` and reconciles the baton, BACKLOG, ROADMAP, DECISIONS, and MAP, and
+> produces the **authoritative** consolidated Records ledger `docs/memory/CANONICAL_STATE.md` (PR /
+> Branch / Directive ledgers + Critical Path + Department Status — *the source of truth for records,
+> per the Director's REC-004 decision*). Live cross-agent coordination lives in
+> `docs/STUDIO_AGENT_REGISTRY.md` (REC-003); CANONICAL_STATE is the point-in-time snapshot. **No
+> production code was changed by REC-004.** The backend OPEN RISKS below were **not** re-audited.
 
 ---
 
@@ -106,13 +110,19 @@ documentation/memory sweep — **no production code touched**:
 
 ---
 
-## NEEDS OWNER (decisions REC-004 could not make on its own)
+## DIRECTOR DECISIONS (REC-004, resolved 2026-06-14)
 
-1. **PR #43 (`closeout-ftue-epic`) overlaps this sweep.** It is a docs-only FTUE closeout that edits
-   the same files (HANDOFF/BACKLOG/DECISIONS) this sweep reconciles. Recommend **close #43** (its
-   content is folded into REC-004), or merge #43 first and rebase this sweep on top — either avoids a
-   conflicting double-edit. **Do not merge both as-is.**
-2. **PR #37 (FTUE Grow Guide, mobile)** overlaps the already-merged FTUE epic (#34/#35/#39). Decide:
-   re-scope to net-new mobile-coach work, or close as superseded.
-3. **Branch pruning** — the Branch Ledger classifies ~30 merged/abandoned branches as prunable;
-   pruning is destructive git → owner's call.
+1. **PR #43** — owner **merged** it (10:09 UTC) before the Director's decision; its content is now on
+   `main` and is fully folded into / superseded by REC-004. ✅ resolved (no action; not closeable).
+2. **PR #37 (Grow Guide)** — **closed** (unmerged) as superseded by the FTUE epic. Unique ideas
+   preserved: the REC-003 registry salvaged its game-state-driven / non-nagging progression; this
+   sweep additionally logged its backend work orders **WO-1** (per-action "last cared at" signals) and
+   **WO-2** (a "session delta / welcome-back" endpoint) to BACKLOG. ✅ resolved.
+3. **Branch pruning** — **approved**; the verified stale-branch report is in
+   `docs/memory/CANONICAL_STATE.md` §3. Per the Director's "stop after reports and cleanup
+   recommendations," REC-004 **recommends** the prune list but does **not** delete (destructive git is
+   denied to agents by `.claude/settings.json` and is the owner's to execute). ⬜ owner executes.
+
+> **Remaining for the next chat:** the NEXT ACTION above — audit & land Feature Flags (open PR #42).
+> Before building, follow the REC-003 registry: claim file surfaces in `docs/STUDIO_AGENT_REGISTRY.md`
+> and rebase onto `main` first.
