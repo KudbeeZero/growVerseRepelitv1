@@ -16,6 +16,8 @@ import { PlantMetrics } from "@/components/plant/PlantMetrics";
 import { StageTimeline } from "@/components/plant/StageTimeline";
 import { AdvisorPanel } from "@/components/plant/AdvisorPanel";
 import { PlantActionCTA } from "@/components/plant/PlantActionCTA";
+import { StickyActionBar } from "@/components/ui/StickyActionBar";
+import { nextPlantAction } from "@/lib/plantAction";
 import { usePlantState } from "@/hooks/usePlantState";
 import { useStrainMap, usePods } from "@/hooks/queries";
 import { useSession } from "@/lib/session";
@@ -52,9 +54,14 @@ function PlantDetail({ plantId }: { plantId: string }) {
 
   const strain = map.get(plant.strain_id);
   const pod = pods?.find((p) => p.id === plant.pod_id) ?? null;
+  // Reuse FP-3's canonical resolver to decide whether a sticky CTA is warranted —
+  // when the plant is thriving (kind "none") we keep the thumb zone clear.
+  const hasNextAction = nextPlantAction(plant, pod).kind !== "none";
 
   return (
-    <div className="space-y-4">
+    // Mobile bottom padding clears the sticky action bar (which floats above the
+    // tab bar); removed at lg where the bar is hidden.
+    <div className="space-y-4 pb-28 lg:pb-0">
       <div className="flex items-center justify-between">
         <Link href="/dashboard" className="text-sm text-grow-300 hover:underline">
           ← Back to dashboard
@@ -67,8 +74,13 @@ function PlantDetail({ plantId }: { plantId: string }) {
         </Link>
       </div>
 
-      {/* Primary CTA — the one thing to do next, always obvious. */}
-      <PlantActionCTA plant={plant} pod={pod} />
+      {/* Primary CTA — the one thing to do next, always obvious.
+          Desktop: inline banner above the fold. Mobile: a sticky thumb-zone bar
+          (below) keeps it reachable while scrolling, so the inline copy is
+          desktop-only to avoid showing the same CTA twice. */}
+      <div className="hidden lg:block">
+        <PlantActionCTA plant={plant} pod={pod} />
+      </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-1">
@@ -136,6 +148,13 @@ function PlantDetail({ plantId }: { plantId: string }) {
           <EventLog events={events.data ?? plant.recent_events} />
         )}
       </Card>
+
+      {/* Mobile: the next action, always within thumb reach while scrolling. */}
+      {hasNextAction && (
+        <StickyActionBar>
+          <PlantActionCTA plant={plant} pod={pod} />
+        </StickyActionBar>
+      )}
     </div>
   );
 }
