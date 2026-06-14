@@ -5,54 +5,177 @@
     <meta name="viewport" content="width=1920, height=1080" />
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
     <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        width: 1920px; height: 1080px; overflow: hidden;
+        background:
+          radial-gradient(120% 120% at 50% 30%, #0b1424 0%, #060a14 55%, #02040a 100%);
+        font-family: "Inter", "Segoe UI", sans-serif;
+        color: #cfe3ff;
       }
-      html,
-      body {
-        margin: 0;
-        width: 1920px;
-        height: 1080px;
-        overflow: hidden;
-        background: #000;
+      #root { position: relative; width: 1920px; height: 1080px; }
+
+      .title {
+        position: absolute; top: 56px; left: 0; right: 0; text-align: center;
+        letter-spacing: 10px; font-size: 30px; font-weight: 700;
+        color: #8fb6ff; text-shadow: 0 0 18px rgba(60,140,255,.55);
       }
-      body {
-        font-family: "Inter", sans-serif;
+      .subtitle {
+        position: absolute; top: 102px; left: 0; right: 0; text-align: center;
+        letter-spacing: 6px; font-size: 15px; color: #5f7fb0; font-weight: 500;
       }
-      code,
-      pre,
-      .monospace {
-        font-family: "JetBrains Mono", monospace;
-      }
+
+      .views { position: absolute; top: 210px; left: 0; right: 0; height: 640px;
+        display: flex; justify-content: center; align-items: center; gap: 120px; }
+      .view { display: flex; flex-direction: column; align-items: center; }
+      .label { margin-top: 34px; letter-spacing: 5px; font-size: 16px;
+        color: #6f93c8; font-weight: 600; }
+
+      .foot { position: absolute; bottom: 54px; left: 0; right: 0; text-align: center;
+        letter-spacing: 7px; font-size: 14px; color: #46618c; }
+
+      .blades { transform-box: fill-box; transform-origin: center; }
     </style>
   </head>
   <body>
-    <div
-      id="root"
-      data-composition-id="main"
-      data-start="0"
-      data-duration="10"
-      data-width="1920"
-      data-height="1080"
-    >
-      
-      
+    <div id="root" data-composition-id="main" data-start="0" data-duration="6"
+         data-width="1920" data-height="1080">
 
-      <!--
-        Add your clips here. Example:
-        <div id="title" class="clip" data-start="0" data-duration="5" data-track-index="1"
-             style="font-size: 64px; color: #fff; padding: 40px">
-          Hello World
+      <div class="clip" data-start="0" data-duration="6" data-track-index="1"
+           class="title" style="position:absolute; top:56px; left:0; right:0; text-align:center;
+           letter-spacing:10px; font-size:30px; font-weight:700; color:#8fb6ff;
+           text-shadow:0 0 18px rgba(60,140,255,.55)">GROWPOD&nbsp;EMPIRE&nbsp;&middot;&nbsp;PODFAN&nbsp;X1</div>
+      <div class="subtitle">FUTURISTIC GROW-POD CIRCULATION FAN — UI ASSET TURNAROUND</div>
+
+      <div class="views">
+        <!-- ===================== FRONT VIEW ===================== -->
+        <div class="view" id="v-front">
+          <svg width="420" height="420" viewBox="-210 -210 420 420">
+            <defs>
+              <radialGradient id="hub" cx="50%" cy="40%" r="70%">
+                <stop offset="0%" stop-color="#2a3b57"/>
+                <stop offset="60%" stop-color="#16223a"/>
+                <stop offset="100%" stop-color="#0a1120"/>
+              </radialGradient>
+              <linearGradient id="ringMetal" x1="0" y1="-1" x2="0" y2="1">
+                <stop offset="0%" stop-color="#5b6f8f"/>
+                <stop offset="50%" stop-color="#2c3a52"/>
+                <stop offset="100%" stop-color="#141d2e"/>
+              </linearGradient>
+              <linearGradient id="blade" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#33486b"/>
+                <stop offset="100%" stop-color="#16223a"/>
+              </linearGradient>
+              <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+                <feGaussianBlur stdDeviation="9" result="b"/>
+                <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+
+            <circle r="200" fill="none" stroke="url(#ringMetal)" stroke-width="18"/>
+            <circle r="178" fill="none" stroke="#34a8ff" stroke-width="7"
+                    filter="url(#glow)" opacity="0.95"/>
+            <circle r="178" fill="none" stroke="#bfe4ff" stroke-width="2"/>
+            <circle r="168" fill="#070c16"/>
+
+            <g class="blades" id="blades-front">
+              <g id="bladeProto">
+                <path d="M0,-18 C70,-60 150,-40 158,8 C120,2 60,20 0,30 Z"
+                      fill="url(#blade)" stroke="#3b5680" stroke-width="1.5"/>
+              </g>
+              <use href="#bladeProto" transform="rotate(0)"/>
+              <use href="#bladeProto" transform="rotate(51.4)"/>
+              <use href="#bladeProto" transform="rotate(102.8)"/>
+              <use href="#bladeProto" transform="rotate(154.2)"/>
+              <use href="#bladeProto" transform="rotate(205.6)"/>
+              <use href="#bladeProto" transform="rotate(257)"/>
+              <use href="#bladeProto" transform="rotate(308.4)"/>
+            </g>
+
+            <circle r="46" fill="url(#hub)" stroke="#3a557f" stroke-width="3"/>
+            <circle r="14" fill="#0a1424" stroke="#34a8ff" stroke-width="3" filter="url(#glow)"/>
+            <circle r="4" fill="#bfe4ff"/>
+          </svg>
+          <div class="label">FRONT</div>
         </div>
-      -->
+
+        <!-- ===================== 3/4 ANGLED VIEW ===================== -->
+        <div class="view" id="v-iso">
+          <svg width="440" height="420" viewBox="-220 -210 440 420">
+            <defs>
+              <linearGradient id="barrel" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#0a1120"/>
+                <stop offset="50%" stop-color="#22304a"/>
+                <stop offset="100%" stop-color="#0a1120"/>
+              </linearGradient>
+            </defs>
+            <path d="M-150,-20 Q0,-150 150,-20 L150,70 Q0,-60 -150,70 Z"
+                  fill="url(#barrel)" opacity="0.85"/>
+            <ellipse cx="18" cy="-26" rx="150" ry="92" fill="#060b15"
+                     stroke="#2c3a52" stroke-width="6"/>
+            <ellipse cx="0" cy="14" rx="178" ry="108" fill="none"
+                     stroke="url(#ringMetal)" stroke-width="16"/>
+            <ellipse cx="0" cy="14" rx="160" ry="96" fill="none" stroke="#34a8ff"
+                     stroke-width="6" filter="url(#glow)"/>
+            <ellipse cx="0" cy="14" rx="150" ry="90" fill="#070c16"/>
+            <g class="blades" id="blades-iso" transform="translate(0,14) scale(1,0.6)">
+              <use href="#bladeProto" transform="rotate(20)"/>
+              <use href="#bladeProto" transform="rotate(71.4)"/>
+              <use href="#bladeProto" transform="rotate(122.8)"/>
+              <use href="#bladeProto" transform="rotate(174.2)"/>
+              <use href="#bladeProto" transform="rotate(225.6)"/>
+              <use href="#bladeProto" transform="rotate(277)"/>
+              <use href="#bladeProto" transform="rotate(328.4)"/>
+            </g>
+            <ellipse cx="0" cy="14" rx="42" ry="26" fill="url(#hub)"
+                     stroke="#3a557f" stroke-width="3"/>
+            <ellipse cx="0" cy="14" rx="12" ry="8" fill="#0a1424"
+                     stroke="#34a8ff" stroke-width="2.5" filter="url(#glow)"/>
+          </svg>
+          <div class="label">3 / 4&nbsp;&nbsp;ANGLE</div>
+        </div>
+
+        <!-- ===================== SIDE VIEW ===================== -->
+        <div class="view" id="v-side">
+          <svg width="240" height="420" viewBox="-120 -210 240 420">
+            <defs>
+              <linearGradient id="sideBody" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#0c1422"/>
+                <stop offset="45%" stop-color="#26344e"/>
+                <stop offset="100%" stop-color="#0a1120"/>
+              </linearGradient>
+            </defs>
+            <rect x="-46" y="-188" width="92" height="376" rx="26"
+                  fill="url(#sideBody)" stroke="#2c3a52" stroke-width="5"/>
+            <rect x="-46" y="-188" width="14" height="376" rx="7"
+                  fill="#34a8ff" filter="url(#glow)" opacity="0.9"/>
+            <rect x="-44" y="-188" width="4" height="376" rx="2" fill="#bfe4ff"/>
+            <rect x="-58" y="150" width="116" height="40" rx="12"
+                  fill="none" stroke="#33486b" stroke-width="4"/>
+            <g stroke="#33486b" stroke-width="4" opacity="0.7">
+              <line x1="-18" y1="-150" x2="34" y2="-150"/>
+              <line x1="-18" y1="-110" x2="34" y2="-110"/>
+              <line x1="-18" y1="-70" x2="34" y2="-70"/>
+              <line x1="-18" y1="-30" x2="34" y2="-30"/>
+              <line x1="-18" y1="10" x2="34" y2="10"/>
+              <line x1="-18" y1="50" x2="34" y2="50"/>
+              <line x1="-18" y1="90" x2="34" y2="90"/>
+            </g>
+          </svg>
+          <div class="label">SIDE</div>
+        </div>
+      </div>
+
+      <div class="foot">PREMIUM SCI-FI &middot; BLUE LED RING &middot; MOBILE GAME UI</div>
     </div>
 
     <script>
       window.__timelines = window.__timelines || {};
       const tl = gsap.timeline({ paused: true });
-      // Example: tl.from("#title", { opacity: 0, y: -50, duration: 1 }, 0);
+      tl.to(["#blades-front"], { rotation: 360, transformOrigin: "0px 0px",
+        duration: 6, ease: "none" }, 0);
+      tl.to(["#blades-iso"], { rotation: 360, transformOrigin: "0px 0px",
+        duration: 6, ease: "none" }, 0);
       window.__timelines["main"] = tl;
     </script>
   </body>
