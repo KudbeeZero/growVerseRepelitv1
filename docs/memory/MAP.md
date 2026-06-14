@@ -32,6 +32,7 @@ flowchart TD
 |------|------|------|-----------|
 | 0 | `CLAUDE.md` | Always-loaded identity + invariants + how to work | Low |
 | — | `docs/memory/MAP.md` | This master index: layer map + code↔doc + build state | Low |
+| — | `docs/memory/CANONICAL_STATE.md` | Records-Department single source of truth: PR / Branch / Directive ledgers + launch Critical Path + Department Status (refreshed per reconciliation sweep) | Snapshot |
 | 1 | `docs/memory/ARCHITECTURE.md` | System map + the "don't break" list (where we are) | Low |
 | 1+ | `docs/memory/design/` | **Design Codex** — vision/intent (where we're going) | Low |
 | 2 | `docs/memory/DECISIONS.md` | Append-only "why" log (ADRs) | Append-only |
@@ -52,7 +53,7 @@ repo-relative (under `src/growpodempire/` unless noted); every ✅ here is check
 |-----------|-------------------------|-------------|
 | `design/00-game-vision.md` | cross-cutting — see the moat/pillar dashboard below | mixed |
 | `design/01-simulation-horticulture.md` | `simulation/engine.py` · `simulation/horticulture.py` · `simulation/curing.py` · `simulation/reactions.py` · `data/balance.yaml` (`simulation:`) | 🔨 Phase A done |
-| `design/02-genetics.md` | `genetics/traits.py` · `genetics/breeding.py` · `data/strains.yaml` · `data/strain_knowledge.yaml` · `services/game_service.py` (breed/stabilize/verify/knowledge) | 🔨 14-trait core; 22-strain KB |
+| `design/02-genetics.md` | `genetics/traits.py` · `genetics/breeding.py` · `data/strains.yaml` · `data/strain_knowledge.yaml` · `services/game_service.py` (breed/stabilize/verify/knowledge) | 🔨 14-trait core; 29-strain KB |
 | `design/03-grower-skills.md` | `services/leveling_service.py` · `services/research_service.py` · `services/progression_service.py` · `data/balance.yaml` (`research`/`leveling`) | 🔨 no skill trees yet |
 | `design/04-honesty-and-trust.md` | `simulation/engine.py` (`_rng_for`) · `services/game_service.py` (`verify_strain`) · `api/game_api.py` (`/provenance`) · `economy/ledger.py` · `services/advisor_service.py` | 🔨 fairness shipped for breeding |
 | `design/05-events-and-competition.md` | `services/cup_service.py` · `economy/pricing.py` (`cup_score`) · `data/balance.yaml` (`cannabis_cup`) · `db/models.py` (`CannabisCup`/`CupEntry`) · `api/game_api.py` (`/cup/*`) | ✅ seasonal Cup + lifetime rewards |
@@ -118,7 +119,7 @@ so correctness is *re-proven on every push* instead of remembered.
   .../courses/<key>/{enroll,complete}`, `POST /players/<id>/degrees/<key>/claim`, `GET
   .../courses/<key>/lecture`.
 - **Strain knowledge base:** `data/strain_knowledge.yaml` — a scientist-grade encyclopedia (lineage,
-  origin, cannabinoid/terpene detail, cultivation parameters) for all 22 catalog strains, surfaced at
+  origin, cannabinoid/terpene detail, cultivation parameters) for all 29 catalog strains, surfaced at
   public `GET /strains/<id>/knowledge`. A test enforces 1:1 sync between the catalog and the KB. It's
   grounded by a peer-reviewed research reference:
   `docs/research/2026-06-08-cannabis-strain-genetics-and-cultivation.md` (a 5-agent deep-research

@@ -4,90 +4,115 @@
 > the end of every chat; read by `/handoff-audit` at the start of the next. If this file and
 > the code disagree, the code wins — fix the baton. See `docs/SESSION_PROTOCOL.md`.
 
-**Last rewritten:** 2026-06-14 · **By:** bud-weight-physics + canonical-PNG chat
-**Active branch:** `claude/bud-weight-physics-polish-7daxpa` (PR #26, base `main`)
-**Just merged to main:** **PR #25** (De-Grape, 2026-06-14). **Merging now:** **PR #26** (Bud Weight
-Physics) — which carries **PR #29** (Canonical Stage PNG Generation) on the same branch; both land
-together. Owner gave visual sign-off on #25/#26 via the canonical stage stills (2026-06-14).
-**Parked (open PRs, green — do NOT modify):** **PR #27** Phenotype Generator Foundation, **PR #28**
-Circadian Leaf Motion.
+**Last rewritten:** 2026-06-14 · **By:** REC-004 — Full Repository Memory Reconciliation Sweep
+**Active branch:** `claude/repo-memory-reconciliation-frcgap` (docs/memory-only — see "Open PRs" below)
+**Just merged to main (head `15f9699`):** the **FTUE epic** — **PR #34** (starter-grant rail),
+**PR #35** (FTUE tutorial backend + Master Grower coaching), **PR #39** (web `/ftue` guided route).
+Also live since the prior baton: **PR #29** (Dashboard / GameState wiring polish — titled "PR #30"),
+**PR #33** (Launch Strain Integration Pack → 29-strain catalog), **PR #36** (mobile-first responsive
+nav + Grow Chamber), **PR #38** (OMNI Charter v1.0).
+**Parked (open PRs, green — do NOT modify):** **PR #27** Phenotype Generator Foundation,
+**PR #28** Circadian Leaf Motion.
+**Other open PRs (do NOT autonomously merge):** **PR #32** E2E grow-loop CI, **PR #37** FTUE Grow
+Guide (mobile — overlaps merged #34/#35/#39; reconcile), **PR #40** mobile bottom nav, **PR #41**
+care-feedback/celebration, **PR #42** *MVP Feature Flag Layer*, **PR #43** FTUE-closeout docs
+(**superseded by this sweep** — see NEEDS OWNER).
 
-> **⚠️ Baton was stale before this chat.** This file had been frozen at the 2026-06-10 *backend*
-> phase (idempotency/concurrency) while the entire **Graphics Phase** (PRs ~#13–#25: grow-chamber
-> renderer, macro-bud system, whole-plant architecture, per-strain leaf morphology, stage-reference
-> grid) landed without updating it. This chat rewrote the baton to the graphics track. The
-> inherited **backend OPEN RISKS below were NOT re-audited** during the graphics phase — they are
-> carried forward verbatim and flagged as such. A chat returning to backend work must re-verify
-> them against current code (note: RISK #6's idempotency remainder appears to have shipped in the
-> still-open PR #16 — confirm before acting).
+> **⚠️ This was a reconciliation sweep, not a feature chat.** Before REC-004, the baton was frozen at
+> the Graphics Phase (PR #26) while the entire **New-Player / Launch-Readiness** track — Dashboard
+> wiring (#29), the 4-strain launch pack (#33), mobile-first nav (#36), the OMNI Charter (#38), and
+> the full **FTUE epic** (#34/#35/#39) — landed on `main` without updating the higher memory layers.
+> This sweep reconciled the baton, BACKLOG, ROADMAP, DECISIONS, and MAP against `main` and produced a
+> consolidated Records ledger (`docs/memory/CANONICAL_STATE.md`: PR / Branch / Directive ledgers +
+> Critical Path + Department Status). **No production code was changed.** The backend OPEN RISKS below
+> were **not** re-audited here — they are carried forward and flagged as such.
 
 ---
 
 ## NEXT ACTION (the one scoped item the next chat does)
 
-**PR #30 — Dashboard / GameState Wiring Polish.** With the whole-plant chamber visuals signed off
-(#25/#26) and the canonical-stage generator landed (#29), the next build PR unifies the
-chamber/dashboard game-state wiring (`GameState · PlantState · EnvironmentState · UIState · BudState`
-per `knowledge/whole-plant-architecture.md` § State). Then **PR #31 — MVP Launch Candidate**.
-- **Visual/UX-only track.** No economy / chain / breeding / factions / combat / tomato / crop
-  families. Do NOT start organic-geometry / mutation rendering yet.
-- **Do NOT modify PR #27 (Phenotype) or PR #28 (Circadian)** — both parked and green.
-- **Reuse, don't rebuild:** the chamber now renders through `web/src/lib/chamber/chamberCore.ts`
-  (shared by the live component and the headless `npm run gen:stages` generator). Keep that single
-  source intact.
-- **Macro Bud Polish II** (BACKLOG, *not launch-blocking*): sharper calyx ridges / denser nesting /
-  reduce the smooth-oval look on the PDP *macro* bud — macro view only; whole-plant is signed off.
+**Audit & land Feature Flags (open PR #42 — "MVP Feature Flag Layer").** Feature Flags are the head
+of the launch critical path, and a PR already exists — so the next chat **audits and finishes #42**
+rather than building from scratch. Goal: a minimal, data-driven launch gate / kill-switch surface so
+player-facing surfaces (the new `/ftue` tutorial, chamber polish, future systems) can be toggled
+per-environment **without a deploy**, mirroring the `balance.yaml` "tuning surface" convention
+(data-driven over code). Confirm the shape is additive: a `flags` section in config (or a small
+`feature_flags` table only if per-player/cohort targeting is needed), a server-authoritative read
+endpoint, and a tiny web hook to gate routes/components.
+- **Off-limits:** no economy / chain / breeding / factions / combat / new crop families; no new
+  Phase-2 systems. Do **not** modify the parked PRs (#27, #28).
+- **Reuse, don't rebuild:** the chamber renders through `web/src/lib/chamber/chamberCore.ts` (single
+  source for the live component + the headless `npm run gen:stages` generator) — keep it intact. The
+  flat `GET …/plants/<id>/state` wire is canonical (DECISIONS 2026-06-14); do **not** build the
+  aspirational `GameState/EnvironmentState/UIState` aggregate.
+- **Critical path:** **Feature Flags (#42) → Mobile Polish (#36 ✅; #40/#41/#37 open) → Playtesting
+  → Retention Validation → MVP Launch Candidate.** Off-chain MVP first; Sprint 4 (real TestNet/IPFS)
+  is post-MVP and still gated by RISK #4/7.
 
 ---
 
-## What THIS chat did
+## What THIS chat did (REC-004 reconciliation)
 
-**PR #25 — De-Grape Whole Plant Buds** (visual-only). Chamber flower sites read as grapes (loose
-circles) because `drawFlowerSite` painted only a stem axis + discrete teardrop calyx pods, which
-are too small to overlap at chamber distance. Ported the macro renderer's solid-core idea down to
-the chamber:
-- Each `FlowerSite` now paints **one continuous bud-mass silhouette** behind its calyxes —
-  overlapping per-cluster blobs fused into a single fill, each reaching ~70% of the way to its
-  neighbour so the gaps close into a stacked solid column; calyxes/pistils/trichomes ride on top
-  as texture. Width follows the existing per-cluster width curve, so silhouettes stay
-  strain-recognisable (G13 slim spear cola; PDP / Animal Mints chunky stacked masses); top cola +
-  node/tip sites flow through the same path and merge near the apex.
-- Cluster placement is precomputed once and shared by the mass fill and the texture pass
-  (lock-step sway); cost is one gradient + one fill per site per frame. Pure logic
-  (`morphology`/`budDna`/`strainVisuals`) untouched.
-- Docs: ADR in `DECISIONS.md` (2026-06-13); `🎨 Graphics Phase II` tracker in `BACKLOG.md` (PR #25
-  ✅, PR #26–30 queued); standup `2026-06-13-lut-report.md`; kickoff audit receipt.
+A one-time, read-only audit of `main` (10 worker assignments: PR/branch ledgers, baton, charter,
+Phase-1 + feature flags, FTUE, plant engine, DX/mobile, backlog/ADRs, consolidation), then a
+documentation/memory sweep — **no production code touched**:
+- **Rewrote this baton** off the stale Graphics Phase onto the New-Player / Launch-Readiness track.
+- **Reconciled `BACKLOG.md`** — marked the Graphics Phase + Dashboard wiring (#29/#30) ✅ COMPLETE,
+  recorded the FTUE epic (#34/#35/#39), the launch strain pack (#33 → 29 strains), mobile-first nav
+  (#36), and the OMNI Charter (#38); added the 🚀 New-Player / Launch-Readiness track with the
+  critical path; noted the open PRs (#32/#37/#40/#41/#42/#43).
+- **Reconciled `ROADMAP.md`** — recorded FTUE + mobile-first DX + OMNI Charter as shipped; catalog 29.
+- **Appended `DECISIONS.md`** — ADRs for the FTUE epic, mobile-first navigation (#36), and adopting
+  the OMNI Charter (#38).
+- **Fixed `MAP.md`** — strain catalog/KB **22 → 29**; registered the new Records ledger.
+- **Created `docs/memory/CANONICAL_STATE.md`** — the Records-Department single source of truth.
+- Standup: `docs/memory/standups/2026-06-14-REC-004-reconciliation.md`.
 
 ## Verification split (this chat)
 
 **Agent-verifiable (proven):**
-- Web: `tsc --noEmit` ✅ · `next lint` ✅ · `next build` ✅ · `vitest run` **100/100** ✅ (Constellation
-  sacred-render hashes untouched — that file not modified).
-- Backend (no Python changed): `make test` **223 passed, 80.83% ≥ 79** ✅ · `make lint` ✅ ·
-  `make check-memory` ✅.
+- No code changed. Gates re-run on the docs branch: `make check-memory` ✅ · `make test` ✅ ·
+  `make lint` ✅ (results recorded in the REC-004 standup).
+- PR/branch ledgers cross-checked against the live GitHub PR list + `git log origin/main`; strain
+  counts confirmed by parsing `data/strains.yaml` + `data/strain_knowledge.yaml` (29 each).
 
-**Device/human-verifiable (owner — the actual deliverable):**
-- The pixels. No headless browser in CI to screenshot the chamber. Open a flowering plant in the
-  chamber view for G13 / Purple Diddy Punch / Animal Mints and confirm the buds read as continuous
-  stacked colas, not grapes (spear cola for G13; chunky masses for PDP/Animal Mints; frost on
-  Animal Mints), silhouettes are continuous, and performance is stable.
+**Device/human-verifiable (owner):**
+- The reconciliation **decisions**: whether to close PR #43 in favour of this sweep (or merge #43
+  first), how to reconcile open PR #37 against the already-merged FTUE epic, and whether to prune the
+  merged/abandoned branches in the Branch Ledger (destructive git = stop-and-ask).
 
 ---
 
-## OPEN RISKS (carried) — INHERITED from the pre-graphics-phase baton, NOT re-audited this chat
+## OPEN RISKS (carried) — NOT re-audited this chat
 
-> These predate the Graphics Phase and were not re-verified here. Re-audit against current code
-> before acting on any of them. A risk clears only when VERIFIED FIXED (test-backed).
+> These predate this sweep and were not re-verified here (REC-004 changed no code). Re-audit against
+> current code before acting. A risk clears only when VERIFIED FIXED (test-backed).
 
-| # | Sev | Risk | Evidence | Status (as last recorded 2026-06-10/11) |
+| # | Sev | Risk | Evidence | Status |
 |---|-----|------|----------|--------|
-| 3 | HIGH | Idempotency on mutations. | `api/game_api.py` | PARTIAL — concurrency core fixed; general `Idempotency-Key` header + one-shot grants appear shipped in **open PR #16** (confirm/merge-audit). |
-| 4/7 | HIGH | **Chain settlement not real** — deposit trusts no on-chain proof; treasury drain path; no txid replay protection / reconciliation / address validation. | `services/settlement_service.py`, `db/models.py`, `game_service.py` | OPEN — blocks any real value moving (Sprint 4 gate). |
-| 8 | HIGH | **Web safety net** — vitest now runs in CI (PR #22), but Playwright e2e is still an `echo` stub; treasury-cap + chain-failure-rollback tests absent. | `web/package.json`, `.github/workflows/ci.yml` | PARTIAL. |
-| 9 | MED | **Sim dormancy semantics** — can delay an earned harvest if `max_catchup_hours` lowered below a stage; skips lethal decay. Masked at default cap. | `simulation/engine.py` | OPEN — needs a design decision + knob guard. |
-| 10 | MED | **Web: no global 401/403 handler** — stale key reads as "logged in" to a broken dashboard. | `web/src/lib/api/client.ts`, `RequireAuth.tsx` | OPEN. |
-| 11 | LOW | Rate-limiter `memory://` per-worker (set Redis); `get_level` public oracle. | see fleet-sweep | PARTIAL — validation 500s→400 fixed earlier. |
+| 3 | HIGH | Idempotency on mutations — general `Idempotency-Key` header (duplicate → original response, not a 409). | `api/game_api.py` | PARTIAL — concurrency core + one-shot grants shipped (`grant_claims`, harvest-once index); FTUE `advance` is replay-guarded. General header still absent (WIP PR #16 closed unmerged). |
+| 4/7 | HIGH | **Chain settlement not real** — deposit trusts no on-chain proof; treasury-drain path; no txid replay protection / reconciliation / address validation. | `services/settlement_service.py`, `db/models.py` | OPEN — blocks any real value moving (Sprint 4 gate). |
+| 8 | HIGH | **Web safety net** — vitest runs in CI; Playwright e2e is still an `echo` stub; treasury-cap + chain-failure-rollback tests absent. | `web/package.json`, `.github/workflows/ci.yml` | PARTIAL (relates to open PR #32). |
+| 9 | MED | **Sim dormancy semantics** — large `max_catchup_hours` gaps can delay an earned harvest / skip lethal decay; needs a design decision + knob guard. (FTUE sidesteps it for the tutorial plant via `last_tick_at = now`; the general knob is unchanged.) | `simulation/engine.py` | OPEN. |
+| 11 | LOW | Rate-limiter `memory://` per-worker (set Redis for multi-worker); `get_level` public oracle. | fleet-sweep audit | PARTIAL. |
+
+**Cleared since the graphics-phase baton:** *Web global 401/403 handler* (prev RISK #10) — an
+`AuthErrorListener` tears down the session on a rejected key, shipped in **PR #29/#30** (see
+`DECISIONS.md` 2026-06-14).
 
 > Reassuring (verified solid earlier, not re-checked here): no IDOR; auth/authz server-authoritative;
 > AI SpendGuard unescapable + CI never hits a live key; ledger correct single-threaded; no
-> model↔migration drift.
+> model↔migration drift (single Alembic head `9d669edf48a8`).
+
+---
+
+## NEEDS OWNER (decisions REC-004 could not make on its own)
+
+1. **PR #43 (`closeout-ftue-epic`) overlaps this sweep.** It is a docs-only FTUE closeout that edits
+   the same files (HANDOFF/BACKLOG/DECISIONS) this sweep reconciles. Recommend **close #43** (its
+   content is folded into REC-004), or merge #43 first and rebase this sweep on top — either avoids a
+   conflicting double-edit. **Do not merge both as-is.**
+2. **PR #37 (FTUE Grow Guide, mobile)** overlaps the already-merged FTUE epic (#34/#35/#39). Decide:
+   re-scope to net-new mobile-coach work, or close as superseded.
+3. **Branch pruning** — the Branch Ledger classifies ~30 merged/abandoned branches as prunable;
+   pruning is destructive git → owner's call.
