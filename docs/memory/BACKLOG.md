@@ -175,6 +175,16 @@ once they appear here. Last reconciled: **2026-06-10**.
   a title + XP), taught by an AI Professor (mock for CI, Claude in prod). Public `/university/catalog`
   + authed enroll/complete/claim/lecture; +13 tests. Grounded in a cited curriculum research report.
   *Next (⬜): quizzes, more departments, Doctorate tier, diploma NFTs.* Per `docs/memory/design/06-university.md`.
+  **Consolidated research blueprint (Directive UNI-010, 2026-06-14):**
+  [`GROWPOD_UNIVERSITY_MASTER_BIBLE.md`](../GROWPOD_UNIVERSITY_MASTER_BIBLE.md) merges 9 worker
+  reports (UNI-A01–A09) into a prioritized plan. **Phase-1 build order (validator-first):**
+  (1) curriculum-integrity validator + CI test + loader-time check; (2) deterministically-graded
+  quizzes (retrieval-practice, objective-mapped, no AI in grading); (3) tier ordering +
+  `requires_degree`; (4) technique practicals `vpd_in_band` + `cure_window`; (5) student-grounded
+  method-prescriptive lectures + lecture caching/SpendGuard; (6) read-only transcript/GPA/leaderboards/
+  cosmetic badges; (7) content depth-gradient + reconcile lectures with sim reality; (8) community
+  Phase-1 (alumni directory, deterministic Scholar-standing, named faculty, graduation events). All
+  monetization, new economy perk keys, on-chain diplomas, and UGC are **owner-gated** (not launch-blocking).
 - 🟡 ✅ **Web client — full UI build** (2026-06-08, branch `claude/growv2-web-ui-build-MZWZE`) — the
   Next 15 client now covers all seven screen groups (onboarding hero · grow dashboard with VPD/DLI/PPFD
   · strain lab + encyclopedia + DNA/lineage constellations + Verify provenance · GenBank galaxy ·

@@ -62,6 +62,11 @@ Public: `GET /university/catalog`. Authed: `GET /players/<id>/university` (trans
   time gate; degree perks reuse the research `_EFFECT_KEYS`; tuition is a sink with **no GROW faucet**.
 
 ## Cross-links
+- **Canonical blueprint:** the consolidated, indexed research bible —
+  [`GROWPOD_UNIVERSITY_MASTER_BIBLE.md`](../../GROWPOD_UNIVERSITY_MASTER_BIBLE.md) (Directive
+  UNI-010; merges 9 worker reports UNI-A01–A09 into Phase 1 / Future / Backlog / Research-Only +
+  risks + canonical recommendations). This design doc stays the live ⬜/✅ tracker; the Bible is the
+  deep "where we're going" detail.
 - The spend-based companion: `03-grower-skills.md` (research tree) · the genetics/agronomy taught:
   `01-simulation-horticulture.md`, `02-genetics.md` · curriculum grounding:
   `docs/research/2026-06-08-cannabis-education-curriculum.md`.
