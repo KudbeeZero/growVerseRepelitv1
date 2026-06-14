@@ -33,3 +33,6 @@ yarn-error.log*
 /test-results
 /playwright-report
 /playwright/.cache
+
+# canonical stage PNGs (regenerable build artifacts: `npm run gen:stages`)
+/canonical-stages

@@ -19,6 +19,14 @@ describe("silhouetteFor", () => {
     // Animal Mints is the densest canopy of the three.
     const am = silhouetteFor("animal-mints", 0.5);
     expect(am.nodeDensity).toBeGreaterThan(pdp.nodeDensity);
+
+    // Bud-weight physics knobs (PR #26): G13 is the strong/light spear (stiffest
+    // stems, lightest buds → least droop); PDP is the chunky sagger (weakest
+    // stems, heaviest buds); Animal Mints sits balanced between them.
+    expect(g13.branchStrength).toBeGreaterThan(am.branchStrength);
+    expect(am.branchStrength).toBeGreaterThan(pdp.branchStrength);
+    expect(pdp.budWeightMul).toBeGreaterThan(am.budWeightMul);
+    expect(am.budWeightMul).toBeGreaterThan(g13.budWeightMul);
   });
 
   it("derives a silhouette from indica dominance for unknown strains", () => {
@@ -28,6 +36,9 @@ describe("silhouetteFor", () => {
     expect(indica.nodeDensity).toBeGreaterThan(sativa.nodeDensity);
     expect(indica.lowerSpread).toBeGreaterThan(sativa.lowerSpread);
     expect(indica.colaScale).toBeGreaterThan(sativa.colaScale);
+    // Indica has sturdier stems and heavier buds than sativa.
+    expect(indica.branchStrength).toBeGreaterThan(sativa.branchStrength);
+    expect(indica.budWeightMul).toBeGreaterThan(sativa.budWeightMul);
   });
 
   it("clamps out-of-range ratios and is deterministic", () => {

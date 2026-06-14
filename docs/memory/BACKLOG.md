@@ -3,25 +3,36 @@
 Status: `⬜ todo · 🔨 doing · ✅ done · ❄️ parked`. Standups may *propose* items; they're only real
 once they appear here. Last reconciled: **2026-06-10**.
 
-## 🎨 Graphics Phase II (active track — visual polish to MVP launch; no scope expansion)
+## 🎨 Graphics Phase II/III (active track — visual polish to MVP launch; no scope expansion)
 > The game's emotional core is the whole-plant chamber view. This track is **visual-only** —
 > no economy / chain / breeding / factions / combat / new crop families. Canon lives in
 > `knowledge/` (botanical-bible, macro-bud-rules, whole-plant-architecture, strain-dna,
 > environment-rules, procedural-generation). The macro bud system is launch-ready; the whole-plant
-> system foundation is complete.
-- 🎨 ✅ **PR #25 — De-Grape Whole Plant Buds** (2026-06-13) — chamber flower sites paint a
+> system foundation is complete. **PR numbering shifted mid-phase** (PRs #27 Phenotype + #28
+> Circadian were opened by a parallel session), so Canonical Stage PNG is #29 and Dashboard wiring
+> is now #30 — see entries below.
+- 🎨 ✅ **PR #25 — De-Grape Whole Plant Buds** (merged 2026-06-14) — chamber flower sites paint a
   continuous bud-mass silhouette behind the calyxes so they read as stacked colas, not loose
-  circles (`web/src/components/viz/GrowChamber.tsx` `drawFlowerSite`). ADR in `DECISIONS.md`
-  (2026-06-13). Gates green (web typecheck/lint/build + 100/100 vitest). *Awaiting owner visual
-  verification (no headless browser in CI to screenshot).*
-- 🎨 ⬜ **PR #26 — Bud Weight Physics Polish** (NEXT ACTION) — refine the bud-weight droop so heavy
-  colas/branches bend believably as flowering fills in. Visual-only; reuse the existing
-  `nd.weight` / `branchFlex` / droop model in `GrowChamber.tsx`, do not add new systems.
-- 🎨 ⬜ **PR #27 — Circadian Leaf Motion** — lights-on leaves pray upward, lights-off droop
-  slightly (subtle), per `whole-plant-architecture.md` § Motion.
-- 🎨 ⬜ **PR #28 — Canonical Stage PNG Generation** — committed reference stills per strain × stage.
-- 🎨 ⬜ **PR #29 — Dashboard / GameState Wiring Polish** — unify the chamber/dashboard state wiring.
-- 🎨 ⬜ **PR #30 — MVP Launch Candidate.**
+  circles. ADR in `DECISIONS.md` (2026-06-13). Owner visual sign-off 2026-06-14 (canonical stills).
+- 🎨 ✅ **PR #26 — Bud Weight Physics Polish** (merged 2026-06-14, with #29) —
+  `web/src/lib/chamber/budPhysics.ts`
+  (`flowerStageMultiplier` / `branchFlex` / `branchDroop` ≤12° / `colaLean` ≤5° / `airflowWeighting`)
+  + per-strain `branchStrength`/`budWeightMul` knobs; droop applied as branch rotation, bud mass
+  folded into the airflow wave. G13 upright/strong · PDP heavy/sagging · Animal Mints balanced.
+  Owner visual sign-off 2026-06-14.
+- 🎨 ✅ **PR #29 — Canonical Stage PNG Generation** (landed 2026-06-14, carried on #26's branch) —
+  the chamber renderer was extracted verbatim into a framework-agnostic `web/src/lib/chamber/chamberCore.ts`
+  (single source for the live component + a headless generator); `web/scripts/gen-stage-pngs.ts`
+  (`npm run gen:stages`) renders the curated strains × stage matrix to PNG via `@napi-rs/canvas`
+  (output `web/canonical-stages/`, gitignored). De-grape ported into `chamberCore` on merge.
+- 🎨 ⬜ **PR #27 — Phenotype Generator Foundation** — *PARKED* (open PR, green). Do not modify.
+- 🎨 ⬜ **PR #28 — Circadian Leaf Motion** — *PARKED* (open PR, green). Do not modify.
+- 🎨 ⬜ **PR #30 — Dashboard / GameState Wiring Polish** — next actual build PR. Unify the
+  chamber/dashboard state wiring.
+- 🎨 ⬜ **PR #31 — MVP Launch Candidate.**
+- 🎨 ⬜ **Macro Bud Polish II** (future; *not launch-blocking*) — sharper calyx ridges, denser calyx
+  nesting, reduce the smooth-oval appearance on the Purple Diddy Punch *macro* bud, improve chunky
+  calyx definition. Macro ("Detailed Bud View") only — the whole-plant chamber is signed off.
 
 ## 🔴 Immediate (do now — correctness, truth, or unblocks others)
 - 🔴 🔨 **Concurrency + idempotency hardening** (RISK #6) — *core landed 2026-06-10*: wallet

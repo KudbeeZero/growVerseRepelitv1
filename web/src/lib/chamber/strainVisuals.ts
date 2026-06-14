@@ -46,10 +46,14 @@ export function budColorForStrain(
 //   • G13 — slim spear / christmas-tree: tight nodes, short top, modest skirt.
 //   • Purple Diddy Punch — short, wide, chunky: heavy lateral branching, fat top.
 //   • Animal Mints — medium height, dense stacking, golf-ball clusters.
+//   • branchStrength / budWeightMul drive PR #26 bud-weight physics: G13 is a
+//     strong spear (stiff stems, light buds → least droop), Purple Diddy Punch is
+//     chunky (weak stems, heavy buds → most sag + a heavy leaning cola), Animal
+//     Mints sits balanced in the middle.
 const SILHOUETTES: Record<string, Silhouette> = {
-  g13: { nodeDensity: 1.16, vertStack: 1.22, branchletFrac: 0.4, lowerSpread: 0.95, upperShorten: 0.46, colaScale: 1.1, nodeLeaf: 0.95 },
-  "purple-diddy-punch": { nodeDensity: 1.08, vertStack: 0.94, branchletFrac: 0.78, lowerSpread: 1.42, upperShorten: 0.16, colaScale: 1.22, nodeLeaf: 1.16 },
-  "animal-mints": { nodeDensity: 1.3, vertStack: 1.08, branchletFrac: 0.64, lowerSpread: 1.12, upperShorten: 0.3, colaScale: 1.07, nodeLeaf: 1.12 },
+  g13: { nodeDensity: 1.16, vertStack: 1.22, branchletFrac: 0.4, lowerSpread: 0.95, upperShorten: 0.46, colaScale: 1.1, nodeLeaf: 0.95, branchStrength: 1.2, budWeightMul: 0.85 },
+  "purple-diddy-punch": { nodeDensity: 1.08, vertStack: 0.94, branchletFrac: 0.78, lowerSpread: 1.42, upperShorten: 0.16, colaScale: 1.22, nodeLeaf: 1.16, branchStrength: 0.82, budWeightMul: 1.28 },
+  "animal-mints": { nodeDensity: 1.3, vertStack: 1.08, branchletFrac: 0.64, lowerSpread: 1.12, upperShorten: 0.3, colaScale: 1.07, nodeLeaf: 1.12, branchStrength: 1.0, budWeightMul: 1.0 },
 };
 
 /**
@@ -71,5 +75,7 @@ export function silhouetteFor(slugOrName: string | undefined, indicaRatio: numbe
     upperShorten: lerp(0.22, 0.4, r),
     colaScale: lerp(0.95, 1.14, r),
     nodeLeaf: lerp(0.9, 1.15, r),
+    branchStrength: lerp(0.9, 1.15, r), // indica = sturdier stems
+    budWeightMul: lerp(0.85, 1.2, r), // indica = heavier buds
   };
 }
