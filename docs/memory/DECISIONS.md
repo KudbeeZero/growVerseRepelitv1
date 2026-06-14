@@ -255,3 +255,27 @@ fixes, not a state rewrite. A global 401/403 handler (`AuthErrorListener`) now t
 on a rejected key (RISK #9); `usePods` refreshes on an interval + focus so the chamber bud phenotype
 reflects committed pod environment. The knowledge doc's `GameState/EnvironmentState/UIState` section
 is documentation aspiration, not a build target, until a future PR proves a need.
+
+### 2026-06-14 — FTUE is orchestration on existing rails; tutorial time is a per-plant fiction (FTUE epic: PR #34/#35/#39)
+**Decision:** The first-time-user experience is built as **pure orchestration over existing game
+actions** — no new economy, no Phase-2 systems. A guarded deterministic step machine on
+`Player.ftue_step` (`welcome → plant → water → environment → grow → harvest → completed`) drives the
+**real** services (`grant_starter_items`, `plant_seed`, `water`, `set_environment`,
+`harvest_plant`+sell); each `advance` is rejected if out-of-sync or already completed (no replay).
+The AI Master Grower's tutorial voice is **deterministic and scripted** (`ai/ftue_coach.py`,
+per-step static `AdvisorReport`s through the real advisor schema) rather than a live AI call, so it
+works in CI with no key and reads identically every time. **Why two choices matter:**
+(1) *Time-compression* — a real first grow is days long; the `grow` step backdates the tutorial
+plant's `planted_at` (so the chamber renders a mature flowering plant) and sets `last_tick_at = now`
+so the authoritative catch-up does **not** retro-decay it. This was chosen over (a) running the full
+hour-by-hour sim across the gap — which would have drought-killed the un-watered plant and spammed
+event rows — and over (b) giving the starter pod auto-water/auto-feed, which is a paid-tier
+**economy** change. The fiction is scoped to the single tutorial plant; global sim/time and the
+`max_catchup_hours` knob are untouched (the general dormancy risk #9 is unchanged).
+(2) *No auto-divert of existing players* — the migration backfills `ftue_step='welcome'`
+(`server_default`), so the web only routes **freshly created** accounts into `/ftue`; returning
+sign-ins and pre-existing players are never swept into the tutorial. **Consequences:** the FTUE epic
+is additive (3 nullable-safe `Player` columns + a new service/coach/route + endpoints); the core
+loop and ledger are untouched; the "come back tomorrow" hook points players at the existing daily
+stipend rather than minting a new reward. Migrations `c7ecd7523cc8` (grant rail) and `9d669edf48a8`
+(FTUE columns) keep a single Alembic head.

@@ -1,9 +1,26 @@
 # Backlog (Layer 3) — single source of priority
 
 Status: `⬜ todo · 🔨 doing · ✅ done · ❄️ parked`. Standups may *propose* items; they're only real
-once they appear here. Last reconciled: **2026-06-10**.
+once they appear here. Last reconciled: **2026-06-14** (FTUE Epic closeout, DX-003).
 
-## 🎨 Graphics Phase II/III (active track — visual polish to MVP launch; no scope expansion)
+## 🚀 New-Player / Launch-Readiness (ACTIVE track — onboarding → MVP launch)
+> The Graphics Phase + Dashboard wiring are done and signed off; the studio is now on the path to a
+> launchable MVP. Player-facing, additive work on existing rails — **no economy / chain / breeding /
+> factions / combat / new crop families, no new Phase-2 systems.**
+- 🚀 ✅ **FTUE Epic — guided first grow** (merged 2026-06-14) — **PR #34** starter-grant rail
+  (`grant_claims`, migration `c7ecd7523cc8`), **PR #35** tutorial backend (deterministic step
+  machine on `Player.ftue_step`, per-step AI Master Grower coaching `ai/ftue_coach.py`, tutorial
+  time-compression, `/ftue` endpoints, migration `9d669edf48a8`), **PR #39** web `/ftue` guided
+  route. New signups walk plant → water → climate → grow → harvest → "come back tomorrow". ADR in
+  `DECISIONS.md` (2026-06-14); standup `standups/2026-06-14-lut-report-ftue.md`.
+- 🚀 ⬜ **Feature Flags** (NEXT) — data-driven launch gate / kill-switch surface (config `flags`
+  section or `feature_flags` table) + server-authoritative read endpoint + a web hook to gate
+  routes/components. Mirror the `balance.yaml` tuning-surface convention.
+- 🚀 🔨 **Mobile Polish** — *started*: PR #36 shipped responsive nav + a responsive Grow Chamber.
+  Remaining: sweep the rest of the player surfaces (dashboard, PDP, `/ftue`) for small screens.
+- 🚀 ⬜ **Playtesting → Retention Validation → MVP Launch Candidate** — the launch critical path tail.
+
+## 🎨 Graphics Phase II/III (COMPLETE — signed off; no scope expansion)
 > The game's emotional core is the whole-plant chamber view. This track is **visual-only** —
 > no economy / chain / breeding / factions / combat / new crop families. Canon lives in
 > `knowledge/` (botanical-bible, macro-bud-rules, whole-plant-architecture, strain-dna,
@@ -27,9 +44,12 @@ once they appear here. Last reconciled: **2026-06-10**.
   (output `web/canonical-stages/`, gitignored). De-grape ported into `chamberCore` on merge.
 - 🎨 ⬜ **PR #27 — Phenotype Generator Foundation** — *PARKED* (open PR, green). Do not modify.
 - 🎨 ⬜ **PR #28 — Circadian Leaf Motion** — *PARKED* (open PR, green). Do not modify.
-- 🎨 ⬜ **PR #30 — Dashboard / GameState Wiring Polish** — next actual build PR. Unify the
-  chamber/dashboard state wiring.
-- 🎨 ⬜ **PR #31 — MVP Launch Candidate.**
+- 🎨 ✅ **PR #29/#30 — Dashboard / GameState Wiring Polish** (merged 2026-06-14) — consumption
+  polish on the flat `GET …/plants/<id>/state` wire (it stays canonical; no aggregate `GameState`
+  object — see `DECISIONS.md` 2026-06-14). Added a global `AuthErrorListener` (401/403 → session
+  teardown) and `usePods` refresh-on-interval/focus.
+- MVP Launch Candidate now lives on the 🚀 launch-readiness track above (after Feature Flags →
+  Mobile Polish → Playtesting → Retention Validation).
 - 🎨 ⬜ **Macro Bud Polish II** (future; *not launch-blocking*) — sharper calyx ridges, denser calyx
   nesting, reduce the smooth-oval appearance on the Purple Diddy Punch *macro* bud, improve chunky
   calyx definition. Macro ("Detailed Bud View") only — the whole-plant chamber is signed off.
