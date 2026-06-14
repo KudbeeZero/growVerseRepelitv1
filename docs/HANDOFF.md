@@ -4,8 +4,16 @@
 > the end of every chat; read by `/handoff-audit` at the start of the next. If this file and
 > the code disagree, the code wins — fix the baton. See `docs/SESSION_PROTOCOL.md`.
 
-**Last rewritten:** 2026-06-14 · **By:** BE-004A reconciliation chat (landed PR #47 = STEP 3 clock **+** STEP 4 e2e)
-**Active branch:** `main` (post-merge — PR #47 just landed; no feature branch open from this chat)
+**Last rewritten:** 2026-06-14 · **By:** BE-003 feature-flag reconciliation chat (collapsed the dual flag system)
+**Active branch:** `claude/be-003-feature-flags-reconcile` (open PR — feature-flag de-dup; awaiting review/audit)
+**This chat (BE-003 recon):** **#42 and #55 both merged ~1 min apart, out of order, leaving TWO
+contradictory feature-flag systems on `main`** (routes gated OFF by #42's `config.py ENABLE_*` while
+`GET /api/game/flags` reported ON from #55's `balance.yaml`). This PR **collapses to the single
+balance.yaml-canonical system** (BE-003 decision): deletes `api/feature_gates.py` + the `config.py`
+`ENABLE_*` block + the `app.config["FEATURE_*"]` mirror; re-points the ~25 route decorators to
+`feature_required` from `growpodempire.feature_flags`; adds `chain`/`contracts` to `balance.yaml` and
+renames the `cup` flag → `cup_competitions`; adds a regression test asserting each route's gate ==
+its `/flags` value. Gates: `make test` **287 passed, 84.55%** · `make lint` ✅ · `make check-memory` ✅.
 **Just merged to main (this chat):** **PR #47 — Simulation Test Clock (BE-002, STEP 3) + e2e Grow Loop
 (BE-004, STEP 4).** The dev/test-only `OffsetClock`/`active_clock()` seam, the `/api/dev/clock/*`
 endpoints (force-disabled in production), **plus** the full core-loop e2e (seed → plant → flower →
@@ -33,12 +41,18 @@ overlapping*. **PR #42** *MVP Feature Flag Layer* (the NEXT ACTION).
 
 ## NEXT ACTION (the one scoped item the next chat does)
 
-**Feature Flags — web gating (PR #2).** The **backend flag core shipped** (BE-003, PR pending review):
-`balance.yaml` `feature_flags:` defaults + `feature_flags.py` (env-overridable `FEATURE_<NAME>`,
-fail-closed) + `GET /api/game/flags` + `require_feature`/`feature_required` guard. Defaults are ON, so
-nothing is gated yet. **Next chat:** the web-gating PR — a `useFlag`/`RequireFeature` hook reading
-`GET /api/game/flags`, then gate routes + nav visibility. This touches the **protected Navigation +
-Layout surfaces**, so claim them in `STUDIO_AGENT_REGISTRY.md` and get Director sign-off first.
+**Feature Flags — web gating (PR #2), now re-pointing the web to the canonical source.** The backend
+flag system is unified (this PR): one balance.yaml-canonical source, gated routes, `GET /api/game/flags`.
+**But the web layer still reads #42's build-time `NEXT_PUBLIC_ENABLE_*`** (`web/src/lib/features.ts`,
+`RequireFeature`, nav filtering) — a *second* flag source that can drift from the backend. **Next
+chat:** the web-gating PR replaces `NEXT_PUBLIC_ENABLE_*` with a `useFlag`/`RequireFeature` hook reading
+`GET /api/game/flags` (runtime, deploy-free), then gates routes + nav. This touches the **protected
+Navigation + Layout surfaces**, so claim them in `STUDIO_AGENT_REGISTRY.md` and get Director sign-off first.
+- **Launch polarity:** gated routes now follow balance.yaml defaults (**ON**). The launch build must
+  set the non-MVP surfaces (`FEATURE_MARKETPLACE/CHAIN/CUP_COMPETITIONS/UNIVERSITY/CONTRACTS=false`)
+  per-environment — a deploy-config step, not a code change.
+- **Owner-pending (REC-004):** the §3 branch prune still has **not** run (all targets present);
+  destructive git is owner-only. After the owner prunes, refresh `CANONICAL_STATE.md` §3.
 - **Off-limits:** no economy / chain / breeding / factions / combat / new crop families. No new
   Phase-2 systems. No per-player flag table (deferred). Do NOT modify the parked PRs (#27, #28).
 - **Reuse, don't rebuild:** the chamber renders through `web/src/lib/chamber/chamberCore.ts`

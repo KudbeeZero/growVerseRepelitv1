@@ -41,14 +41,10 @@ def create_app(init_database: bool = True):
     app.config["RATELIMIT_STORAGE_URI"] = settings.ratelimit_storage_uri
     init_limiter(app)
 
-    # MVP feature flags: gate non-MVP systems (marketplace, on-chain, cup,
-    # university, contracts) off by default. Gated routes check these via
-    # current_app.config (see api/feature_gates.py).
-    app.config["FEATURE_MARKETPLACE"] = settings.enable_marketplace
-    app.config["FEATURE_CHAIN"] = settings.enable_chain
-    app.config["FEATURE_CUP"] = settings.enable_cup
-    app.config["FEATURE_UNIVERSITY"] = settings.enable_university
-    app.config["FEATURE_CONTRACTS"] = settings.enable_contracts
+    # Feature flags are resolved data-driven from balance.yaml `feature_flags:`
+    # (growpodempire.feature_flags), with per-env `FEATURE_<NAME>` overrides — no
+    # app.config mirror needed. Gated routes use the `feature_required` decorator;
+    # GET /api/game/flags serves the resolved map.
 
     # Ensure the persistent game schema exists (no-op for already-migrated DBs).
     if init_database:

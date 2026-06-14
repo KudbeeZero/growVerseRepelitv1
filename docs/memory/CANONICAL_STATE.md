@@ -86,6 +86,16 @@ opened #27/#28); (b) **"DIR-004" (a Design directive, FP-3 plant CTA, PR #45) is
 
 ## 3) Branch Ledger — verified stale-branch report (REC-A09)
 
+> **Re-verified 2026-06-14 (post-REC-004, REC-005 audit):** the prune has **NOT yet been executed** —
+> all vetted targets still exist on the remote. Two reclassifications since the snapshot below:
+> **`simulation-test-clock-u4ounm`** → now **MERGED** (PR #47) → safe to prune (was wrongly listed as
+> closed-unmerged); **`heygen-hyperframes-install-o52fxi`** → now has **OPEN PR #56** → **EXCLUDE**.
+> **`growpod-university-curriculum-4f6xnd`** → now safe (Master Bible merged via PR #53). Several
+> post-snapshot branches (`be-feature-flags-core` #55-merged, `dx-007-closeout`, `dx-*`,
+> `be-003-feature-flags-reconcile` this PR, etc.) are **not** in the list and must not be pruned
+> unless verified merged with no open PR. A full §3 list refresh should run immediately after the
+> owner executes the prune.
+
 `main` is the trunk. ~54 `claude/*` + `session/*` branches exist on the remote; most are **merged or
 superseded** and are safe to prune. Each prune candidate below was verified against the PR ledger
 (represented on `main` or explicitly closed) and the open-PR list (no active PR depends on it).
@@ -136,6 +146,10 @@ Experience). Reconstructed from PR titles/commits + the OMNI Charter; live in-fl
 | DIR-004 | FP-3 Primary Plant CTA (Design) | PR #45 | ✅ merged |
 | REC-003 | Studio Agent Registry (live coordination roster) | PR #46 (`docs/STUDIO_AGENT_REGISTRY.md`) | ✅ in force |
 | **REC-004** | **Full Repository Memory Reconciliation Sweep** | this directive | ✅ this sweep (authoritative records) |
+| BE-002/004 | Simulation Test Clock + e2e Grow Loop + HTTP-boundary coverage | PR #47 | ✅ merged |
+| UNI-003/004/010/011 | GrowPod University Master Bible (records; ❄️ frozen post-MVP) | PR #53 | ✅ merged |
+| BE-003 | Feature Flags — backend core (data-driven, balance.yaml) | PR #55 | ✅ merged |
+| BE-003 (recon) | Feature-flag de-dup: collapse #42's config path into the balance.yaml-canonical system | this PR | 🔨 open (cleanup) |
 
 ---
 

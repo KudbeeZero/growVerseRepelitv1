@@ -13,15 +13,10 @@ import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-# Non-MVP systems (marketplace, on-chain, cup, university, contracts) are gated
-# OFF in production (see config.Settings). The test suite still exercises those
-# subsystems, so enable them by default here — set before any Settings is built.
-# A test can flip one back off with monkeypatch.setenv to assert the gate 404s.
-for _flag in (
-    "ENABLE_MARKETPLACE", "ENABLE_CHAIN", "ENABLE_CUP",
-    "ENABLE_UNIVERSITY", "ENABLE_CONTRACTS",
-):
-    os.environ.setdefault(_flag, "true")
+# Feature flags resolve from balance.yaml `feature_flags:` (default ON), so the
+# gated subsystems (marketplace, chain, cup_competitions, university, contracts)
+# are reachable in tests with no setup. A test flips one OFF for its scope with
+# `monkeypatch.setenv("FEATURE_<NAME>", "false")` to assert the gate 404s.
 
 from growpodempire.config import get_settings  # noqa: E402
 from growpodempire.db.session import reset_engine_for_tests, init_db, session_scope  # noqa: E402
