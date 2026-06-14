@@ -483,6 +483,8 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
   interface Node {
     x: number; y: number; f: number; side: number; tilt: number; len: number;
     leafSize: number; leaflets: number; phase: number; tipX: number; tipY: number;
+    leafAzimuth: number; // where the fan points around the stem (3-D facing cue)
+    leafSeed: number;    // stable per-fan seed for leaflet asymmetry
     site: FlowerSite | null; budRot: number;
     curve: number; // branch upward bend (bezier), 0.1–0.4
     weight: number; // bud load on this branch → how much it droops
@@ -585,11 +587,18 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
       const side = i % 2 ? 1 : -1;
       const tilt = (0.92 + rnd() * 0.3) * (1 - f * 0.22) * lerp(1, 1.12, low);
       const len = A * 0.27 * S.branchMul * (0.35 + 0.65 * low) * grow * shorten;
+      // Phyllotaxy: each successive node's fan points ~137.5° further around the
+      // stem (golden angle), so fans face every which way instead of all flat to
+      // the camera. Derived from the already-rolled `phase` so the branch/bud RNG
+      // stream is untouched (silhouettes + buds render identically).
+      const phase = rnd() * TAU;
       const nd: Node = {
         x: p.x, y: p.y, f, side, tilt, len, spread,
         leafSize: A * (0.08 + 0.05 * low) * (0.55 + 0.45 * grow) * (1 - 0.4 * P.budDev * f),
         leaflets: Math.min(S.leafletMax, 3 + 2 * Math.floor(d / 14)),
-        phase: rnd() * TAU,
+        phase,
+        leafAzimuth: i * 2.39996 + (phase - Math.PI) * 0.1,
+        leafSeed: (seed * 131 + i * 92821 + Math.floor(phase * 4096)) >>> 0 || 1,
         tipX: 0, tipY: 0, site: null, budRot: 0,
         curve: 0.14 + rnd() * 0.22, // upward bend
         weight: 0,
@@ -790,38 +799,74 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
   }
 
   // ---- leaves ----
+  // Palmate fan: leaflets radiate from one petiole tip (how a real cannabis fan
+  // leaf is built). FAN_A = leaflet angles, FAN_M = relative length.
   const FAN_A = [0, 0.42, -0.42, 0.85, -0.85, 1.22, -1.22, 1.5, -1.5];
   const FAN_M = [1, 0.86, 0.86, 0.7, 0.7, 0.52, 0.52, 0.36, 0.36];
-  function drawFan(size: number, n: number, topBoost: number, claw: number) {
-    // Clamp to the FAN_A/FAN_M table length: a future per-strain leaflet count
-    // above 9 would otherwise index past the arrays → undefined → NaN geometry.
+  // Outer→inner draw order so inner leaflets overlap the outer ones (depth).
+  const FAN_ORDER = [7, 8, 5, 6, 3, 4, 1, 2, 0];
+  function drawFan(
+    size: number,
+    n: number,
+    topBoost: number,
+    claw: number,
+    azimuth = 0,
+    fanSeed = 0,
+  ) {
+    // `azimuth` = where this fan points *around* the stem. cos() gives how much it
+    // faces the camera (1 toward, -1 away); that drives horizontal foreshortening
+    // (edge-on fans squish thin), front/back shading and a slight lean — the cues
+    // that make a flat fan read as a leaf on a 3-D stem instead of a sticker. A
+    // per-fan seed adds natural asymmetry (jittered leaflet length/angle, the odd
+    // half-hidden leaflet). Deterministic + frame-stable (seeded at build).
     const leaflets = Math.min(n, FAN_A.length);
-    for (let i = 0; i < leaflets; i++) {
-      const L = size * FAN_M[i], Wd = L * 0.32 * S.leafW;
-      const a = FAN_A[i] + (claw ? Math.sign(FAN_A[i] || 1) * claw * (0.2 + Math.abs(FAN_A[i]) * 0.5) : 0);
+    const az = Math.atan2(Math.sin(azimuth), Math.cos(azimuth)); // wrap to [-π,π]
+    const facing = Math.cos(az); // 1 toward viewer · -1 away
+    const face = 0.4 + 0.6 * Math.abs(facing); // horizontal foreshorten 0.4..1
+    const lift = lerp(0.62, 1.06, (facing + 1) / 2); // away fans sit in shadow
+    const lr = mulberry32(((fanSeed | 0) * 2654435761) >>> 0 || 1);
+    const petL = size * (0.16 + 0.14 * Math.abs(facing)); // longer, real petiole
+    ctx!.save();
+    ctx!.rotate(az * 0.18); // lean off the branch axis
+    ctx!.scale(face, 1); // tilt the leaf plane into depth
+    // petiole
+    ctx!.strokeStyle = `hsl(${S.hue}, ${S.sat * 0.65}%, ${clamp((S.lit + topBoost * 6) * 0.62 * lift, 8, 60)}%)`;
+    ctx!.lineWidth = Math.max(0.8, size * 0.022);
+    ctx!.lineCap = "round";
+    ctx!.beginPath();
+    ctx!.moveTo(0, 0);
+    ctx!.lineTo(0, -petL);
+    ctx!.stroke();
+    ctx!.translate(0, -petL);
+    for (const i of FAN_ORDER) {
+      if (i >= leaflets) continue;
+      const jL = 0.82 + lr() * 0.34; // per-leaflet length jitter
+      const jA = (lr() - 0.5) * 0.18; // per-leaflet angle jitter
+      const jW = 0.28 + lr() * 0.08;
+      const hide = lr();
+      if (i >= 5 && hide < 0.16) continue; // an occasional missing/occluded leaflet
+      const L = size * FAN_M[i] * jL;
+      const Wd = L * jW * S.leafW;
+      const a = FAN_A[i] + jA + (claw ? Math.sign(FAN_A[i] || 1) * claw * (0.2 + Math.abs(FAN_A[i]) * 0.5) : 0);
+      // Center leaflet brightest; outers drop into layered shade (× fan facing).
+      const lShade = lerp(1.05, 0.72, Math.abs(FAN_A[i]) / 1.5) * lift;
+      const Lh = clamp((S.lit + topBoost * 6) * lShade, 8, 62);
       ctx!.save();
       ctx!.rotate(a);
-      const col = `hsl(${S.hue}, ${S.sat}%, ${S.lit + topBoost * 6}%)`;
-      ctx!.strokeStyle = `hsl(${S.hue}, ${S.sat * 0.7}%, ${(S.lit + topBoost * 6) * 0.8}%)`;
-      ctx!.lineWidth = 1;
-      ctx!.beginPath();
-      ctx!.moveTo(0, 0);
-      ctx!.lineTo(0, -size * 0.12);
-      ctx!.stroke();
-      ctx!.translate(0, -size * 0.12);
-      ctx!.fillStyle = col;
+      ctx!.fillStyle = `hsl(${S.hue}, ${S.sat}%, ${Lh}%)`;
       leafletPath(L, Wd);
       ctx!.fill();
-      ctx!.strokeStyle = "rgba(0,0,0,0.20)";
+      ctx!.strokeStyle = "rgba(0,0,0,0.22)";
       ctx!.lineWidth = 0.6;
       ctx!.stroke();
-      ctx!.strokeStyle = "rgba(255,255,255,0.05)";
+      ctx!.strokeStyle = `rgba(255,255,255,${0.05 * lift})`;
       ctx!.beginPath();
       ctx!.moveTo(0, 0);
       ctx!.lineTo(0, -L * 0.96);
       ctx!.stroke();
       ctx!.restore();
     }
+    ctx!.restore();
   }
 
   // ---- physics + dust ----
@@ -1097,7 +1142,7 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
       }
       ctx!.save();
       ctx!.translate(top.x, top.y);
-      drawFan(sz * 1.15, 3, 1, 0);
+      drawFan(sz * 1.15, 3, 1, 0, 0.15, (seed * 9 + 1) >>> 0 || 1);
       ctx!.restore();
       return;
     }
@@ -1140,14 +1185,15 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
       ctx!.save();
       ctx!.translate(endX, endY);
       ctx!.rotate(nd.side * (0.5 + nd.tilt * 0.18));
-      drawFan(nd.leafSize, nd.leaflets, nd.f, claw);
+      drawFan(nd.leafSize, nd.leaflets, nd.f, claw, nd.leafAzimuth, nd.leafSeed);
       ctx!.restore();
       // Leaf cluster hugging the stem at the node — every node carries foliage,
-      // not just the branch tip, so internodes don't read as bare gaps.
-      for (const [ang, scl] of [[-nd.side * 0.32, 0.55], [-nd.side * 0.74, 0.36], [nd.side * 0.22, 0.3]] as const) {
+      // not just the branch tip, so internodes don't read as bare gaps. Each
+      // sub-fan gets its own azimuth/seed so the cluster has real spread + depth.
+      for (const [ang, scl, k] of [[-nd.side * 0.32, 0.55, 1], [-nd.side * 0.74, 0.36, 2], [nd.side * 0.22, 0.3, 3]] as const) {
         ctx!.save();
         ctx!.rotate(ang);
-        drawFan(nd.nodeLeafSize * scl, Math.max(3, nd.leaflets - 2), 0, claw);
+        drawFan(nd.nodeLeafSize * scl, Math.max(3, nd.leaflets - 2), 0, claw, nd.leafAzimuth + ang * 2.1, (nd.leafSeed * 2 + k) >>> 0);
         ctx!.restore();
       }
       // Secondary branchlets — forks part-way along the branch (sharing the
@@ -1171,7 +1217,7 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
         ctx!.save();
         ctx!.translate(bex, bey);
         ctx!.rotate(bl.side * (0.4 + bl.tilt * 0.2));
-        drawFan(bl.leafSize, bl.leaflets, nd.f, claw);
+        drawFan(bl.leafSize, bl.leaflets, nd.f, claw, bl.phase, (Math.floor(bl.phase * 4096) ^ (nd.leafSeed * 5)) >>> 0 || 1);
         ctx!.restore();
         if (bl.site) {
           ctx!.save();
@@ -1216,7 +1262,7 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
       ctx!.rotate(phys.cola.ao + colaSway + colaDroop);
       ctx!.save();
       ctx!.translate(0, -p.cola.site.axisLen * 0.04);
-      drawFan(p.A * 0.08 * (1 - 0.35 * p.P.budDev), Math.min(S.leafletMax, 5 + Math.floor(day / 18)), 1, claw);
+      drawFan(p.A * 0.08 * (1 - 0.35 * p.P.budDev), Math.min(S.leafletMax, 5 + Math.floor(day / 18)), 1, claw, 0.22, (seed * 17 + 3) >>> 0 || 1);
       ctx!.restore();
       drawFlowerSite(p.cola.site, p.P, cjig, tt);
       ctx!.restore();
@@ -1224,7 +1270,7 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
       ctx!.save();
       ctx!.translate(top.x, top.y);
       ctx!.rotate(swayT);
-      drawFan(p.A * 0.08, Math.min(S.leafletMax, 5 + Math.floor(day / 18)), 1, claw);
+      drawFan(p.A * 0.08, Math.min(S.leafletMax, 5 + Math.floor(day / 18)), 1, claw, 0.18, (seed * 17 + 5) >>> 0 || 1);
       ctx!.restore();
     }
     drawConditionOverlay(p);
