@@ -4,8 +4,8 @@
 **Asked:** Consolidate the 9 worker deliverables (UNI-A01–A09) into one synthesis — cross-link findings, reconcile conflicts, and produce the Owner decision docket.
 **Done:** Campaign complete; all 9 streams landed. This doc is the single front-door: status board, unified picture, conflict/reconciliation register, the consolidated Owner decision docket, a build-readiness ranking against the *shipped* backend, and the BACKLOG hand-off.
 **Risks:** This is research, not a build commitment — three streams independently propose `curriculum.yaml` extensions that **must be merged into one schema before any code** (see §3). Treating any ⬜ item as shipped would violate the codex honesty rule.
-**Needs You:** Six decisions in §4 — five are Owner-only (economy / player-facing); recommendations attached.
-**Next:** Owner rules on §4 → Lead opens a single implementation directive (likely starting with the deterministic quiz engine, the one fully shovel-ready, CI-safe item).
+**Needs You:** ✅ Resolved — all six §4 decisions ratified as **UNI-ADR-001** (2026-06-14, `docs/memory/DECISIONS.md`). Nothing open.
+**Next:** University build is **post-MVP** (Owner order: Feature Flags → e2e Grow Loop → Playtesting → Retention → MVP → **University Build Phase**). First build artifact: the R1 `curriculum.yaml` schema merge + deterministic quiz engine.
 
 ---
 
@@ -75,19 +75,24 @@ knob. It is an Owner *tuning* decision (§4.3), not a schema clash.
 
 ---
 
-## 4. Owner decision docket (the "Needs You")
+## 4. Owner decision docket — ✅ RESOLVED by UNI-ADR-001 (2026-06-14)
 
-Per `CLAUDE.md`, player-facing economy and difficulty calls are Owner-only. Five of these six are
-that. Recommendations are the campaign's, not commitments.
+> **All six are now canon** — ratified by the Owner as **UNI-ADR-001** (`docs/memory/DECISIONS.md`,
+> 2026-06-14). They no longer block anything; they govern the University build phase (sequenced
+> *post-MVP*). Recorded outcomes below (the Owner expanded several beyond the campaign's recommendation).
 
-| # | Decision | Raised by | Campaign recommendation |
-|---|----------|-----------|-------------------------|
-| 4.1 | **May any university reward touch the GROW ledger?** (streaks, social rewards, Knowledge Score → tradeable reputation) | A01, A05, A07 | **No.** Keep it XP/perk/title/cosmetic/standing only — preserves the net-deflationary invariant and the no-faucet rule. Wiring Knowledge Score into a *tradeable* economy is a separate, later economy change. |
-| 4.2 | **Doctorate capstone: Cup *entry* or Cup *placement*?** | A01 | **Placement.** The capstone should prove mastery, not participation — and it gives the unused `cup_entry` practical type a real endgame home. |
-| 4.3 | **Quizzes: advisory or a hard completion gate?** | A01, A08 | **Ship advisory, promote to required per-course** once quiz banks are proven. `gate: advisory\|required` supports both; it's a faucet/sink-adjacent difficulty knob. |
-| 4.4 | **Community: free-text UGC, or structured-only social?** | A07 | **Structured-only first** (endorsements, templated peer review). Free-text is the dominant moderation-cost/safety risk in a public-read, cannabis-context system. |
-| 4.5 | **Monetization** (all 5 families) | A06 | **Stay parked.** Build none yet. Enforce the anti-moat NOT-TO-BUILD list (no paid time-skips / practical bypass / degree or perk purchase / loot boxes). Diploma NFTs double-parked behind the mocked chain layer. |
-| 4.6 | *(Optional, Lead-scoped)* Ship **teach-ahead** curriculum (A02 Modules 4 & 7) before sim Phase B deepens the model? | A02 | Lead call: teach-ahead is fine *if* the tutor honestly tags "the science vs. what the sim models." A02's fidelity dashboard is the guardrail. |
+| # | Decision | Raised by | ✅ Ratified outcome (UNI-ADR-001) |
+|---|----------|-----------|-----------------------------------|
+| 4.1 | May any university reward touch the GROW ledger? | A01, A05, A07 | **NO — all rewards NON-GROW, always.** Titles/badges/flair/lab-decor/frames/lore-unlocks/prestige-points/achievements only. No emissions, no passive farming, no educational yield. |
+| 4.2 | Doctorate capstone requirement? | A01 | **Prestige, not participation.** Master's = curriculum + all exams + **strain thesis**. Doctorate = Master's **AND one of**: Top-10 Cup placement · breed a Legendary Cultivar · discover a new mutation · recognized genetics contribution. *(broader than the Cup-only rec.)* |
+| 4.3 | Quizzes advisory or hard gate? | A01, A08 | **REQUIRED gate, ≥70%** (lesson→quiz→unlock). *(Owner chose required outright.)* Grading stays deterministic/server-side (A09 §3). |
+| 4.4 | Free-text UGC or structured-only social? | A07 | **Structured-only for V1** (study groups, mentor requests, professor boards, research collabs, thesis comments). Global chat / DMs / voice / open forums deferred. |
+| 4.5 | Monetization (5 families) | A06 | **PARKED — V1 is free.** Collect completion/retention/popularity/time/quiz-pass/engagement metrics first. Anti-moat NOT-TO-BUILD list stands. |
+| 4.6 | *(Lead-scoped)* Teach-ahead curriculum before sim Phase B? | A02 | Lead call retained — fine **if** the tutor honestly tags science-vs-sim (A02 fidelity dashboard is the guardrail). |
+
+**New canon added by the Owner — Merit Prestige Ladder (titles):**
+`Seedling → Grower → Cultivator → Breeder → Researcher → Professor → Master Grower → Doctorate`.
+No pay-to-win shortcuts; earned only. This is a new data-shaped requirement for the R1 schema merge.
 
 ---
 

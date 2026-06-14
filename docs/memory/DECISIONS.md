@@ -255,3 +255,39 @@ fixes, not a state rewrite. A global 401/403 handler (`AuthErrorListener`) now t
 on a rejected key (RISK #9); `usePods` refreshes on an interval + focus so the chamber bud phenotype
 reflects committed pod environment. The knowledge doc's `GameState/EnvironmentState/UIState` section
 is documentation aspiration, not a build target, until a future PR proves a need.
+
+### 2026-06-14 — GrowPod University foundations adopted (UNI-ADR-001)
+**Decision:** The Owner ratified the six open calls from Directive UNI-001's consolidation
+(`docs/research/university/UNI-A10-records-consolidation.md` §4) as canon. These govern the
+University **build phase** (which is sequenced *post-MVP* — see Consequences):
+1. **Rewards stay NON-GROW, always.** Approved: titles, badges, profile flair, lab decorations,
+   cosmetic frames, genetics-lore unlocks, prestige points, achievements. Prohibited: GROW emissions,
+   passive token farming, any "educational yield." Preserves the net-deflationary invariant and the
+   no-faucet rule (`CLAUDE.md`).
+2. **Doctorate is prestige, not participation.** Master's = complete curriculum + pass all exams +
+   publish a **strain thesis**. Doctorate = Master's **AND one of**: Top-10 Cannabis Cup placement ·
+   breed a Legendary Cultivar · discover a new mutation · a recognized genetics contribution.
+   (Broader than the consolidation's Cup-only recommendation; the extra paths lean on
+   `05-events-and-competition.md`, `02-genetics.md`, `knowledge/mutation-system.md` — those mechanics
+   are ⬜/🔨 today, so the requirement is canon but its checks ship with the build.)
+3. **Quizzes are REQUIRED progression gates.** Lesson → quiz → **≥70%** → next lesson unlocks.
+   (Owner chose required outright over the consolidation's advisory→required ramp.) Grading stays
+   deterministic/server-side per UNI-A09 §3 (DB authoritative, CI key-free).
+4. **Structured-only social for V1.** Ship: study groups, mentor requests, professor boards, research
+   collaborations, thesis comments. Defer: global chat, DMs, voice, open forums. (Lower moderation
+   cost; safer public-read launch.)
+5. **Monetization PARKED; V1 is free.** Collect completion/retention/popularity/time-spent/quiz-pass/
+   engagement metrics first; revisit premium only after data. Anti-moat NOT-TO-BUILD list (UNI-A06 §3)
+   stands — no paid time-skips/practical-bypass/degree-or-perk purchase/loot boxes.
+6. **Merit prestige ladder (canonical titles):** Seedling → Grower → Cultivator → Breeder →
+   Researcher → Professor → Master Grower → Doctorate. No pay-to-win shortcuts; prestige is earned.
+
+**Why:** Locks the earned-mastery moat (`00-game-vision.md` §Moat #6) into governance so no later
+build can quietly trade money/shortcuts for credentials, and unblocks implementation planning by
+removing the six ambiguities.
+**Consequences:** The six docket items in `UNI-A10 …§4` are now **resolved (✅ APPROVED)**, not open.
+University build is **post-MVP**: Owner priority order is Feature Flags → e2e Grow Loop → Playtesting
+→ Retention Validation → MVP Launch Candidate → **then** the GrowPod University Build Phase. First
+build artifact remains the `curriculum.yaml` schema merge (R1) + deterministic quiz engine. The
+prestige ladder + 70% quiz gate are new data-shaped requirements for that schema. No code or tags
+flip until the build ships (this entry is governance, not implementation).
