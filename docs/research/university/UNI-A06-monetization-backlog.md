@@ -2,222 +2,248 @@
 **Directive ID:** UNI-001 · **Lead Agent:** UNI-A00 · **Worker Agent:** UNI-A06
 **Status:** PARKED — research only, no implementation, Owner decision required.
 **Asked:** Survey monetization *options* for GrowPod University without recommending adoption — for each, define what it is, its ethical/invariant risk, economy impact, and why it stays parked.
-**Done:** Catalogued five option families (cosmetic/vanity, convenience, premium curriculum/season-pass, diploma NFTs, faculty/persona) against the earned-mastery moat, the honesty pillar, and the faucet/sink economy; flagged study-time-skips as anti-moat and not-to-build.
+**Done:** Catalogued five option families (cosmetic/vanity, convenience/time-skips, premium curriculum/season-pass, diploma NFTs, faculty/persona depth) against the earned-mastery moat, the honesty pillar, and the net-deflationary faucet/sink economy; flagged study-time-skips and any paid practical bypass as anti-moat and explicitly NOT-to-build.
 **Risks:**
-- Any "pay to skip study hours / practicals" directly attacks the earned-mastery moat (`00-game-vision.md` Moat #6) and the honesty pillar — must NOT be built.
-- Real-money entry pulls the university out of the *net-deflationary* design; a careless price/perk pairing could turn a degree into a soft pay-to-win advantage.
-- Diploma NFTs are Phase-2/chain and would leak Phase-2 into Phase-1 if scoped now (`OMNI_CHARTER.md` "No Phase-2 leakage").
-**Needs You (Owner monetization decisions):** Whether GrowPod University ever monetizes at all; if so, which families are permitted (cosmetic-only vs. premium content); the hard line on convenience/time-skips; and whether diploma NFTs are ever in scope post-chain.
-**Next:** Stays in backlog. No work order. Re-open only on an explicit Owner go-ahead; a follow-up could draft cosmetic-only catalog stubs *if* approved.
+- Any "pay to skip study time / pass a practical" option directly attacks the earned-mastery moat (`00-game-vision.md` §Moat #6: "you can't credit-card your way to the top") and the no-pay-to-win-obfuscation pledge (`04-honesty-and-trust.md` Pledge #4). Listing it at all risks it being misread as on-menu — it is NOT.
+- Real-money (USD) anything is outside agent authority and outside the off-chain MVP scope (`OMNI_CHARTER.md`: "Off-chain MVP first").
+- Diploma-NFT monetization is Phase-2/chain and gated behind the mocked chain layer — surfacing it must not leak into Phase-1 work (`OMNI_CHARTER.md`: "No Phase-2 leakage").
+**Needs You (Owner decisions, all deferred):** (1) Is *any* university monetization desired pre-launch, or strictly post-launch? (2) Real-money storefront vs. GROW-only cosmetic sinks — which, if either? (3) Diploma NFTs as a paid mint vs. free credential — parked until chain ships. (4) Hard ruling to forbid time-skip/practical-bypass forever (recommended posture, but yours to set).
+**Next:** Stays in backlog. No code, no `balance.yaml`, no `curriculum.yaml` change. Hand-off to UNI-A00; if Owner ever greenlights, a fresh directive with explicit economy sign-off is required.
 
 ---
 
-## 0. Scope guard (read this first)
-This is a **parked options register**, not a plan. Per `CLAUDE.md` ("Stop and ask ONLY for…
-player-facing economy changes (faucets/sinks/prices)") and the OMNI Charter
-(`docs/OMNI_CHARTER.md`: "Off-chain MVP first… No Phase-2 leakage"), monetization is an
-Owner-reserved decision. **Every option below ends in "deferred to Owner."** Nothing here is a
-recommendation to build. The Think-Tank role is research-only: no code, no mutations.
+## 0. Scope, method, and the one non-negotiable
+This is a **parked options register**, not a plan. Nothing here is recommended for build. Monetization
+is a **player-facing economy decision reserved for the Owner** (`CLAUDE.md` → "Stop and ask ONLY for…
+player-facing economy changes (faucets/sinks/prices)"). Every option below terminates in "deferred to
+Owner."
 
-The university as shipped (`src/growpodempire/services/university_service.py`,
-`docs/memory/design/06-university.md`) is deliberately **net-deflationary**: enrolling posts a
-GROW *sink* (`LedgerEntryType.TUITION`, `university_service.py:140-145`); degrees pay **perks +
-title + XP, never GROW** (`claim_degree`, lines 191-219). That balance is the baseline every
-monetization option below must be measured against — and most of them risk disturbing it.
+The one rule that overrides every option: **the university is the earned-mastery half of the moat**
+(`06-university.md` intro; `00-game-vision.md` §Moat #6). A degree is "a genuine investment" that takes
+"real study hours" and demands "you *prove it in your grow* (a practical)" (`06-university.md` §Why a
+university). Any monetization that lets money substitute for that earned time or that proof is
+**anti-moat and must not be built** — see §3.
 
-## 1. The three lenses every option is graded on
-1. **Moat lens — earned mastery.** The university *is* the "earned-mastery half of the moat"
-   (`06-university.md` intro; `00-game-vision.md` Moat #6: "Mastery + time as the gate — and the
-   anti-whale… you can't credit-card your way to the top"). Anything that lets money substitute for
-   *time studied* or *practical proven in the grow* erodes the single most defensible thing here.
-2. **Honesty lens — trust as a product surface.** `04-honesty-and-trust.md` pledge #4 is an
-   explicit "**No dark patterns** — disclosed odds, no loot-box manipulation, no manufactured FOMO,
-   no pay-to-win obfuscation." A monetization model that contradicts a *published* trust charter is
-   strictly worse than no monetization, because it spends the wedge that differentiates the game.
-3. **Economy lens — faucets ↔ sinks.** `CLAUDE.md`: "Money is `Decimal`, ledger-based… Faucets must
-   have matching sinks (watch inflation)." Real-money (USD/fiat) purchases live *outside* the GROW
-   ledger and so don't directly inflate GROW — but any perk they grant lands *inside* gameplay and
-   must be modelled like any other faucet/effect.
+Frameworks cited honestly below are standard free-to-play / live-service literature: the
+cosmetics-only "ethical F2P" stance popularized by *Path of Exile* (GGG) and *Dota 2*; the
+**season pass / battle pass** model (*Fortnite*, *Dota 2 Battle Pass*); the loot-box and
+"pay-to-win vs. pay-for-convenience" distinction debated in academic and regulatory work (e.g. the UK
+DCMS loot-box review, Zendle & Cairns' loot-box research, and the EU/Belgium/Netherlands rulings); and
+the "horizontal vs. vertical progression" monetization split common in live-ops design writing. These
+are referenced as *prior art*, not endorsements.
 
-## 2. Monetization framework grounding (honest citations)
-Standard free-to-play / live-service monetization taxonomy used to structure this survey:
-- **Cosmetic / vanity ("horizontal" monetization)** — sells expression, not power. Riot/*League
-  of Legends* skins and Epic/*Fortnite* are the canonical "no competitive advantage purchased"
-  model; widely regarded as the least-predatory mainstream model.
-- **Convenience / time-skip ("soft pay-to-win")** — sells *time*. *Clash of Clans*-style "finish
-  now" timers, energy refills, boosters. The contested category: framed as "respecting players'
-  time," but trades directly against the value of the time-gate that makes progression meaningful.
-- **Battle-pass / season-pass ("content cadence")** — a time-boxed track of unlocks for a flat
-  fee; popularized by *Fortnite*, now genre-standard. Mixes cosmetic + sometimes power; ethics
-  depend on whether the rewards are vanity or advantage, and on FOMO pressure.
-- **Premium content / DLC / "expansion"** — sells *more game* (new curricula, departments) for a
-  one-off or subscription fee. The traditional, least-controversial model when the base game is
-  complete and the DLC is additive rather than gating.
-- **NFT / on-chain credential** — tokenizes an asset (here, a diploma) as tradable/ownable
-  on-chain. In a game whose whole trust thesis is *anti-rug-pull* (`04-honesty-and-trust.md`),
-  this family carries the heaviest reputational and regulatory load.
-
-Regulatory backdrop worth flagging for the Owner: loot-box and "disclosed-odds" legislation is
-expanding (Belgium/Netherlands bans, UK & EU consumer-protection scrutiny), and the honesty codex
-already treats "disclosed odds + no dark patterns" as a *regulatory tailwind*
-(`04-honesty-and-trust.md` §How this impacts the game). Any randomized-purchase mechanic would
-walk straight into that.
+Current economy ground truth (do not break): **tuition is a GROW sink** (`LedgerEntryType.TUITION`,
+`university_service.py:enroll`); **degrees pay perks/XP, never GROW**; the university is therefore
+**net-deflationary** and honors the faucet↔sink invariant (`06-university.md` §Economy; `CLAUDE.md`:
+"Faucets must have matching sinks"). Any monetization must preserve or improve this — it must **never
+introduce a GROW faucet** and must **never** route real money into gameplay advantage.
 
 ---
 
-## 3. Option family A — Cosmetic / vanity (LOWEST risk of the set)
-**What it is.** Real-money (or premium-currency) purchases that change *appearance/expression*
-only, with zero gameplay effect. Candidates specific to the university:
-- **Diploma frames / parchment skins** — visual styling on the transcript/degree view
-  (`transcript()` already returns the degree rows the UI renders, `university_service.py:225-276`).
-- **Campus / lecture-hall skins** — themed backdrops for the lecture surface
-  (`GET …/courses/<key>/lecture`, `06-university.md` §The AI Professor).
-- **Faculty persona / professor-voice cosmetics** — named-faculty styling layered on the existing
-  `LecturerProvider` stack (`ai/lecturer_*.py`); a *cosmetic* re-skin of an already-planned feature
-  ("Professor persona depth," `06-university.md` §Where it's going).
-- **Vanity titles** beyond the earned `Player.university_title` — purely decorative flair.
+## 1. Cosmetic / Vanity (lowest risk — still parked)
+**What it is.** Purely decorative, **non-power** items: diploma frame styles, transcript/parchment
+skins, campus/quad skins, graduation-ceremony flourishes, animated title badges around the existing
+`Player.university_title` (`university_service.py:claim_degree` already sets `university_title`), and
+honorific flourishes. Horizontal, not vertical — nothing touches `_EFFECT_KEYS` (the perk effect keys
+in `research_service` that `degree_effects()` sums).
 
-**Ethical / invariant risk — LOW.** Sells expression, not power → does **not** touch the earned-
-mastery moat and is the model the honesty charter implicitly endorses (the anti-pay-to-win pledge).
-Caveat: cosmetic *titles* must stay visibly distinct from **earned** degree titles, or they
-undercut the prestige signal the university exists to create — a cosmetic "Master Grower" that
-looks identical to an earned one would be a soft dishonesty.
+**Prior art.** The "ethical F2P" cosmetics-only model (*Path of Exile*, *Dota 2*): revenue from
+identity/expression, zero competitive advantage. Widely regarded as the least player-hostile model.
 
-**Economy impact — NEUTRAL-to-clean.** If sold for **fiat**, sits entirely outside the GROW
-ledger → no inflation. If ever sold for **GROW**, it becomes an additional *sink* (deflationary,
-consistent with the tuition model) — arguably the cleanest way to add a GROW sink without a faucet.
+**Ethical / invariant risk.** *Low.* Does not touch earned-mastery (no perk, no time, no practical
+bypass), so the moat is intact. Honesty risk is low **iff** odds/contents are fully disclosed and there
+is no randomized purchase (no loot box) — Pledge #4 forbids "loot-box manipulation" and "manufactured
+FOMO" (`04-honesty-and-trust.md`). A fixed-price, see-what-you-buy cosmetic store is compatible with the
+trust pillar; a gacha cosmetic crate is **not**.
 
-**Why deferred.** Even pure cosmetics are a *price-bearing, player-facing* surface → Owner-reserved
-per `CLAUDE.md`. **Deferred to Owner.**
+**Economy impact.** If priced in **GROW**, it is a **pure new sink** — *more* deflationary, which the
+ledger/inflation posture welcomes (`04-honesty-and-trust.md` Pledge #2: "the burn is visible"). It would
+need its own `LedgerEntryType` (e.g. a COSMETIC sink) so the burn is auditable. If priced in **real
+money (USD)**, it bypasses the GROW economy entirely (revenue, not a sink) and raises store/tax/refund
+concerns — **out of agent scope**, Owner-only.
 
-## 4. Option family B — Convenience / time-skip (ANTI-MOAT — flagged DO-NOT-BUILD)
-**What it is.** Purchases that compress the *time* or *effort* gate: buy-out of `duration_hours`
-study time, instant course completion, practical-waivers, or "study boosters" that accelerate the
-clock. The mechanical hooks exist — completion is gated on `elapsed_h >= need_h` **and** the
-practical (`complete_course`, `university_service.py:165-175`).
-
-**Ethical / invariant risk — SEVERE. This is the anti-moat case.**
-- **Study-time skips directly attack Moat #6.** The vision states the anti-whale property
-  explicitly: "Reputation and rare phenotypes are **earned**… you can't credit-card your way to the
-  top" (`00-game-vision.md`). A paid time-skip is *exactly* "credit-card your way to the top." It
-  converts the university from an earned-mastery engine into a pay-to-win store.
-- **Practical-waivers are worse.** The practical is the "prove it in your grow" mechanic
-  (`06-university.md` §Why a university). Selling a waiver means a degree no longer certifies that
-  the player *did the thing* — it makes the credential **dishonest**, violating the honesty pillar
-  at its root.
-- **Contradicts the published trust charter.** `04-honesty-and-trust.md` pledge #4 names "no
-  pay-to-win obfuscation" as a commitment. Shipping a time-skip would force the game to either break
-  its own charter or never publish it — either way the trust wedge is forfeit.
-
-**Economy impact — corrosive.** Even if priced in fiat (no GROW inflation), the *effect* injected
-(a degree's permanent perks, which feed real apply-sites via `degree_effects()`,
-`university_service.py:55-69`) is a power faucet bought with money — the precise pattern the
-anti-whale design forbids.
-
-**Verdict: ANTI-MOAT — must NOT be built.** This family is recorded here only to be explicitly
-ruled out. A narrow, *defensible* exception the Owner may want to consider separately (and only the
-Owner) is a **purely cosmetic "fast-forward animation"** that does not change real elapsed-time
-gating — but the moment money moves the actual gate, it is pay-to-win. **Deferred to Owner with a
-standing recommendation that the time/practical gate itself remain unpurchasable.**
-
-## 5. Option family C — Premium curriculum / season-pass content
-**What it is.** Selling *additional* learning content rather than shortcuts:
-- **Premium departments / courses** — e.g. the planned "Lab Analytics & QA, Business/Law/Compliance,
-  Pharmacology/Medical" departments (`06-university.md` §Where it's going) sold as paid expansions.
-- **Season-pass cadence** — a time-boxed track of *new* courses, lectures, and cosmetic rewards.
-
-**Ethical / invariant risk — MEDIUM, and entirely dependent on the perk design.**
-- *Additive content* (new lectures, new flavor, cosmetic rewards) is close to traditional DLC and
-  defensible. The risk is **the perks attached to premium degrees.** If a paid-only course grants
-  `degree_effects()` perks unavailable to non-payers, the premium track becomes *vertical* (power-
-  selling) and re-enters pay-to-win territory — even though the player still studies for it.
-- The honest design constraint: a premium track may sell *access to more knowledge/expression*, but
-  the **competitive perk ceiling should remain reachable without paying**, or the moat erodes.
-- Season-pass **FOMO** ("expires in 3 days!") collides directly with honesty pledge #4's "no
-  manufactured FOMO." A premium track that pressures via expiry timers is a dark pattern by the
-  game's own definition.
-
-**Economy impact — fiat-clean but perk-sensitive.** Fiat purchase → no GROW inflation. But premium
-perks still flow through the same effect-key aggregation as research/degrees
-(`degree_effects()` reuses `_EFFECT_KEYS`, `university_service.py:31, 55-69`), so any power granted
-must be balance-modelled exactly like a free perk. `balance.yaml` is the right tuning surface if it
-ever ships (`CLAUDE.md`: "Prefer data-driven balance changes").
-
-**Why deferred.** Player-facing content + pricing + potential perk-balance shift = squarely
-Owner-reserved. **Deferred to Owner.**
-
-## 6. Option family D — Diploma NFTs (PHASE-2 / CHAIN — PARKED BEHIND THE MOCK)
-**What it is.** Minting an earned degree as an on-chain credential — already named as a *planned*
-(⬜) item: "**Diploma NFTs** — mint a degree as an on-chain credential (Proof-of-Cultivation kin;
-Sprint 4)" (`06-university.md` §Where it's going).
-
-**Ethical / invariant risk — gated, not yet evaluable.** The chain layer is **mocked**
-(`00-game-vision.md` pillar 5: "live TestNet/IPFS is deferred… Sprint 4"; `04-honesty-and-trust.md`
-pledge #5 lists on-chain provenance as ⬜). Per `CLAUDE.md`: "DB is authoritative; the chain is a
-mirror/settlement layer. Never let on-chain state drive gameplay truth" — a diploma NFT must stay a
-*mirror* of the DB-authoritative `DegreeProgress` row, never a gate. **Scoping this now would be
-Phase-2 leakage into Phase-1, which the OMNI Charter forbids.** It also carries the heaviest
-reputational load: a game whose pitch is "the provably-honest, anti-rug-pull grow game" must be
-especially careful that any *tradable* credential can't be misread as a speculative asset.
-
-**Economy impact — out of scope until chain is live.** No GROW-economy interaction off-chain; any
-mint fee / settlement is a real-money/chain action — and real-money/chain/treasury actions are an
-explicit **"Stop and ask"** item in `CLAUDE.md`.
-
-**Why deferred.** Double-locked: (a) blocked on the mocked chain layer / Sprint 4, and (b)
-chain-settlement is an Owner-reserved action regardless. **Deferred to Owner; remains parked behind
-the chain mock — do not build pre-Phase-2.**
-
-## 7. Option family E — Faculty personas / "endowment" flair (cosmetic-adjacent)
-**What it is.** Named-faculty packs, professor-voice variants, or a vanity "donate to the
-university / name a lecture hall" flourish layered on the lecturer stack
-(`ai/lecturer_*.py`, `06-university.md` §The AI Professor; persona depth is already a planned ⬜).
-
-**Ethical / invariant risk — LOW (treat as a sub-case of cosmetics, §3).** Risk only if a persona
-secretly improves lecture *quality in a way that affects outcomes* — but lectures are informational,
-not perk-bearing, so a persona re-skin is expression-only. A GROW-priced "endowment" donation could
-double as a clean **sink**.
-
-**Economy impact — NEUTRAL (fiat) or deflationary SINK (GROW).** Same shape as §3.
-
-**Why deferred.** Player-facing + priced. **Deferred to Owner.**
+**Why deferred.** Even the safest option is still a player-facing storefront and a price decision →
+Owner-only. Parked. **Deferred to Owner.**
 
 ---
 
-## 8. Summary register (all PARKED)
-| Family | Moat risk | Honesty risk | Economy shape | Build status |
+## 2. Convenience (pay-for-convenience) — analyze, mostly NO
+**What it is.** Time/effort reducers. Sub-variants, ranked by danger:
+- **2a. Cosmetic-convenience (UI/QoL):** transcript export, a "study planner" view, catalog filters,
+  multi-course dashboards. Quality-of-life that touches **no** game state.
+- **2b. Soft-convenience (parallelism/slots):** more concurrent enrollments (the model is per-course;
+  no hard cap is enforced in `enroll` today), reminder/notification slots.
+- **2c. Hard-convenience (study-time-skip):** pay to shorten or zero-out `duration_hours` — the real-time
+  study gate enforced in `complete_course` (`elapsed_h < need_h → "Study in progress"`).
+- **2d. Practical bypass:** pay to satisfy a `practical` (`_practical_met`) without doing the gameplay.
+
+**Prior art & the key distinction.** The literature splits "pay-for-convenience" from "pay-to-win." The
+honest reading (DCMS loot-box review; Zendle & Cairns; live-ops design writing): convenience is benign
+**only** when the skipped thing is *grind/friction*, not *the core proof of skill*. When the thing being
+skipped **is the moat**, "convenience" is just pay-to-win wearing a friendlier label.
+
+**Ethical / invariant risk.**
+- 2a: *Low.* QoL with no state change — comparable to cosmetics. Compatible if not paywalling basic
+  fairness/disclosure.
+- 2b: *Medium.* More slots is closer to vertical advantage and could distort balance; needs careful
+  analysis; parked.
+- **2c & 2d: HIGH — ANTI-MOAT. DO NOT BUILD.** The university's entire value is that study time is
+  *real* and the practical is *proven in your grow* (`06-university.md`). A study-time-skip directly
+  contradicts `00-game-vision.md` §Moat #6 ("you can't credit-card your way to the top") and the
+  honesty pillar's "no pay-to-win obfuscation" (`04-honesty-and-trust.md` Pledge #4). It would let money
+  substitute for earned mastery — the exact thing the moat exists to prevent. A practical bypass is
+  worse: it lets a player claim a degree **without the underlying gameplay**, hollowing the credential
+  and poisoning any future reputation/knowledge economy built on degrees (`03-grower-skills.md`
+  tie-in). **These are categorically excluded — see §3.**
+
+**Economy impact.** 2a/2b as GROW sinks are deflationary-neutral-to-positive. 2c/2d are economically
+irrelevant because they are forbidden on *ethics/moat* grounds regardless of pricing — the harm is to
+trust and the moat, not to the ledger.
+
+**Why deferred.** 2a/2b: still a price/store decision → Owner. 2c/2d: **not deferred, but rejected** —
+flagged here only to document that they were considered and ruled anti-moat. **Deferred (2a/2b) / NOT
+TO BUILD (2c/2d).**
+
+---
+
+## 3. EXPLICIT ANTI-MOAT LIST — options that must NOT be built
+The directive asks for this to be called out plainly. The following are **not** parked-pending-Owner;
+they are **architecturally incompatible** with the stated moat and honesty pillar and should be treated
+as forbidden absent an explicit Owner override that knowingly rewrites the moat:
+
+1. **Paid study-time skip** (shortening/zeroing `duration_hours`). Breaks Moat #6 + Pledge #4.
+2. **Paid practical bypass** (auto-satisfying `_practical_met`). Hollows the credential; breaks honesty.
+3. **Paid degree/title purchase** (buying `claim_degree` outcome or `university_title` without the
+   courses). Same as #2, more direct.
+4. **Paid perk boosts** (real money buying anything that lands in `_EFFECT_KEYS` via `degree_effects()` —
+   yield, quality, terpene, discounts). Textbook pay-to-win; breaks the anti-whale moat and the
+   transparent-economy pledge.
+5. **Randomized paid crates / loot boxes** of any of the above. Compounds with regulatory risk (loot-box
+   legislation is a tailwind the trust pillar deliberately leans into — `04-honesty-and-trust.md` §How
+   this impacts the game).
+
+If any of these is ever desired, it requires an explicit Owner decision that *accepts redefining the
+moat*, not a worker directive.
+
+---
+
+## 4. Premium Curriculum / Season-Pass-style content (parked)
+**What it is.** Paid *additional* content layered on the free core: bonus departments/courses (the
+"Where it's going" list already names Lab Analytics & QA, Business/Law/Compliance,
+Pharmacology/Medical, a Doctorate capstone — `06-university.md`), guest-lecturer series, seasonal
+"semester pass" tracks with cosmetic + (carefully) perk rewards, or a Doctorate capstone behind a pass.
+
+**Prior art.** The **season/battle pass** model (*Fortnite*, *Dota 2 Battle Pass*): a time-boxed track
+of rewards, often free + premium tiers. Ethical when the premium track is **additive and
+non-power-gating** and free players still get a complete experience; player-hostile when it gates
+progression or core fairness behind the pass.
+
+**Ethical / invariant risk.** *Medium, and forks sharply on reward type.*
+- **Cosmetic / lore / extra-lecture rewards:** acceptable in principle (same class as §1).
+- **Perk-bearing rewards (anything in `_EFFECT_KEYS`):** if those perks are obtainable **only** by
+  paying, this becomes pay-to-win and collapses into §3.4. A premium track may grant power **only** if
+  that *same* power is fully earnable for free via gameplay — otherwise it breaches Moat #6 and Pledge #4.
+- **FOMO risk:** time-boxed passes manufacture urgency; Pledge #4 explicitly forbids "manufactured FOMO."
+  Any seasonal framing must be scrutinized against that pledge.
+- **Honesty risk:** premium courses must still require **real study + a real practical**, or they become
+  hollow degrees (§3.2). A "premium" course is still subject to the earned-mastery rule.
+
+**Economy impact.** If the pass is bought with **GROW**, it is a sink (deflationary, fine). If bought
+with **USD**, it is revenue outside the ledger (neutral to inflation, but Owner/store scope). Tuition on
+any premium course remains a GROW sink and must keep the no-GROW-faucet rule.
+
+**Why deferred.** Content scope + pricing + the perk-gating question are all Owner-level economy/taste
+calls. **Deferred to Owner.**
+
+---
+
+## 5. Diploma NFTs (Phase-2 / chain — PARKED behind the mocked chain layer)
+**What it is.** Mint an earned degree as an **on-chain credential** — already named as planned work:
+"Diploma NFTs — mint a degree as an on-chain credential (Proof-of-Cultivation kin; Sprint 4)"
+(`06-university.md` §Where it's going). Monetization variants: a paid mint fee, a marketplace cut on
+transfer, or premium credential cosmetics.
+
+**Ethical / invariant risk.** *Parked-by-architecture.* The chain is **mocked** today
+(`04-honesty-and-trust.md`: "on-chain provenance ⬜ chain mocked (Sprint 4)"; `06-university.md`
+Invariants). The DB-authoritative invariant means **the chain is a mirror/settlement layer and must
+never drive gameplay truth** (`CLAUDE.md`). So a diploma NFT must be a *mirror* of the DB-earned degree,
+never a way to **buy** a degree (buying the NFT must not grant the perks/title — that would be §3.3 via
+the chain). Real-money minting is also **real-money/chain settlement**, an explicit
+**Owner-and-treasury-only** action (`CLAUDE.md`: "Stop and ask ONLY for… real money / chain settlement /
+treasury actions").
+
+**Economy impact.** Off-chain MVP first (`OMNI_CHARTER.md`); this cannot affect the live GROW economy
+until chain ships, and even then must not become a GROW faucet. A mint fee priced in GROW could be a
+sink; priced in real money it is out of scope.
+
+**Why deferred.** Doubly parked: (a) chain is mocked — "No Phase-2 leakage into Phase-1"
+(`OMNI_CHARTER.md`); (b) real-money/treasury — Owner-only by charter. **Deferred to Owner; do not begin
+ahead of the chain layer.**
+
+---
+
+## 6. Faculty / Persona depth as a vanity surface (parked)
+**What it is.** Building on planned "Professor persona depth — named faculty, course-specific voices"
+(`06-university.md` §Where it's going): paid alternate professor personas/voices, cosmetic "office hours"
+flair, or collectible faculty cards. The AI lecturer stack (`LecturerProvider` ABC, `MockLecturerProvider`,
+`ClaudeLecturerProvider`) already exists and is CI-safe.
+
+**Ethical / invariant risk.** *Low-to-medium.* As **pure cosmetic persona reskins** it is §1-class
+(no power, no time-skip). Risk appears only if a "premium professor" gives **better lecture quality or a
+gameplay edge** — that would smuggle power into a cosmetic and breach the moat. Must also keep the
+CI-safe / no-live-key invariant (`06-university.md` Invariants) — a paid persona cannot require a live AI
+key in CI or condition gameplay on a paid model.
+
+**Economy impact.** GROW-priced → sink (fine). USD-priced → revenue/store scope (Owner).
+
+**Why deferred.** Persona content + pricing are Owner calls; trivially collapses into §3 if it ever
+confers power. **Deferred to Owner.**
+
+---
+
+## 7. Cross-cutting analysis: interaction with the two pillars
+**Deflationary economy.** Every option that is *GROW-priced* is a **new sink** → *more* deflationary,
+directionally healthy given the current net-deflationary stance and the visible-burn pledge. But more
+sinks with **no new faucet** can over-drain GROW and starve the core loop (grow → … → sell); the right
+counter is **not** a university faucet (that would break the invariant) but Owner-level tuning of
+existing legitimate faucets via `balance.yaml`. Any new sink should get its own auditable
+`LedgerEntryType` so the burn stays visible (`04-honesty-and-trust.md` Pledge #2). Every option that is
+*USD-priced* sits **outside** the ledger — neutral to inflation, but outside agent scope and into
+store/tax/refund/treasury territory.
+
+**Trust / honesty pillar.** The university is downstream of the project's loudest promise: "the
+provably-honest grow game," "no pay-to-win obfuscation," "no manufactured FOMO," "no loot-box
+manipulation" (`04-honesty-and-trust.md` §Pledge #4, §How this impacts the game). Monetization is the
+**single biggest threat surface** to that promise. The safe envelope is narrow and consistent:
+disclosed-price, non-random, **non-power** cosmetics and **additive** content where any power is also
+freely earnable. Step outside that envelope and the headline marketing claim becomes a lie — which, per
+the trust doc, "defeats its own purpose."
+
+**Summary matrix (parked — none recommended):**
+
+| Option | Moat risk | Honesty risk | Economy effect (GROW) | Disposition |
 |---|---|---|---|---|
-| A. Cosmetic / vanity | None | Low (keep cosmetic ≠ earned titles) | Fiat-neutral; GROW = clean sink | PARKED → Owner |
-| B. Convenience / time-skip | **SEVERE — anti-moat** | **Severe — breaks pledge #4** | Power faucet bought w/ money | **DO-NOT-BUILD** → Owner |
-| C. Premium curriculum / season-pass | Medium (perk-dependent) | Medium (FOMO/expiry risk) | Fiat-clean; perk-balance sensitive | PARKED → Owner |
-| D. Diploma NFTs | Gated (chain mock) | High reputational load | Out of scope pre-chain | PARKED (Phase-2) → Owner |
-| E. Faculty personas / endowment flair | None | Low | Fiat-neutral; GROW = clean sink | PARKED → Owner |
+| 1. Cosmetic/vanity | Low | Low (if no gacha) | New sink (deflationary) | Parked → Owner |
+| 2a. QoL convenience | Low | Low | Neutral/sink | Parked → Owner |
+| 2b. Slots/parallelism | Medium | Medium | Sink, balance risk | Parked → Owner |
+| 2c/2d. Time-skip / practical bypass | **CRITICAL** | **CRITICAL** | n/a | **NOT TO BUILD (§3)** |
+| 4. Premium curriculum / pass | Medium (perk-gating) | Medium (FOMO) | Sink or USD | Parked → Owner |
+| 5. Diploma NFTs | Med (mirror-only) | Medium | Phase-2/chain | Parked (chain mocked) → Owner |
+| 6. Faculty/persona vanity | Low–Med | Low | Sink or USD | Parked → Owner |
 
-## 9. Cross-cutting observations (for the Owner, not a recommendation)
-- **The cleanest-fit families (A, E) are the cosmetic ones** — they reinforce rather than dilute the
-  earned-mastery moat, and GROW-priced variants would *add deflationary sinks* consistent with the
-  tuition model.
-- **The single bright line** is selling the *gate itself* (Family B). Time-skips and practical-
-  waivers are where monetization and the moat are mutually exclusive; this is the one family the
-  research can confidently flag as never-build, independent of any Owner pricing decision.
-- **Premium content (C) is viable only if perks stay non-exclusive** — sell knowledge/expression
-  and cadence, never a competitive ceiling payers reach and non-payers can't.
-- **NFTs (D) are not a Phase-1 question at all** and should stay out of any near-term discussion to
-  avoid Phase-2 leakage.
+---
 
-## 10. Hand-off
-Stays in backlog. **No work order generated, no implementation proposed.** Re-open only on explicit
-Owner direction. If approved, the *only* low-risk first step worth a follow-up directive would be a
-**cosmetic-only** (Family A/E) catalog stub, GROW-priced as a sink, with earned-vs-purchased titles
-kept visibly distinct — but that, too, is **deferred to Owner**.
+## 8. Disposition
+All options above are **PARKED**. Nothing is recommended for implementation. The anti-moat set (§3) is
+flagged as **NOT TO BUILD**. No `curriculum.yaml`, `balance.yaml`, ledger, or service change is proposed.
+Any move from "parked" to "build" requires an explicit Owner decision with player-facing economy
+sign-off, per `CLAUDE.md` and `OMNI_CHARTER.md`. **Deferred to Owner.**
 
-### Sources cited
-Repo: `docs/memory/design/06-university.md`, `docs/memory/design/00-game-vision.md`,
-`docs/memory/design/04-honesty-and-trust.md`, `docs/OMNI_CHARTER.md`, `CLAUDE.md`,
-`src/growpodempire/services/university_service.py` (tuition sink lines 140-145; perk aggregation
-55-69 / 31; completion gate 165-175; claim_degree 191-219).
-External frameworks (named honestly, from general industry knowledge): cosmetic/horizontal
-monetization (Riot *League of Legends*, Epic *Fortnite*); convenience/time-skip soft-pay-to-win
-(*Clash of Clans*); battle-/season-pass cadence (*Fortnite*); premium-content/DLC model; and the
-loot-box / disclosed-odds regulatory trend (Belgium/Netherlands bans, UK/EU consumer-protection
-scrutiny).
+## Sources & repo paths
+- `docs/memory/design/06-university.md` — tuition-as-sink, degrees pay perks/XP not GROW, earned-mastery, "Where it's going" (premium depts, Diploma NFTs Sprint 4, persona depth).
+- `docs/memory/design/00-game-vision.md` §Moat #6 — "earned… you can't credit-card your way to the top" (anti-whale).
+- `docs/memory/design/04-honesty-and-trust.md` — Pledge #2 (transparent economy/visible burn), Pledge #4 (no dark patterns / no pay-to-win / no FOMO / no loot-box).
+- `docs/OMNI_CHARTER.md` — "Off-chain MVP first," "No Phase-2 leakage into Phase-1," Monetization Analyst role.
+- `CLAUDE.md` — faucets↔sinks invariant; DB-authoritative / chain-as-mirror; "Stop and ask ONLY for… player-facing economy changes, real money / chain settlement / treasury."
+- `src/growpodempire/services/university_service.py` — `enroll` (TUITION sink), `complete_course` (real-time study gate + `_practical_met`), `claim_degree`/`university_title`, `degree_effects()` / `_EFFECT_KEYS`.
+- External (cited as prior art, not endorsement): ethical-cosmetics F2P (Path of Exile / Dota 2); season/battle pass (Fortnite, Dota 2 Battle Pass); pay-to-win vs. pay-for-convenience & loot-box literature (UK DCMS loot-box review; Zendle & Cairns; EU/Belgium/Netherlands loot-box rulings).
