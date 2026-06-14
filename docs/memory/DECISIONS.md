@@ -389,3 +389,20 @@ flags govern *exposure* only. Per-player/cohort targeting is deferred until a re
 additive table, not a rewrite). **Consequences:** Backend core ships first (this PR); web route/nav
 gating is a separate surface-claimed PR. Defaults are ON, so adding a flag changes no behaviour until
 a surface is explicitly gated.
+
+### 2026-06-14 — Collapse to ONE feature-flag system (balance.yaml canonical) — supersedes the #42 config path
+**Decision:** Two feature-flag systems landed on `main` ~1 minute apart, out of the agreed order:
+**#42** (env `ENABLE_*` in `config.Settings` → `app.config["FEATURE_*"]`, `api/feature_gates.py`
+decorator gating ~25 routes, defaults **OFF**) and **#55** (the balance.yaml resolver above, defaults
+**ON**, `GET /api/game/flags`). They contradicted each other (routes gated OFF by #42 while `/flags`
+reported ON from #55). Per the BE-003 decision, **#55/balance.yaml is canonical**; the #42 path is
+**removed**. The route decorators now use `feature_required` from `growpodempire.feature_flags`
+(→ `FeatureDisabledError` → 404 via the blueprint handler); `api/feature_gates.py`, the `config.py`
+`ENABLE_*` block, and the `app.config["FEATURE_*"]` mirror are deleted; `balance.yaml feature_flags:`
+gained `chain` + `contracts` and the `cup` decorators were renamed to `cup_competitions` so every
+gated surface maps to exactly one canonical flag. **Why:** the `balance.yaml` data-over-code invariant,
+and one source of truth (no divergence). **Consequences:** gated routes now follow balance.yaml
+defaults (**ON**) — the launch build turns non-MVP surfaces (marketplace/chain/cup_competitions/
+university/contracts) OFF via `FEATURE_*` env, *not* a code default. A regression test asserts each
+route's gate state equals its `/flags` value so the two can never diverge again. Web route/nav gating
+(still on `NEXT_PUBLIC_ENABLE_*`) is re-pointed to `GET /api/game/flags` in the separate Web Gating PR.

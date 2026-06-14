@@ -22,9 +22,8 @@ from ..services.university_service import UniversityService
 from ..services.research_service import ResearchService
 from ..services import leveling_service
 from ..economy.ledger import InsufficientFundsError
-from ..feature_flags import all_flags, FeatureDisabledError
+from ..feature_flags import all_flags, FeatureDisabledError, feature_required as require_feature
 from .auth import require_player
-from .feature_gates import require_feature
 from .ratelimit import limiter
 from .validation import positive_int, bounded_int, positive_money, number
 from . import serialize as S
@@ -947,7 +946,7 @@ def fulfill_contract(player_id, contract_id):
 
 # ----- Seasonal Cannabis Cup --------------------------------------------
 @game_bp.get("/cup/current")
-@require_feature("cup")
+@require_feature("cup_competitions")
 def cup_current():
     """The current season's Cup (auto-judges any closed window). Public."""
     with session_scope() as s:
@@ -960,7 +959,7 @@ def cup_current():
 
 
 @game_bp.get("/cup/<cup_id>/standings")
-@require_feature("cup")
+@require_feature("cup_competitions")
 def cup_standings(cup_id):
     try:
         with session_scope() as s:
@@ -972,7 +971,7 @@ def cup_standings(cup_id):
 
 
 @game_bp.get("/cup/hall-of-fame")
-@require_feature("cup")
+@require_feature("cup_competitions")
 def cup_hall_of_fame():
     """Every season's champions — the lifetime record. Public."""
     with session_scope() as s:
@@ -981,7 +980,7 @@ def cup_hall_of_fame():
 
 
 @game_bp.post("/players/<player_id>/cup/enter")
-@require_feature("cup")
+@require_feature("cup_competitions")
 @require_player
 @limiter.limit("30 per hour")
 def cup_enter(player_id):
