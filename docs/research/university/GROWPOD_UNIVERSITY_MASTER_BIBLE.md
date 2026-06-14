@@ -23,6 +23,13 @@
 | Directive | Title | Worker | Classification | Status | Implementation | Owner Gate |
 |-----------|-------|--------|----------------|--------|----------------|-----------|
 | **UNI-003** | Master Grower Methods | UNI-A03 | Research Only | ✅ COMPLETE | **Deferred** | Required for future `curriculum.yaml` additions |
+| **UNI-010** | Master Bible Update – Practical Curriculum Integration | UNI-A10 | Records Only | ✅ COMPLETE | n/a | — |
+| **UNI-004** | Master Bible Consolidation (canonical source of truth) | UNI-A01–A10 | Records Only | ✅ COMPLETE | n/a | — |
+
+> **Canonical path (UNI-004):** this file — `docs/research/university/GROWPOD_UNIVERSITY_MASTER_BIBLE.md`
+> — is the authoritative source of truth. All future University directives reference it **first**
+> before creating courses, degrees, Methods modules, quizzes, academic progression, the Professor
+> system, research mechanics, or credential systems.
 
 > **Prior grounding research** (predates directive numbering, folded into the Academic track):
 > *Cannabis Higher-Education Curriculum* (2026-06-08) and *Cannabis Strain Genetics & Cultivation*
