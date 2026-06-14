@@ -23,13 +23,24 @@ surface is explicit.
 ## Pre-work checklist (every agent, before writing code)
 
 1. **Check this registry** — is any active directive already touching your file surfaces?
-2. **Claim your surfaces** — add a row to the Live Assignment Ledger (Directive, branch, surfaces).
-3. **Rebase onto `main`** — never build on a stale base; `main` moves under you.
-4. **Verify no active directive owns the same files** — if one does, STOP and escalate to the
+2. **Verify the feature doesn't already exist** — grep `main` and scan the *Recently merged* list
+   below before building. (DX-005 set out to build FP-5; it was already merged in #41 — this step is
+   why no duplicate shipped.)
+3. **Claim your surfaces** — add a row to the Live Assignment Ledger (Directive, branch, surfaces).
+4. **Rebase onto `main`** — never build on a stale base; `main` moves under you.
+5. **Verify no active directive owns the same files** — if one does, STOP and escalate to the
    Director. Do not build on a [Protected Surface](#protected-surfaces) without Director approval.
+6. **Keep PRs small; stop at PR creation / the natural checkpoint** — one responsibility per PR.
 
 > **No autonomous merges. No autonomous rebases of someone else's branch. No mutations without
 > approval.** (OMNI Charter, Core Rules.)
+
+### Operational note — workflow transition (2026-06-14)
+
+The studio is moving toward **desktop + terminal operations**: the Director will increasingly drive
+the repo through **Claude Code / terminal-based repo control**, while ChatGPT / Grok / Claude
+continue to act as specialized studio departments. Going forward every agent assumes terminal-first
+repo control and follows the pre-work checklist above before any new work.
 
 ---
 
