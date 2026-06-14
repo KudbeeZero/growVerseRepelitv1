@@ -56,13 +56,15 @@ Open / in-flight directives. One row per directive; update **Status** as it move
 
 | Directive | Dept | Lead | Workers | Branch | PR | Owned file surfaces | Deps | Status |
 |---|---|---|---|---|---|---|---|---|
-| DIR-004 (FP-3 re-cut) | Design & Experience | DIR-A00 | DIR-A01, A02 | `claude/dx-plant-cta` | #45 | Plant-care only: `lib/plantAction.ts`, `components/plant/PlantActionCTA.tsx`, `PlantCard.tsx`, `pod/PodCard.tsx`, `app/dashboard/plants/[plantId]/page.tsx` | — | 🟢 Open, awaiting review |
-| REC-003 (this registry) | Records | DIR-A00 | DIR-A05–A10, A03/A04 | `claude/records-agent-registry` | (this PR) | Docs only: `docs/STUDIO_AGENT_REGISTRY.md`, `docs/memory/BACKLOG.md`, `docs/OMNI_CHARTER.md` | — | 🟢 Open |
+| DX-006 (P4 Sticky One-Handed CTAs) | Design & Experience | DX-A00 | DX-A01–A10 | `claude/dx-sticky-one-handed-ctas` | (this PR) | Plant-care placement: `components/ui/StickyActionBar.tsx` (new), `app/dashboard/plants/[plantId]/page.tsx` | Reuses merged FP-3 `lib/plantAction.ts` + `PlantActionCTA` **read-only** (no logic change) | 🟢 Open |
 
 ### Recently merged to `main` (for collision awareness)
 
 | PR | Title | Surfaces touched |
 |---|---|---|
+| #46 | REC-003 Studio Agent Registry activation | docs (governance) |
+| #45 | DIR-004 / FP-3 Primary Plant CTA (next-action resolver + `PlantActionCTA`) | Plant-care (`plantAction.ts`, `PlantActionCTA.tsx`, plant detail, `PlantCard`, `PodCard`) |
+| #41 | DX-001 Care Feedback & Celebration | Plant-care (care bursts), `globals.css`, chamber end-state |
 | #39 | `/ftue` guided tutorial route | FTUE |
 | #38 | OMNI Charter v1.0 | docs (governance) |
 | #36 | DXD Mobile-first — responsive nav + chamber | **Navigation**, App Shell, Layout, chamber |
