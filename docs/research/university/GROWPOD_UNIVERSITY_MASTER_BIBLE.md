@@ -1,5 +1,15 @@
 # 🎓 GrowPod University — Master Bible (Canonical)
 
+> ## ❄️ FROZEN — UNI-011 Canonical Freeze & Implementation Hold (2026-06-14)
+> **GrowPod University development is PARKED until after MVP launch.** This file is the **single
+> authoritative source of truth** for all University systems (degrees, academic/Methods tracks,
+> curriculum, research pathways, Professor, quizzes, social/credential systems, and all future
+> University directives). Until the **University Build Phase** is explicitly authorized by the owner:
+> **no code / renderer / economy / `curriculum.yaml` changes, no new University systems, no PRs**
+> unless explicitly requested. Records/documentation only. Methods-track `curriculum.yaml`
+> integration is **owner-gated** and activates only in the University Build Phase. Any future chat:
+> read this file first before proposing or starting University work.
+
 > **Records Department · maintained by UNI-A10 (Records Consolidation).** The single canonical
 > reference for GrowPod University's *curriculum knowledge* — what the university teaches and how.
 > It **consolidates and indexes** the underlying research deliverables; it does not replace them.
@@ -25,6 +35,7 @@
 | **UNI-003** | Master Grower Methods | UNI-A03 | Research Only | ✅ COMPLETE | **Deferred** | Required for future `curriculum.yaml` additions |
 | **UNI-010** | Master Bible Update – Practical Curriculum Integration | UNI-A10 | Records Only | ✅ COMPLETE | n/a | — |
 | **UNI-004** | Master Bible Consolidation (canonical source of truth) | UNI-A01–A10 | Records Only | ✅ COMPLETE | n/a | — |
+| **UNI-011** | Canonical Freeze & Implementation Hold | UNI-A00 | Records Only | ✅ COMPLETE / ❄️ FROZEN | **Parked → University Build Phase** | Owner approval to lift freeze |
 
 > **Canonical path (UNI-004):** this file — `docs/research/university/GROWPOD_UNIVERSITY_MASTER_BIBLE.md`
 > — is the authoritative source of truth. All future University directives reference it **first**
