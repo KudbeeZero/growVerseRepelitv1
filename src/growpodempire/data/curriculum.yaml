@@ -29,6 +29,7 @@ courses:
   cult-101:
     name: "Fundamentals of Cannabis Cultivation"
     department: cultivation
+    faculty: atlas
     credits: 3
     level_req: 1
     duration_hours: 48
@@ -46,6 +47,7 @@ courses:
   cult-201:
     name: "Environmental Control: VPD & DLI"
     department: cultivation
+    faculty: verdant
     credits: 4
     level_req: 3
     duration_hours: 96
@@ -62,6 +64,7 @@ courses:
   cult-301:
     name: "Advanced Canopy & Yield Management"
     department: cultivation
+    faculty: atlas
     credits: 5
     level_req: 6
     duration_hours: 168
@@ -78,6 +81,7 @@ courses:
   gen-101:
     name: "Plant Genetics"
     department: genetics
+    faculty: nova
     credits: 3
     level_req: 2
     duration_hours: 60
@@ -94,6 +98,7 @@ courses:
   gen-201:
     name: "Breeding & Selection"
     department: genetics
+    faculty: nova
     credits: 4
     level_req: 4
     duration_hours: 120
@@ -110,6 +115,7 @@ courses:
   gen-301:
     name: "Stabilization & Pheno-Hunting"
     department: genetics
+    faculty: nova
     credits: 5
     level_req: 7
     duration_hours: 192
@@ -126,6 +132,7 @@ courses:
   nut-101:
     name: "Soil & Nutrient Science"
     department: nutrients
+    faculty: mycelia
     credits: 3
     level_req: 2
     duration_hours: 60
@@ -142,6 +149,7 @@ courses:
   nut-201:
     name: "Hydroponics & EC/pH Management"
     department: nutrients
+    faculty: mycelia
     credits: 4
     level_req: 5
     duration_hours: 120
@@ -158,6 +166,7 @@ courses:
   ipm-101:
     name: "Pest & Disease Identification"
     department: ipm
+    faculty: flora
     credits: 3
     level_req: 2
     duration_hours: 60
@@ -174,6 +183,7 @@ courses:
   ipm-201:
     name: "Integrated Pest Management"
     department: ipm
+    faculty: flora
     credits: 4
     level_req: 5
     duration_hours: 120
@@ -190,6 +200,7 @@ courses:
   chem-101:
     name: "Cannabinoids & Terpenes"
     department: chemistry
+    faculty: flora
     credits: 3
     level_req: 3
     duration_hours: 72
@@ -206,6 +217,7 @@ courses:
   chem-201:
     name: "Chemotypes & GC/LC Analytics"
     department: chemistry
+    faculty: flora
     credits: 5
     level_req: 6
     duration_hours: 168
@@ -222,6 +234,7 @@ courses:
   ph-101:
     name: "Harvest, Drying & Curing"
     department: postharvest
+    faculty: atlas
     credits: 3
     level_req: 2
     duration_hours: 60
@@ -238,6 +251,7 @@ courses:
   ph-201:
     name: "Post-Harvest Quality & Storage"
     department: postharvest
+    faculty: atlas
     credits: 4
     level_req: 5
     duration_hours: 120
