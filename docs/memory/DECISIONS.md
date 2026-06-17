@@ -517,3 +517,23 @@ monetization, no tokenomics** introduced; the earned-mastery moat is unchanged (
 stay non-economic). Approved future build order: Framework → `bio-101` → Professor System → ElevenLabs →
 Labs → Assessments → Certifications → Transcripts → Advanced Courses → Degree Programs. No
 implementation is scheduled yet; these docs are the authoritative reference when it is.
+
+### 2026-06-17 — University content expansion: personas, diplomas, Lab QA/Pharmacology + Doctorate
+**Decision:** Lifted the freeze for *structure-only* university expansion across three merged PRs.
+(1) **Named-faculty personas wired** to all courses (PR #73) — the 5 dormant personas
+(atlas/flora/verdant/mycelia/nova) were dead code; each course now routes to its specialist via the
+existing `faculty` key. (2) **On-chain diplomas** (PR #73) — earned degrees can mint as Algorand ASA
+verifiable credentials, mirroring the strain/harvest NFT path (DB-authoritative, idempotent, mock in
+CI, `MintingService.mint_diploma`, migration `e1a7c4d92b08`). (3) **Lab QA + Pharmacology departments,
+6 courses, 5 degrees incl. a new `doctorate` tier** (PR #76, owner-specced). Module bodies, quizzes,
+audio, and video remain **frozen**; new courses ship with `lecture.topic`+`objectives` only.
+**Why:** activate already-built infrastructure and add progression paths at near-zero risk before any
+content/UX work. Owner reviewed and signed off the perk spec before coding.
+**Consequences (invariants verified, not assumed):** Only **degree** perks aggregate into gameplay
+(`university_service.degree_effects`, same additive path as `research_effects`); **course `perks` are
+display-only** previews. All perks use the canonical 9 keys in `research_service._EFFECT_KEYS`. The
+`doctorate` tier is a free-text string — no enum, no `claim_degree` change, no model migration. Nothing
+couples to degree `tier` strings; achievements key off harvests/breeds/NFTs/balance. **Carried finding
+(not fixed):** the merged bizlaw degrees use `tuition_discount_pct`, which is **not** a recognized
+effect key and silently no-ops today — needs a separate ticket (either add the key + an apply-site, or
+remap to an existing key). NEXT: **frontend wiring** to make all of the above player-visible.

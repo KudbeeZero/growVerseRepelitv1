@@ -4,9 +4,23 @@
 > the end of every chat; read by `/handoff-audit` at the start of the next. If this file and
 > the code disagree, the code wins — fix the baton. See `docs/SESSION_PROTOCOL.md`.
 
-**Last rewritten:** 2026-06-14 · **By:** records chat — CEO ratified PR #63; #61 closed; FF-RECON-001 EXECUTED
-**Active branch:** `main` (PR #63 squash-merged this chat).
-**Just merged (this chat): PR #63 — BE-003 feature-flag reconciliation.** `main` had carried **two**
+**Last rewritten:** 2026-06-17 · **By:** University expansion chat — PRs #73 + #76 merged to `main`
+**Active branch:** `main`. **Closeout PR:** docs/baton-only PR on `claude/closeout-uni-labqa-pharma`
+(awaiting audit). **Prev audit status:** n/a (owner drove this chat directly).
+
+**THIS CHAT (2026-06-17) — GrowPod University content expansion (3 PRs, all merged):**
+- **PR #73 — specialist professors + on-chain diplomas.** Wired the 5 dormant faculty personas
+  (atlas/flora/verdant/mycelia/nova) to all 14 core courses (they were written yet referenced by
+  nothing). Added **on-chain diplomas**: earned degrees mint as Algorand ASA verifiable credentials,
+  mirroring the strain/harvest NFT path (DB-authoritative, idempotent, mock-in-CI; `DegreeProgress.nft_*`
+  + migration `e1a7c4d92b08`; `MintingService.mint_diploma`; `POST /players/<id>/degrees/<key>/mint`).
+- **PR #76 — Lab QA + Pharmacology departments + Doctorate tier (structure-only).** 2 departments
+  (`labqa`, `pharma`), 6 courses, 5 degrees incl. a new `doctorate` tier (`phd-cannabis-science`), 2 new
+  personas (`assay`, `remedy`). Owner-specced perks. **Module bodies/quizzes/audio/video stay frozen.**
+- **Gates on merged `main`:** `make test` **294 passed, 84.66%** · `make lint` ✅ · `make check-memory` ✅.
+- **All backend/API only — no player-visible UI yet** (this is the NEXT ACTION).
+
+**Prior context (feature-flag chat): PR #63 — BE-003 feature-flag reconciliation.** `main` had carried **two**
 contradictory flag systems (#42's `config.py ENABLE_*` / `feature_gates.py` gating routes OFF while
 `GET /api/game/flags` reported ON from #55's `balance.yaml`). #63 collapses to the single
 balance.yaml-canonical system: deletes `api/feature_gates.py` + the `config.py ENABLE_*` block + the
@@ -44,6 +58,23 @@ overlapping*. **PR #42** *MVP Feature Flag Layer* (the NEXT ACTION).
 ---
 
 ## NEXT ACTION (the one scoped item the next chat does)
+
+**Frontend wiring for the merged University backend (owner-chosen 2026-06-17).** Everything from PRs
+#73/#76 is backend/API only — no player can click it. Make it visible in `web/`:
+1. **Mint-diploma button** on `/university/transcript` — call `POST /players/<id>/degrees/<key>/mint`
+   for earned degrees (mirror the existing strain/harvest mint hooks in `web/src/lib/api/`), show
+   `nft_status`/`nft_asset_id`.
+2. **Faculty nameplate** on the course page — surface the course's professor (the `faculty` key) so the
+   persona is visible, not just implicit in the lecture text.
+3. **New departments/degrees in the catalog UI** — `labqa`, `pharma`, and the `doctorate` tier render
+   in the catalog + transcript (the API already returns them; confirm the UI doesn't hard-code tiers).
+- **Scope/limits:** UI only — do NOT touch curriculum perks, the freeze (no module bodies/quizzes/
+  audio), or the chain provider. Gate diploma UI behind the `chain` flag like the other mint buttons.
+- **Also worth a separate ticket (not this action):** `tuition_discount_pct` is a **dead perk** — see
+  OPEN RISKS. And the real-provider smoke test (Algorand TestNet mint + real Claude lecture) is still
+  only mock-verified.
+
+<details><summary>Prior NEXT ACTION (feature-flag chat) — superseded</summary>
 
 **Playtesting → Retention Validation → MVP Launch Candidate.** **Feature Flags are DONE** — one
 canonical `balance.yaml`/`feature_flags.py` system (**PR #63, CEO-ratified 2026-06-14**): gated routes
@@ -89,7 +120,7 @@ Candidate.
 
 ---
 
-## What THIS chat did (BE-004A reconciliation + PR #47 landing)
+## Prior chats (context) — BE-004A reconciliation + PR #47 landing
 
 Reconciled the three overlapping Builder-Dept PRs and landed the canonical one, per the Director's
 BE-004A decision:
@@ -136,6 +167,7 @@ Shipped by PR #47 (authored across the BE-002 + BE-004 sessions):
 
 | # | Sev | Risk | Evidence | Status |
 |---|-----|------|----------|--------|
+| 12 | LOW | **`tuition_discount_pct` is a dead perk.** The merged bizlaw degrees (`cert-compliance`, `bs-cannabis-business`, `ms-cannabis-operator`, biz course previews) grant `tuition_discount_pct`, but it is **not** in `research_service._EFFECT_KEYS`, so `degree_effects()` silently drops it — players get no tuition discount. | `data/curriculum.yaml`, `services/research_service.py` (`_EFFECT_KEYS`), `services/university_service.py` (`degree_effects`) | OPEN (new 2026-06-17) — separate ticket: add the key + an enroll-time apply-site in `university_service.enroll`, or remap to an existing key. Not in scope for the frontend-wiring NEXT ACTION. |
 | 1 | MED | **Cure/auction not dev-clock-drivable.** `GameService` defaulted to `SystemClock`, so the dev clock couldn't fast-forward cure/auction over HTTP. | `services/game_service.py` (now `active_clock()`) | ✅ **CLOSED** — STEP 4.5 merged as **PR #59** (`5d44d35`); verified live in the BE-004.5 playtest + `test_cure_advances_under_dev_clock`. |
 | 3 | HIGH | Idempotency on mutations — general `Idempotency-Key` header (duplicate → original response, not a 409). | `api/game_api.py` | PARTIAL — concurrency core + one-shot grants shipped (`grant_claims`, harvest-once index); FTUE `advance` replay-guarded. General header absent (WIP PR #16 closed unmerged). |
 | 4/7 | HIGH | **Chain settlement not real** — deposit trusts no on-chain proof; treasury-drain path; no txid replay protection / reconciliation / address validation. | `services/settlement_service.py`, `db/models.py` | OPEN — blocks any real value moving (Sprint 4 gate). |
