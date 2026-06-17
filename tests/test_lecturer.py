@@ -48,13 +48,17 @@ def test_every_course_faculty_resolves_to_a_known_persona():
         assert faculty is not None, f"{key} has no faculty assigned"
         assert faculty in _FACULTY_PERSONAS, f"{key} -> unknown faculty '{faculty}'"
         used.add(faculty)
-    # All five named teaching personas (plus lex) must actually be wired to a course.
-    assert {"atlas", "flora", "verdant", "mycelia", "nova", "lex"} <= used
+    # Every named teaching persona must actually be wired to at least one course.
+    assert {
+        "atlas", "flora", "verdant", "mycelia", "nova", "lex", "assay", "remedy"
+    } <= used
 
 
 def test_build_system_prompt_routes_to_faculty_and_falls_back():
     assert "Atlas" in build_system_prompt("atlas")
     assert "Lex" in build_system_prompt("lex")
+    assert "Assay" in build_system_prompt("assay")
+    assert "Remedy" in build_system_prompt("remedy")
     # Unknown / missing faculty -> default Master Grower persona, no crash.
     assert build_system_prompt("ghost") == build_system_prompt(None)
 

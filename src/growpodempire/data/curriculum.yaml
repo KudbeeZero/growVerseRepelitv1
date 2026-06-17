@@ -24,6 +24,8 @@ departments:
   chemistry: {name: "Cannabis Chemistry"}
   postharvest: {name: "Post-Harvest & Processing"}
   bizlaw: {name: "Business, Law & Compliance"}
+  labqa: {name: "Lab Analytics & Quality Assurance"}
+  pharma: {name: "Pharmacology & Medical Cannabis"}
 
 courses:
   cult-101:
@@ -846,6 +848,122 @@ courses:
     practical: {type: harvest_quality, threshold: 90}
     perks: {yield_pct: 0.05, terpene_pct: 0.03, quality_bonus: 2}
 
+  # ─────────────────────────────────────────────────────────────────────────
+  # DEPARTMENT: Lab Analytics & Quality Assurance
+  # Faculty: Professor Assay — analytical chemist / QA lab director.
+  # NOTE: course `perks` are display-only previews; only DEGREE perks aggregate
+  #       into gameplay (see services/university_service.degree_effects). Module
+  #       bodies / quizzes / audio / video are intentionally deferred (freeze).
+  # ─────────────────────────────────────────────────────────────────────────
+
+  lab-101:
+    name: "Sampling & Lab Methods"
+    department: labqa
+    faculty: assay
+    credits: 3
+    level_req: 3
+    duration_hours: 60
+    tuition: 250
+    prereqs: []
+    lecture:
+      topic: "Representative sampling, sample prep, and the lab workflow: why a result is only as good as the gram it came from."
+      objectives:
+        - "Pull a representative sample and explain sampling error."
+        - "Describe homogenization, extraction, and dilution before analysis."
+    practical: {type: harvest_quality, threshold: 70}
+    perks: {quality_bonus: 1}
+
+  lab-201:
+    name: "Potency & Terpene Analysis"
+    department: labqa
+    faculty: assay
+    credits: 4
+    level_req: 5
+    duration_hours: 120
+    tuition: 400
+    prereqs: [lab-101]
+    lecture:
+      topic: "Quantifying cannabinoids and terpenes by chromatography: calibration curves, internal standards, and reading a certificate of analysis."
+      objectives:
+        - "Interpret a potency/terpene COA and its uncertainty."
+        - "Explain calibration and why replicate runs matter."
+    practical: {type: harvest_quality, threshold: 80}
+    perks: {terpene_pct: 0.04}
+
+  lab-301:
+    name: "QA Systems & Contaminant Screening"
+    department: labqa
+    faculty: assay
+    credits: 5
+    level_req: 7
+    duration_hours: 168
+    tuition: 600
+    prereqs: [lab-201]
+    lecture:
+      topic: "Building a quality system: pesticide/heavy-metal/microbial screening, action limits, and chain-of-custody from intake to release."
+      objectives:
+        - "List the contaminant classes screened before release and their action limits."
+        - "Design a release-testing QA gate for a batch."
+    practical: {type: cure, threshold: 3}
+    perks: {quality_bonus: 1, cure_bonus_pct: 0.05}
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # DEPARTMENT: Pharmacology & Medical Cannabis
+  # Faculty: Professor Remedy — clinical pharmacologist, dosing-and-safety first.
+  # NOTE: course `perks` are display-only previews (see note above).
+  # ─────────────────────────────────────────────────────────────────────────
+
+  pharm-101:
+    name: "The Endocannabinoid System & Pharmacokinetics"
+    department: pharma
+    faculty: remedy
+    credits: 3
+    level_req: 4
+    duration_hours: 72
+    tuition: 300
+    prereqs: []
+    lecture:
+      topic: "How cannabinoids act in the body: CB1/CB2 receptors, the endocannabinoid system, and absorption/distribution/metabolism/excretion by route."
+      objectives:
+        - "Describe CB1/CB2 signaling and the endocannabinoid system."
+        - "Compare onset and duration across inhaled vs. oral routes."
+    practical: {type: harvest_count, threshold: 3}
+    perks: {consumable_potency_pct: 0.05}
+
+  pharm-201:
+    name: "Cannabinoid Therapeutics & Dosing"
+    department: pharma
+    faculty: remedy
+    credits: 4
+    level_req: 6
+    duration_hours: 120
+    tuition: 450
+    prereqs: [pharm-101]
+    lecture:
+      topic: "Evidence-based therapeutic use: indications, the entourage hypothesis, titration and start-low-go-slow dosing, tolerance, and drug interactions."
+      objectives:
+        - "Explain titration and the start-low-go-slow principle."
+        - "Describe the entourage hypothesis and cite its limits."
+    practical: {type: harvest_quality, threshold: 80}
+    perks: {consumable_potency_pct: 0.05, terpene_pct: 0.03}
+
+  pharm-301:
+    name: "Formulation & Extract Science"
+    department: pharma
+    faculty: remedy
+    credits: 5
+    level_req: 8
+    duration_hours: 192
+    tuition: 700
+    prereqs: [pharm-201]
+    lecture:
+      topic: "From flower to product: extraction methods, decarboxylation, bioavailability, and formulating consistent, dose-accurate edibles and tinctures."
+      objectives:
+        - "Compare extraction methods and their selectivity/safety tradeoffs."
+        - "Explain decarboxylation and how formulation drives dose accuracy."
+    practical: {type: research, threshold: 5}
+    perks: {consumable_potency_pct: 0.06, quality_bonus: 1}
+
 degrees:
   cert-cultivation:
     name: "Cannabis Cultivation Certificate"
@@ -910,3 +1028,49 @@ degrees:
     required_courses: [biz-101, biz-201, biz-301, biz-401, biz-501]
     perks: {tuition_discount_pct: 0.20, yield_pct: 0.08, quality_bonus: 2, terpene_pct: 0.03}
     xp_reward: 2000
+
+  # ----- Lab Analytics & QA -----
+  cert-lab-qa:
+    name: "Cannabis Lab QA Certificate"
+    tier: certificate
+    title: "Certified Lab Analyst"
+    required_courses: [lab-101, lab-201]
+    perks: {quality_bonus: 2}
+    xp_reward: 350
+
+  bs-analytical:
+    name: "B.S. Analytical Cannabis Science"
+    tier: bachelor
+    title: "Cannabis Analytical Scientist"
+    required_courses: [lab-101, lab-201, lab-301, chem-201]
+    perks: {quality_bonus: 2, terpene_pct: 0.05}
+    xp_reward: 900
+
+  # ----- Pharmacology & Medical Cannabis -----
+  cert-pharma:
+    name: "Medical Cannabis Certificate"
+    tier: certificate
+    title: "Cannabis Pharmacology Associate"
+    required_courses: [pharm-101, pharm-201]
+    perks: {consumable_potency_pct: 0.08}
+    xp_reward: 350
+
+  bs-medical:
+    name: "B.S. Medical Cannabis & Pharmacology"
+    tier: bachelor
+    title: "Cannabis Pharmacologist"
+    required_courses: [pharm-101, pharm-201, pharm-301, chem-101]
+    perks: {consumable_potency_pct: 0.10, terpene_pct: 0.03}
+    xp_reward: 900
+
+  # ----- Doctorate: the capstone. NEW `doctorate` tier (additive string only —
+  # no enum, no claim_degree change). Requires the terminal course of every
+  # track; because each capstone prereq-chains its department, this subsumes the
+  # whole curriculum. -----
+  phd-cannabis-science:
+    name: "Ph.D. — Cannabis Science"
+    tier: doctorate
+    title: "Doctor of Cannabis Science"
+    required_courses: [cult-301, gen-301, nut-201, ipm-201, chem-201, ph-201, lab-301, pharm-301, biz-501]
+    perks: {yield_pct: 0.10, quality_bonus: 3, terpene_pct: 0.05, consumable_potency_pct: 0.10, care_discount_pct: 0.05}
+    xp_reward: 3000
