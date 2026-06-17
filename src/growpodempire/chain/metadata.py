@@ -38,6 +38,31 @@ def strain_metadata(strain) -> Dict:
     }
 
 
+def diploma_metadata(degree_key: str, degree: Dict, player) -> Dict:
+    """ARC-3 metadata for a GrowPod University diploma — a verifiable academic
+    credential mirrored on-chain. The DB remains authoritative for the perks and
+    title the degree grants; this credential just proves the degree was earned."""
+    perks = degree.get("perks") or {}
+    return {
+        "name": degree.get("name", degree_key),
+        "description": (
+            f"GrowPod University diploma — {degree.get('name', degree_key)}. "
+            f"Conferred the title \"{degree.get('title', '')}\". "
+            "A verifiable academic credential earned in GROWv2."
+        ),
+        "decimals": 0,
+        "properties": {
+            "type": "diploma",
+            "degree_key": degree_key,
+            "tier": degree.get("tier"),
+            "title": degree.get("title"),
+            "required_courses": list(degree.get("required_courses") or []),
+            "perks": dict(perks),
+            "graduate": getattr(player, "name", None) or getattr(player, "id", None),
+        },
+    }
+
+
 def harvest_metadata(harvest, strain) -> Dict:
     """ARC-3 metadata for a premium harvest NFT."""
     return {

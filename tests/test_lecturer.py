@@ -9,9 +9,14 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 from growpodempire.db.session import session_scope
 from growpodempire.services.game_service import GameService
 from growpodempire.services.lecturer_service import LecturerService
+from growpodempire.services.university_service import load_curriculum
 from growpodempire.ai.lecturer_mock import MockLecturerProvider
 from growpodempire.ai.provider import LectureReport
 from growpodempire.ai.factory import get_lecturer_provider
+from growpodempire.ai.lecturer_claude import (
+    _FACULTY_PERSONAS,
+    build_system_prompt,
+)
 
 
 def test_factory_returns_mock_without_key():
@@ -31,6 +36,27 @@ def test_mock_lecture_is_deterministic():
     assert isinstance(a, LectureReport)
     assert a.title == b.title and a.content == b.content
     assert a.key_takeaways and a.quiz_question
+
+
+def test_every_course_faculty_resolves_to_a_known_persona():
+    """Each course's `faculty` key must map to a defined persona — otherwise the
+    Professor silently falls back to the generic default (dead-persona bug)."""
+    courses = load_curriculum().get("courses", {})
+    used = set()
+    for key, course in courses.items():
+        faculty = course.get("faculty")
+        assert faculty is not None, f"{key} has no faculty assigned"
+        assert faculty in _FACULTY_PERSONAS, f"{key} -> unknown faculty '{faculty}'"
+        used.add(faculty)
+    # All five named teaching personas (plus lex) must actually be wired to a course.
+    assert {"atlas", "flora", "verdant", "mycelia", "nova", "lex"} <= used
+
+
+def test_build_system_prompt_routes_to_faculty_and_falls_back():
+    assert "Atlas" in build_system_prompt("atlas")
+    assert "Lex" in build_system_prompt("lex")
+    # Unknown / missing faculty -> default Master Grower persona, no crash.
+    assert build_system_prompt("ghost") == build_system_prompt(None)
 
 
 def test_lecturer_service_returns_a_lecture_for_a_real_course(db):

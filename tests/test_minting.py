@@ -8,7 +8,7 @@ import pytest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from growpodempire.db.session import session_scope
-from growpodempire.db.models import Strain
+from growpodempire.db.models import Strain, DegreeProgress
 from growpodempire.enums import NFTStatus, Rarity, LineageType
 from growpodempire.services.game_service import GameService, GameError
 from growpodempire.services.minting_service import MintingService
@@ -84,6 +84,43 @@ def test_mint_strain_requires_stability_and_rarity(db):
         minted = MintingService(s, provider=MockChainProvider()).mint_strain(player.id, stable.id)
         assert minted.nft_status == NFTStatus.MINTED.value
         assert minted.nft_asset_id is not None
+
+
+def test_mint_diploma_for_an_earned_degree(db):
+    with session_scope() as s:
+        p = GameService(s).create_player("graduate")
+        # The degree is DB-authoritative — earn it directly, then mirror on-chain.
+        s.add(DegreeProgress(player_id=p.id, degree_key="cert-cultivation"))
+        s.flush()
+        provider = MockChainProvider()
+        progress = MintingService(s, provider=provider).mint_diploma(p.id, "cert-cultivation")
+        assert progress.nft_status == NFTStatus.MINTED.value
+        assert progress.nft_asset_id in provider.assets
+
+        # And its ARC-3 metadata is servable and marked as a diploma.
+        meta = MintingService(s, provider=provider).metadata_for("diploma", progress.id)
+        assert meta["properties"]["type"] == "diploma"
+        assert meta["properties"]["degree_key"] == "cert-cultivation"
+
+
+def test_mint_diploma_requires_earning_it_first(db):
+    with session_scope() as s:
+        p = GameService(s).create_player("dropout")
+        with pytest.raises(GameError):
+            MintingService(s, provider=MockChainProvider()).mint_diploma(p.id, "cert-cultivation")
+
+
+def test_mint_diploma_is_idempotent(db):
+    with session_scope() as s:
+        p = GameService(s).create_player("grad2")
+        s.add(DegreeProgress(player_id=p.id, degree_key="cert-cultivation"))
+        s.flush()
+        provider = MockChainProvider()
+        svc = MintingService(s, provider=provider)
+        first = svc.mint_diploma(p.id, "cert-cultivation").nft_asset_id
+        second = svc.mint_diploma(p.id, "cert-cultivation").nft_asset_id
+        assert first == second
+        assert len(provider.assets) == 1  # not minted twice
 
 
 def test_link_wallet(db):
