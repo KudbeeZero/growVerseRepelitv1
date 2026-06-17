@@ -275,7 +275,10 @@ once they appear here. Last reconciled: **2026-06-14** (REC-004 full repository 
   (tuition sink) → time + practical study → degrees (permanent perks via the research effect keys +
   a title + XP), taught by an AI Professor (mock for CI, Claude in prod). Public `/university/catalog`
   + authed enroll/complete/claim/lecture; +13 tests. Grounded in a cited curriculum research report.
-  *Next (⬜): quizzes, more departments, Doctorate tier, diploma NFTs.* Per `docs/memory/design/06-university.md`.
+  *Shipped since (2026-06-17): named-faculty personas wired to all courses (PR #73); on-chain diplomas
+  — degrees mint as Algorand ASA credentials (PR #73); Lab QA + Pharmacology departments + `doctorate`
+  tier (PR #76). Next (⬜): **frontend wiring** (mint-diploma button, faculty nameplate, new depts in
+  catalog UI); then quizzes/module bodies/audio (still frozen).* Per `docs/memory/design/06-university.md`.
 - 🟡 ✅ **Web client — full UI build** (2026-06-08, branch `claude/growv2-web-ui-build-MZWZE`) — the
   Next 15 client now covers all seven screen groups (onboarding hero · grow dashboard with VPD/DLI/PPFD
   · strain lab + encyclopedia + DNA/lineage constellations + Verify provenance · GenBank galaxy ·
