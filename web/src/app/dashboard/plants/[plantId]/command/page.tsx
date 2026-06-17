@@ -48,6 +48,9 @@ function CommandScreen({ plantId }: { plantId: string }) {
 
   const [climate, setClimate] = useState<Environment>(DEFAULT_CLIMATE);
   const [previewDay, setPreviewDay] = useState<number | null>(null);
+  // Monotonic LIVE grow-day floor (see liveDay below) — a living plant never
+  // visually regresses, so the top cola can't snap smaller/bigger between polls.
+  const dayFloorRef = useRef<{ id: string; day: number }>({ id: "", day: 0 });
 
   const pod = pods?.find((p) => p.id === plant?.pod_id);
 
@@ -109,12 +112,25 @@ function CommandScreen({ plantId }: { plantId: string }) {
   const strain = map.get(plant.strain_id);
   const render = plantRender(plant, strain, pod);
 
+  // A living plant never visually shrinks. The chamber rebuilds its geometry on
+  // the (rounded) grow-day, so non-monotonic jitter in the server's compute-on-
+  // read stage progress — sampled every 7s poll — would snap the top cola
+  // bigger/smaller. nominalGrowDay only climbs within and across stages, so pin
+  // the LIVE day to the max seen for this plant (reset when the plant changes).
+  // Preview days bypass this — those are user-driven and may move either way.
+  if (dayFloorRef.current.id !== plantId) {
+    dayFloorRef.current = { id: plantId, day: render.liveNominalDay };
+  } else if (render.liveNominalDay > dayFloorRef.current.day) {
+    dayFloorRef.current.day = render.liveNominalDay;
+  }
+  const liveDay = dayFloorRef.current.day;
+
   const previewing = previewDay !== null;
-  const day = previewing ? previewDay : render.liveNominalDay;
+  const day = previewing ? previewDay : liveDay;
   const renderStage = previewing ? stageForDay(day, render.flMid) : plant.growth_stage;
   const dev = previewing
     ? previewDev(day, render.flMid)
-    : previewDev(render.liveNominalDay, render.flMid);
+    : previewDev(liveDay, render.flMid);
   const maxPreviewDay = Math.round(cycleDays(render.flMid) + 8);
 
   const stageIndex = plant.forecast?.stage_index ?? STAGE_ORDER.indexOf(plant.growth_stage);
@@ -129,7 +145,7 @@ function CommandScreen({ plantId }: { plantId: string }) {
         playerId={playerId!}
         pod={pod}
         pods={pods}
-        day={render.liveNominalDay}
+        day={liveDay}
       />
 
       {/* header band: counters (left) · stage header (center) · stat chips (right) */}
@@ -209,8 +225,8 @@ function CommandScreen({ plantId }: { plantId: string }) {
             <TimeControls
               forecast={plant.forecast}
               previewing={previewing}
-              previewDay={previewDay ?? render.liveNominalDay}
-              liveNominalDay={render.liveNominalDay}
+              previewDay={previewDay ?? liveDay}
+              liveNominalDay={liveDay}
               maxPreviewDay={maxPreviewDay}
               onPreview={(d) => setPreviewDay(d)}
               onLive={() => setPreviewDay(null)}

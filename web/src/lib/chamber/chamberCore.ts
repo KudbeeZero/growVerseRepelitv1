@@ -571,8 +571,11 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
     let hN: number;
     if (d <= 10) hN = lerp(0.05, 0.13, smooth(d / 10));
     else if (d <= 34) hN = lerp(0.13, 0.55, Math.pow((d - 10) / 24, 0.75));
-    else hN = lerp(0.55, clamp(0.6 * S.stretch, 0, 0.97), smooth(clamp((d - 34) / 28, 0, 1)));
-    hN = clamp(hN * S.heightMul * (0.85 + 0.15 * CL.growthMult), 0.05, 0.97);
+    // Flowering stretch: pull the plant taller / more elongated in flower (was
+    // 0.6·stretch capped at 0.97). A taller leader also reads as a more graceful
+    // spire and makes the top cola sit proportionally smaller against the canopy.
+    else hN = lerp(0.55, clamp(0.78 * S.stretch, 0, 0.99), smooth(clamp((d - 34) / 28, 0, 1)));
+    hN = clamp(hN * S.heightMul * (0.85 + 0.15 * CL.growthMult), 0.05, 0.99);
     const stemH = A * hN;
 
     // Main stem: tapered (drawn thick→thin) with gentle noise so it isn't a
@@ -587,9 +590,11 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
 
     const nodes: Node[] = [];
     const flowering = stageOf() === "flowering" || stageOf() === "harvest";
-    // Node density: the strain silhouette sets the canopy fill, and flowering
-    // packs a few more nodes in to close the gaps the bare skeleton left.
-    const flowerPack = flowering ? 1.18 : 1;
+    // Node density: the strain silhouette sets the canopy fill. Flowering packs a
+    // few more nodes in to close the gaps the bare skeleton left; veg spaces them
+    // OUT (×0.82) so a young plant reads as a handful of distinct, well-separated
+    // fan-leaf tiers up a clean stem (the reference), not an overlapping bush.
+    const flowerPack = flowering ? 1.18 : 0.82;
     const nodeTarget = Math.floor((hN / S.internode) * SK.nodeDensity * SK.vertStack * flowerPack);
     const maxNodes = Math.min(18, Math.max(d <= 10 ? 1 : 2, nodeTarget));
     const grow = smooth(clamp((d - 8) / 22, 0, 1));
@@ -632,7 +637,10 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
       const lateral = az.lateral;
       // Engines 1&2: is this node a co-dominant top (one of the highest `nTop`)?
       const topK = nTop > 0 && i >= topFromIdx ? i - topFromIdx : -1;
-      let tilt = (0.92 + rnd() * 0.3) * (1 - f * 0.22) * lerp(1, 1.12, low);
+      // Veg branches lift toward the canopy (≈20% more upright) so a young plant
+      // reads as the tidy, up-and-out symmetric fan tiers of the reference, not a
+      // drooping bush. Flowering keeps its fuller, wider-tilt canopy.
+      let tilt = (0.92 + rnd() * 0.3) * (1 - f * 0.22) * lerp(1, 1.12, low) * (flowering ? 1 : 0.8);
       let len = A * 0.27 * S.branchMul * (0.35 + 0.65 * low) * grow * shorten;
       if (topK >= 0) {
         // A released top straightens toward vertical and extends up to race the
@@ -644,7 +652,9 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
       const depthSize = lerp(0.86, 1.06, (az.depth + 1) / 2);
       const nd: Node = {
         x: p.x, y: p.y, f, side, tilt, len, spread,
-        leafSize: A * (0.08 + 0.05 * low) * (0.55 + 0.45 * grow) * (1 - 0.4 * P.budDev * f) * depthSize,
+        // Broad palmate fans in veg (the reference's big up-and-out leaves); the
+        // boost fades as buds form (·budDev) so flowering canopy stays as tuned.
+        leafSize: A * (0.08 + 0.05 * low) * (0.55 + 0.45 * grow) * (1 - 0.4 * P.budDev * f) * depthSize * (1 + 0.34 * (1 - clamp(P.budDev, 0, 1))),
         leaflets: Math.min(S.leafletMax, 3 + 2 * Math.floor(d / 14)),
         phase: rnd() * TAU,
         tipX: 0, tipY: 0, site: null, budRot: 0,
@@ -670,16 +680,19 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
         // still reads as the main cola. Total flower mass is conserved by the
         // leaderShare/secondaryShares split.
         const coShare = tops.secondaryShares[topK] / tops.leaderShare; // ≤1 vs leader
-        const axis = stemH * 0.13 * S.clusterLen * SK.colaScale * (0.5 + 0.5 * P.budDev) * lerp(0.72, 1.06, coShare) * (1 + P.ripe * 0.18);
-        const baseW = axis * (S.pattern === "spiral" ? 0.3 : 0.46) * S.clusterFat * (0.95 + 0.18 * P.ripe);
+        const axis = stemH * 0.115 * S.clusterLen * SK.colaScale * (0.5 + 0.5 * P.budDev) * lerp(0.72, 1.06, coShare) * (1 + P.ripe * 0.12);
+        const baseW = axis * (S.pattern === "spiral" ? 0.27 : 0.4) * S.clusterFat * (0.95 + 0.12 * P.ripe);
         const nC = Math.max(3, Math.round(S.bracts * (S.pattern === "spiral" ? 1.5 : 1.05)));
         nd.site = buildFlowerSite(rnd, axis, baseW, { pattern: S.pattern, nClusters: nC, bracts: S.bracts, fatMul: 1.05 });
         nd.budRot = nd.side * 0.06;
         nd.weight = lerp(0.95, 1.7, f) * S.clusterFat; // a top cola is heavy
       } else if (P.budDev > 0 && f > S.flowerFrom) {
-        const sizeUp = lerp(0.55, 1.15, f);
-        const axis = A * (0.05 + 0.09 * f) * S.clusterLen * sizeUp * (0.5 + 0.5 * P.budDev);
-        const baseW = axis * 0.42 * S.clusterFat;
+        // Upper branch-tip buds: trimmed so the highest ones don't fuse with the
+        // leader cola into one oversized apex blob — they read as their own buds
+        // stacking up a taller spire.
+        const sizeUp = lerp(0.5, 1.0, f);
+        const axis = A * (0.045 + 0.075 * f) * S.clusterLen * sizeUp * (0.5 + 0.5 * P.budDev);
+        const baseW = axis * 0.38 * S.clusterFat;
         const nC = Math.max(2, Math.round(S.bracts * 0.55 * (0.6 + 0.5 * f)));
         nd.site = buildFlowerSite(rnd, axis, baseW, { pattern: S.pattern, nClusters: nC, bracts: S.bracts, fatMul: 1 });
         nd.budRot = nd.side * 0.1;
@@ -697,8 +710,9 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
       }
       // Secondary branchlets — small forks carrying their own foliage and, in
       // flower, a small bud at the tip. Denser on the lower/mid canopy. Skipped
-      // on co-cola tops (they read as a clean single cola).
-      if (topK < 0 && nd.len > A * 0.045 && d > 14) {
+      // on co-cola tops (they read as a clean single cola) and in veg, where the
+      // reference plant is clean opposite fan tiers with no cluttering forks.
+      if (topK < 0 && nd.len > A * 0.045 && d > 14 && flowering) {
         let nBL = rnd() < SK.branchletFrac ? 1 : 0;
         if (low > 0.45 && rnd() < SK.branchletFrac * 0.75) nBL += 1;
         for (let b = 0; b < nBL; b++) {
@@ -723,15 +737,23 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
 
     let cola: Plant["cola"] = null;
     if (P.budDev > 0) {
-      // Top cola gains mass through flowering and swells further in late flower
-      // (ripeness) — the apex should be the visual climax, not a tidy spike.
-      const lateMass = 1 + P.ripe * 0.2;
+      // Top cola gains mass through flowering and swells a little more in late
+      // flower (ripeness) — the apex is the visual climax, but a restrained one:
+      // a tapered spire, not a club. Late swell is gentle (was ·0.2) so a plant
+      // left past harvest-ready doesn't keep ballooning the top.
+      const lateMass = 1 + P.ripe * 0.12;
       // Engines 1&2: when the canopy shares its mass across several tops the
       // leader cola shrinks toward its share (but never below ~0.62×, so it still
       // reads as THE main cola). leaderShare = 1 for single-cola strains → no change.
       const leaderMul = lerp(0.62, 1, tops.leaderShare);
-      const axis = stemH * (0.15 + 0.18 * P.budDev) * S.clusterLen * SK.colaScale * lateMass * leaderMul;
-      const baseW = axis * (S.pattern === "spiral" ? 0.3 : 0.46) * S.clusterFat * (0.95 + 0.18 * P.ripe);
+      // Length: trimmed from (0.15 + 0.18·budDev) so the top reads smaller, then
+      // hard-capped at 0.40·stemH so no strain / late-flower combo can let the
+      // central cola overrun the plant. Width is pulled in more than length
+      // (slimmer factor + gentler ripe-fatten) so the cola stretches into an
+      // elongated spear rather than a fat blob.
+      const rawAxis = stemH * (0.13 + 0.14 * P.budDev) * S.clusterLen * SK.colaScale * lateMass * leaderMul;
+      const axis = Math.min(rawAxis, stemH * 0.35);
+      const baseW = axis * (S.pattern === "spiral" ? 0.23 : 0.32) * S.clusterFat * (0.95 + 0.12 * P.ripe);
       const nC = Math.round(S.bracts * (S.pattern === "spiral" ? 1.7 : 1.15));
       cola = {
         site: buildFlowerSite(rnd, axis, baseW, { pattern: S.pattern, nClusters: nC, bracts: S.bracts, fatMul: 1.1 }),
@@ -1182,15 +1204,34 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
     }
     if (p.stage === "seed" || p.stage === "germination" || p.stage === "seedling") {
       const top = p.spine[24], sz = p.A * 0.05 + p.stemH * 0.35;
-      ctx!.fillStyle = `hsl(${S.hue}, ${S.sat}%, ${S.lit + 10}%)`;
+      // Cotyledons: a clean OPPOSITE pair of rounded seed-leaves, paler than the
+      // true foliage and sitting a little down the stem — the first thing a sprout
+      // shows (matches the reference sprout: two smooth ovals, then the rosette).
+      const cotY = top.y + sz * 0.34;
+      ctx!.fillStyle = `hsl(${S.hue + 6}, ${S.sat * 0.85}%, ${S.lit + 15}%)`;
+      ctx!.strokeStyle = "rgba(0,0,0,0.18)";
+      ctx!.lineWidth = 0.6;
       for (const s of [-1, 1]) {
+        ctx!.save();
+        ctx!.translate(top.x, cotY);
+        ctx!.rotate(s * 0.42);
         ctx!.beginPath();
-        ctx!.ellipse(top.x + s * sz * 0.5, top.y + 3, sz * 0.42, sz * 0.2, s * 0.3, 0, TAU);
+        ctx!.ellipse(s * sz * 0.36, 0, sz * 0.4, sz * 0.19, 0, 0, TAU);
         ctx!.fill();
+        ctx!.stroke();
+        ctx!.restore();
       }
+      // First true leaves: a small opposite pair of young serrated leaves flanking
+      // an emerging central fan — the seedling rosette, upright and tidy.
       ctx!.save();
-      ctx!.translate(top.x, top.y);
-      drawFan(sz * 1.15, 3, 1, 0);
+      ctx!.translate(top.x, top.y + sz * 0.05);
+      for (const s of [-1, 1]) {
+        ctx!.save();
+        ctx!.rotate(s * 0.66);
+        drawFan(sz * 0.74, 3, 1, 0);
+        ctx!.restore();
+      }
+      drawFan(sz * 1.12, 5, 1, 0);
       ctx!.restore();
       return;
     }

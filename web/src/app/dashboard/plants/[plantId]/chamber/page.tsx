@@ -93,6 +93,10 @@ function ChamberScreen({ plantId }: { plantId: string }) {
 
   const pod = pods?.find((p) => p.id === plant?.pod_id);
 
+  // Monotonic LIVE grow-day floor (see liveDay below) — a living plant never
+  // visually regresses, so the top cola can't snap smaller/bigger between polls.
+  const dayFloorRef = useRef<{ id: string; day: number }>({ id: "", day: 0 });
+
   // Seed the sliders from the pod's real environment, once, when it loads.
   const seededRef = useRef(false);
   useEffect(() => {
@@ -181,10 +185,20 @@ function ChamberScreen({ plantId }: { plantId: string }) {
   const liveNominalDay = plant.forecast
     ? nominalGrowDay(plant.growth_stage, plant.forecast.stage_progress_pct, flMid)
     : ageDays(plant.planted_at);
+  // Pin the LIVE grow-day to the max seen for this plant (reset on plant change):
+  // nominalGrowDay only climbs, so this absorbs any non-monotonic server poll
+  // jitter that would otherwise rebuild the chamber into a smaller/bigger cola.
+  // Preview days bypass it — those are user-driven and may move either way.
+  if (dayFloorRef.current.id !== plantId) {
+    dayFloorRef.current = { id: plantId, day: liveNominalDay };
+  } else if (liveNominalDay > dayFloorRef.current.day) {
+    dayFloorRef.current.day = liveNominalDay;
+  }
+  const liveDay = dayFloorRef.current.day;
   const previewing = previewDay !== null;
-  const day = previewing ? previewDay : liveNominalDay;
+  const day = previewing ? previewDay : liveDay;
   const renderStage = previewing ? stageForDay(day, flMid) : plant.growth_stage;
-  const dev = previewing ? previewDev(day, flMid) : previewDev(liveNominalDay, flMid);
+  const dev = previewing ? previewDev(day, flMid) : previewDev(liveDay, flMid);
   const maxPreviewDay = Math.round(cycleDays(flMid) + 8);
   // "To harvest" is the authoritative, pace-aware countdown from the server
   // forecast (so it tracks the compressed cycle); the client estimate is only a
