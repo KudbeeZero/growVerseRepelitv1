@@ -45,6 +45,7 @@ class LecturerService:
         context = {
             "course": course.get("name", course_key),
             "department": course.get("department"),
+            "faculty": course.get("faculty"),  # optional; routes to named persona in Claude
             "topic": lecture.get("topic"),
             "objectives": list(lecture.get("objectives") or []),
             "level": level if level in ("beginner", "intermediate", "advanced") else "beginner",

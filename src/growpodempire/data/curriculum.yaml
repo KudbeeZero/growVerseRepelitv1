@@ -23,6 +23,7 @@ departments:
   ipm: {name: "Integrated Pest Management"}
   chemistry: {name: "Cannabis Chemistry"}
   postharvest: {name: "Post-Harvest & Processing"}
+  bizlaw: {name: "Business, Law & Compliance"}
 
 courses:
   cult-101:
@@ -250,6 +251,587 @@ courses:
     practical: {type: cure, threshold: 3}
     perks: {cure_bonus_pct: 0.1, quality_bonus: 1}
 
+  # ─────────────────────────────────────────────────────────────────────────
+  # DEPARTMENT: Business, Law & Compliance
+  # Faculty: Professor Lex (full name: Alexandria "Lex" Torres)
+  # Persona: Ex-cannabis licensing attorney turned educator. Dry wit,
+  #          precedent-driven, allergic to hand-waving on compliance questions.
+  #          Grounds every lecture in primary sources: actual state regs, SEC
+  #          filings, IRS bulletins, and real enforcement actions.
+  # Free source material:
+  #   - California DCC regulations (cannabis.ca.gov, public domain)
+  #   - IRS IRC §280E / IRS Pub 535 (irs.gov, public domain)
+  #   - Washington State Chapter 314-55 WAC (law.cornell.edu mirror)
+  #   - SBA small-business frameworks (sba.gov, public domain)
+  #   - Metrc public API documentation
+  # ─────────────────────────────────────────────────────────────────────────
+
+  biz-101:
+    name: "Cannabis Law & the Regulatory Landscape"
+    department: bizlaw
+    faculty: lex
+    credits: 3
+    level_req: 4
+    duration_hours: 72
+    tuition: 300
+    prereqs: []
+    lecture:
+      topic: >
+        Federal prohibition vs. state legalization: the Controlled Substances
+        Act Schedule I status, the Cole Memo doctrine and its aftermath, and
+        how state cannabis regulatory agencies (California DCC, Washington LCB)
+        actually function. Licensing tiers, operator duties, and why a state
+        license does not confer federal protection.
+      objectives:
+        - "Explain the federal-state conflict and its practical consequences for operators."
+        - "Identify the three major license tiers (cultivation, manufacturing, retail) and their distinct compliance obligations."
+        - "Describe the anatomy of a license application: owner disclosure, site control, operating plans, and background checks."
+        - "State what a Designated Responsible Party (DRP) is and why this role carries personal liability."
+    modules:
+      - id: biz-101-m1
+        title: "Federal vs. State: The Legal Fault Line"
+        duration_min: 45
+        content: >
+          Cannabis remains a Schedule I controlled substance under the federal
+          Controlled Substances Act (21 U.S.C. §812), placing it alongside
+          heroin in the eyes of federal law. The 2013 Cole Memorandum gave
+          operators a brief window of federal non-interference — then
+          Attorney General Sessions rescinded it in January 2018, leaving only
+          Congress (via the SAFE Banking Act) as the durable fix. As of 2026
+          the SAFE Banking Act has passed the House multiple times but stalled
+          in the Senate, meaning most cannabis businesses remain locked out of
+          FDIC-insured banking. Practical consequence: operators run cash-heavy
+          businesses, pay payroll through credit unions, and maintain meticulous
+          paper trails — because an IRS examination is more likely than a state
+          compliance audit.
+        knowledge_check:
+          question: "A customer shows you a valid state retail license. Does that protect the business from federal prosecution?"
+          options:
+            - {text: "Yes — state law preempts federal law for licensed operators.", correct: false}
+            - {text: "No — federal law does not recognize state cannabis licenses; the CSA still applies.", correct: true}
+            - {text: "Only if the business files for federal tax-exempt status.", correct: false}
+          explanation: >
+            State licenses confer no federal immunity. The CSA's supremacy
+            clause means federal prosecutors retain jurisdiction. In practice
+            the enforcement risk is low for compliant state licensees, but
+            a change in administration can shift enforcement priorities overnight.
+
+      - id: biz-101-m2
+        title: "The License Anatomy"
+        duration_min: 50
+        content: >
+          California's DCC application process is the most-studied model in the
+          industry. Every application requires: (1) Business Structure and
+          Financial Interests — every owner with 5% or more equity must submit
+          a Personal History Disclosure and pass a background check;
+          (2) Site Control — demonstrate legal control of the premises before
+          a license issues; (3) Local Authorization First — the state blocks
+          applications until the city or county grants a local permit;
+          (4) Operating Plans — detailed SOPs covering security (24/7 camera
+          coverage, alarm systems, access logs), inventory tracking, waste
+          disposal, and employee training. Washington State's Chapter 314-55
+          WAC adds a traceability requirement: all inventory must be logged in
+          the state's seed-to-sale system before it leaves the licensed premises.
+        knowledge_check:
+          question: "What must happen before a California state cannabis license can be issued?"
+          options:
+            - {text: "Only a background check on the primary owner.", correct: false}
+            - {text: "Federal DEA registration must be obtained first.", correct: false}
+            - {text: "A local permit from the city or county must already be in place.", correct: true}
+          explanation: >
+            California (cannabis.ca.gov) is explicit: complete local permitting
+            first. The state application will not advance without it. A licensee
+            is subject to both local operating conditions AND state regulations.
+
+      - id: biz-101-m3
+        title: "License Tiers and the DRP Role"
+        duration_min: 40
+        content: >
+          Most state frameworks split licenses into three tiers: Cultivation
+          (growing), Manufacturing (conversion), and Retail (sales to
+          consumers). Each tier has distinct requirements. The Designated
+          Responsible Party (DRP) signs the application, receives all
+          regulatory correspondence, and is personally accountable for
+          violations. If your DRP leaves the company, you must notify the
+          agency within 10 business days in most states or risk license
+          suspension. This is the single most overlooked administrative
+          compliance duty in early-stage operations.
+        knowledge_check:
+          question: "Your DRP resigns on a Friday. What is the immediate compliance action?"
+          options:
+            - {text: "Nothing — update the record at your next annual renewal.", correct: false}
+            - {text: "Notify the licensing agency within the required window (typically 10 business days) and designate a replacement.", correct: true}
+            - {text: "Surrender your license and reapply with the new DRP.", correct: false}
+          explanation: >
+            Most state regulations require prompt notification. Failing to
+            update the DRP of record is a citable violation that can trigger
+            a license review or suspension — a classic paperwork violation
+            regulators find on routine audits.
+
+    practical: {type: research, threshold: 3}
+    perks: {tuition_discount_pct: 0.05}
+
+  biz-201:
+    name: "Cannabis Taxation: IRC §280E & Business Structure"
+    department: bizlaw
+    faculty: lex
+    credits: 4
+    level_req: 6
+    duration_hours: 96
+    tuition: 450
+    prereqs: [biz-101]
+    lecture:
+      topic: >
+        The single most punishing federal rule for cannabis operators: Internal
+        Revenue Code §280E, which disallows deductions for trafficking in
+        Schedule I or II controlled substances. How to legally minimize
+        effective tax rate through COGS allocation, entity structuring
+        (LLC vs. C-Corp), and the management company model.
+      objectives:
+        - "State what §280E disallows and what Cost of Goods Sold (COGS) still allows."
+        - "Explain why a cultivator vs. a retailer faces very different effective tax rates under §280E."
+        - "Describe the management company structure and why it partially mitigates §280E exposure."
+        - "Identify when a change in federal scheduling would render §280E moot."
+    modules:
+      - id: biz-201-m1
+        title: "§280E: The Most Expensive Sentence in Tax Law"
+        duration_min: 55
+        content: >
+          IRC §280E reads: no deduction or credit shall be allowed for any
+          amount paid or incurred in carrying on any trade or business if such
+          trade or business consists of trafficking in controlled substances.
+          This means a cannabis retailer cannot deduct rent, utilities,
+          salaries, or marketing — only Cost of Goods Sold (the direct cost
+          of the product itself). A typical non-cannabis retail business with
+          $1M revenue and $600K expenses pays taxes on $400K of profit.
+          That same cannabis retailer under §280E pays taxes on $1M minus
+          COGS — if COGS is $400K, they owe taxes on $600K. Effective tax
+          rates of 60 to 80 percent are documented in the industry. Source:
+          IRS Publication 535; confirmed in Harborside Inc. v. Commissioner
+          (2021, U.S. Tax Court).
+        knowledge_check:
+          question: "Under §280E, which expense can a cannabis retailer still deduct?"
+          options:
+            - {text: "Employee wages for budtenders.", correct: false}
+            - {text: "Store rent and utilities.", correct: false}
+            - {text: "The direct cost of the cannabis products purchased for resale (COGS).", correct: true}
+          explanation: >
+            §280E disallows all ordinary business deductions. The one exception
+            is COGS — the product itself — because COGS is an inventory
+            accounting mechanism, not a deduction in the §280E sense. Confirmed
+            in IRS Rev. Rul. 2020-13 and Harborside.
+
+      - id: biz-201-m2
+        title: "COGS Maximization & the Cultivator Advantage"
+        duration_min: 50
+        content: >
+          Cultivators have a structural tax advantage over retailers: a larger
+          fraction of their total spend qualifies as COGS (seeds, substrates,
+          nutrients, lighting electricity, direct labor touching the plant).
+          Retailers buy finished product — their COGS is the wholesale purchase
+          price, a smaller share of revenue. The key legal strategy is
+          meticulous COGS documentation: every direct cost of production must
+          be supported by invoices, time-logs, and allocation methodologies.
+          The IRS challenge in almost every §280E audit: prove that expense
+          touched the product. If you cannot document it, it gets moved out
+          of COGS and increases your taxable income dollar for dollar.
+        knowledge_check:
+          question: "A grower's electricity bill covers both grow lights and office HVAC. How should this be handled for COGS?"
+          options:
+            - {text: "Deduct the entire bill as a business expense.", correct: false}
+            - {text: "Allocate the portion attributable to the grow lights to COGS; exclude the office portion.", correct: true}
+            - {text: "Exclude the entire bill since it is a mixed-use expense.", correct: false}
+          explanation: >
+            Mixed-use costs must be allocated. The grow-light share is a
+            direct cost of producing the cannabis — it belongs in COGS. The
+            office HVAC share is an indirect operating expense — §280E
+            disallows it. Document the square footage split or sub-metered usage.
+
+      - id: biz-201-m3
+        title: "Entity Structure & the Management Company Model"
+        duration_min: 45
+        content: >
+          The management company model is the most widely used §280E mitigation
+          structure. The cannabis-touching entity holds the license and generates
+          the revenue. A separate management company — which does NOT touch
+          cannabis and is NOT subject to §280E — provides administrative services
+          (accounting, HR, marketing, IT) to the licensee and charges a management
+          fee. The management company CAN deduct its expenses normally. Key risks:
+          the IRS scrutinizes management fees — they must reflect fair-market value
+          for services actually rendered, documented by contract. The management
+          company must have real operational substance, not be a shell.
+          Most cannabis operators choose C-Corp for the licensee to lock in a
+          flat 21% federal corporate rate rather than passing through inflated
+          income to individual owners at 37%.
+        knowledge_check:
+          question: "What is the primary legal risk of the management company model under IRS scrutiny?"
+          options:
+            - {text: "The management company's employees may need cannabis licenses.", correct: false}
+            - {text: "Management fees not supported by real services at fair-market value will be reclassified as distributions, collapsing the structure.", correct: true}
+            - {text: "C-Corps are not permitted to own cannabis licenses in most states.", correct: false}
+          explanation: >
+            The IRS specifically challenges management fee arrangements that
+            are not arm's-length. If the fee is reclassified, the deduction
+            disappears and you owe back taxes plus penalties. Document every
+            service with contracts, timesheets, and invoices.
+
+    practical: {type: research, threshold: 5}
+    perks: {tuition_discount_pct: 0.08, care_discount_pct: 0.03}
+
+  biz-301:
+    name: "Track-and-Trace, SOPs & Compliance Operations"
+    department: bizlaw
+    faculty: lex
+    credits: 4
+    level_req: 7
+    duration_hours: 120
+    tuition: 550
+    prereqs: [biz-201]
+    lecture:
+      topic: >
+        The operational backbone of a compliant cannabis business: seed-to-sale
+        tracking systems (Metrc, BioTrackTHC), Standard Operating Procedure
+        design, chain-of-custody manifests, and what triggers a compliance
+        audit vs. an enforcement action.
+      objectives:
+        - "Explain how Metrc's tag-based tracking system works from plant tag to retail sale."
+        - "Design an SOP for a single operational process such as receiving or inventory reconciliation."
+        - "Distinguish a compliance audit from a license revocation proceeding and list licensee rights in each."
+        - "Identify the three most common compliance violations that trigger enforcement actions."
+    modules:
+      - id: biz-301-m1
+        title: "Metrc: How Seed-to-Sale Tracking Actually Works"
+        duration_min: 55
+        content: >
+          Metrc is the most widely deployed state-mandated track-and-trace
+          system, operating in 22+ states. Every physical cannabis plant
+          receives a unique RFID tag at the immature plant stage. Every harvest
+          batch, processed lot, and retail package gets a Package Tag.
+          Transfers between licensees require a Metrc-generated manifest: the
+          sending facility creates the transfer, the receiving facility accepts
+          it, and any discrepancy between manifest quantity and received quantity
+          is a reportable variance — immediately visible to the state regulator.
+          The most common compliance failure: plants or packages that exist
+          physically but are not reflected in Metrc (untracked inventory).
+          Regulators treat untracked inventory as diversion evidence.
+          Source: Metrc API public documentation; California DCC Bulletin 2023-04.
+        knowledge_check:
+          question: "A delivery driver arrives with 10 lbs on the Metrc manifest. The receiving manager weighs in 9.8 lbs. What is the correct action?"
+          options:
+            - {text: "Accept the transfer and adjust the weight in internal records only.", correct: false}
+            - {text: "Reject the entire transfer and refuse to accept it.", correct: false}
+            - {text: "Accept the transfer, record the actual received weight in Metrc, and document the variance in writing per your SOP.", correct: true}
+          explanation: >
+            Most state regulations allow acceptance with a documented variance
+            — but it must be recorded in Metrc AND in an internal discrepancy
+            log. A 0.2 lb variance on 10 lbs (2%) is within normal tolerance;
+            anything above 3 to 5 percent triggers a review.
+
+      - id: biz-301-m2
+        title: "Writing SOPs That Hold Up in an Audit"
+        duration_min: 50
+        content: >
+          A Standard Operating Procedure serves two purposes: training employees
+          to execute correctly, and providing the primary audit evidence that
+          the business operates in compliance with its license conditions.
+          Every SOP must include: Purpose, Scope (roles and locations),
+          Frequency, Materials/Equipment, Step-by-step Procedure with who
+          does each step, Recordkeeping requirements (what gets logged, where,
+          how long retained), and a Revision Log. The single biggest SOP
+          failure auditors find: an SOP that describes the process correctly
+          but employees demonstrably do not follow it. Regulators call this
+          paper compliance — the document exists but the practice does not.
+          Training logs, signed acknowledgments, and observed practice records
+          are the defense.
+        knowledge_check:
+          question: "An auditor finds employees disposing of cannabis waste without logging it, even though the SOP requires a waste log. What does this represent?"
+          options:
+            - {text: "A minor paperwork issue — the SOP exists, so the business is compliant.", correct: false}
+            - {text: "Paper compliance — the SOP exists on paper but is not being followed, which is a citable violation.", correct: true}
+            - {text: "A federal violation requiring DEA notification.", correct: false}
+          explanation: >
+            Regulators are trained to look past the binder and observe
+            actual practice. A gap between documented procedure and observed
+            behavior is cited as failure to follow SOPs — one of the most
+            common violations in dispensary and cultivation audits. The fix
+            is training documentation, not a better SOP.
+
+      - id: biz-301-m3
+        title: "Enforcement Actions: Audits, Violations & License Defense"
+        duration_min: 45
+        content: >
+          There is a crucial distinction between a routine compliance audit
+          (an inspector visits, reviews records, may cite violations and issue
+          a Corrective Action Plan) and a license revocation proceeding (a
+          formal administrative action that can permanently revoke operating
+          authority). Most violations are resolved at the audit level:
+          Tier 1 (minor, first occurrence) triggers a written warning plus a
+          30-day Corrective Action Plan cure period. Tier 2 (repeat or
+          significant) triggers a fine of $1,000 to $50,000 depending on
+          state. Tier 3 (diversion, fraud, serious public safety) triggers
+          automatic license suspension pending a hearing. Licensee rights
+          in a revocation proceeding: right to notice (typically 15 to 30
+          days), right to a hearing before an administrative law judge,
+          right to present evidence and cross-examine, and right to legal
+          counsel. Self-reporting is a mitigating factor in every state
+          framework.
+        knowledge_check:
+          question: "You discover a Metrc discrepancy before a scheduled audit. What is the most defensible action?"
+          options:
+            - {text: "Correct the Metrc records quietly and say nothing.", correct: false}
+            - {text: "Self-report the discrepancy to the regulatory agency in writing before the audit, document the correction, and show the remediation trail.", correct: true}
+            - {text: "Postpone the audit until the records are clean.", correct: false}
+          explanation: >
+            Self-reporting is explicitly a mitigating factor in virtually
+            every state cannabis enforcement framework. Correcting records
+            without reporting looks like record falsification. The grower who
+            self-reports, fixes, and documents gets a Tier 1 warning. The one
+            who gets caught hiding a discrepancy gets a Tier 2 or Tier 3 action.
+
+    practical: {type: level, threshold: 8}
+    perks: {care_discount_pct: 0.05, tuition_discount_pct: 0.05}
+
+  biz-401:
+    name: "Cannabis Business Finance & Capital Strategy"
+    department: bizlaw
+    faculty: lex
+    credits: 5
+    level_req: 9
+    duration_hours: 144
+    tuition: 700
+    prereqs: [biz-301]
+    lecture:
+      topic: >
+        Capital structure for cannabis operators: why traditional debt and equity
+        raise structures do not work, the venture capital landscape post-2019
+        downturn, alternative financing (sale-leaseback, revenue-based
+        financing, cannabis-specific lenders), cash management under banking
+        restrictions, and financial reporting for regulators and investors.
+      objectives:
+        - "Explain why most commercial banks decline cannabis operators and what the SAFE Banking Act would change."
+        - "Describe three alternative financing structures available to cannabis businesses."
+        - "Calculate a break-even analysis for a cultivation operation accounting for §280E effective tax rates."
+        - "Design a cash management policy for a high-cash cannabis retail operation."
+    modules:
+      - id: biz-401-m1
+        title: "The Banking Problem & SAFE Banking"
+        duration_min: 50
+        content: >
+          Federal law creates a money-laundering risk for any FDIC-insured
+          financial institution that knowingly provides services to cannabis
+          businesses (Bank Secrecy Act, 31 U.S.C. §5324). Most national banks
+          and credit unions decline cannabis operators entirely. In practice,
+          operators are forced into cash-only operations with all the security,
+          robbery, and operational risk that implies; small state-chartered
+          credit unions that file Suspicious Activity Reports on every cannabis
+          deposit; and fintech workarounds that charge 2 to 5 percent per
+          transaction. The SAFE Banking Act would create a federal safe harbor
+          for financial institutions serving state-legal cannabis businesses.
+          It has passed the House seven times as of 2024 but stalled in the
+          Senate each time — primarily due to concerns about serving as a
+          backdoor to federal legalization.
+        knowledge_check:
+          question: "A cannabis dispensary wants to accept Visa/Mastercard directly. What is the primary obstacle?"
+          options:
+            - {text: "Card networks do not operate in states where cannabis is legal.", correct: false}
+            - {text: "Federal anti-money-laundering law creates legal risk for banks processing cannabis transactions, so major card networks decline cannabis operators.", correct: true}
+            - {text: "Cannabis operators must pay a special federal sales tax that card networks cannot collect.", correct: false}
+          explanation: >
+            Visa and Mastercard require the issuing bank to comply with federal
+            law. Since the BSA creates liability for banks handling cannabis
+            money, the card networks block cannabis merchant category codes.
+            Some operators use cashless ATM systems — technically a cash
+            advance, not a card purchase — but these are legally grey and
+            regulators are cracking down.
+
+      - id: biz-401-m2
+        title: "Alternative Capital: Sale-Leaseback, RBF & Cannabis Lenders"
+        duration_min: 55
+        content: >
+          Three structures dominate cannabis financing outside of equity.
+          Sale-Leaseback: the operator sells its real property to a REIT or
+          private investor, then immediately leases it back. Cannabis-focused
+          REITs like Innovative Industrial Properties (IIPR, NYSE) built their
+          entire business model on this structure. Downside: you no longer own
+          the building; if you miss rent the REIT can evict you.
+          Revenue-Based Financing: a cannabis-specific lender advances a lump
+          sum in exchange for a fixed percentage of monthly revenue until a
+          repayment cap (typically 1.3 to 1.5x principal) is reached. No
+          equity dilution; repayment scales with revenue. Cost is high
+          (effective APR 25 to 60 percent) but no bank relationship required.
+          Private cannabis-specific lenders (AFC Gamma, Chicago Atlantic) make
+          senior secured loans at 12 to 18 percent interest with cannabis
+          licenses and real property as collateral — the closest thing to
+          conventional debt available to the industry.
+        knowledge_check:
+          question: "A cultivator owns its grow facility and needs $2M in expansion capital without giving up equity. Which structure is most appropriate?"
+          options:
+            - {text: "Series A venture round.", correct: false}
+            - {text: "Sale-leaseback of the grow facility to a cannabis REIT.", correct: true}
+            - {text: "FDIC bank commercial loan.", correct: false}
+          explanation: >
+            The cultivator owns real property — a sale-leaseback converts that
+            into immediate capital without diluting equity. The trade-off is
+            monthly lease payments replacing ownership. An equity round requires
+            giving up ownership stake. An FDIC bank loan is typically unavailable
+            due to federal banking restrictions.
+
+      - id: biz-401-m3
+        title: "Cash Management & Financial Controls"
+        duration_min: 50
+        content: >
+          High-cash operations require written cash handling policies that
+          satisfy both state cannabis regulators AND the operator's insurance
+          carrier. Core components: dual-control requirement (two employees
+          present for all cash counts and deposits); daily reconciliation (POS
+          cash drawer against sales records — unreconciled variances over $20
+          trigger a written discrepancy report); safe limits (maximum cash
+          held overnight before armored car pickup, typically $10,000 to
+          $50,000 as set by state regs); deposit frequency (most operators
+          deposit daily or every other day); robbery protocol (documented
+          employee safety-first policy — never resist, activate silent alarm,
+          preserve footage; staff training required annually). An IRS field
+          audit of a cash-heavy cannabis business will reconstruct income from
+          camera footage, sales logs, and supplier invoices — if your cash log
+          does not match, it becomes a fraud investigation.
+        knowledge_check:
+          question: "What is the primary purpose of the dual-control cash counting requirement?"
+          options:
+            - {text: "To speed up counting by dividing the work.", correct: false}
+            - {text: "To prevent and detect internal theft by ensuring no single employee controls cash without a witness.", correct: true}
+            - {text: "It is a federal banking requirement under the BSA.", correct: false}
+          explanation: >
+            Dual control is an internal controls principle: it creates a
+            witness to every cash transaction, making it significantly harder
+            for a single employee to steal and harder for the business to
+            later claim ignorance of a theft. It also protects employees from
+            false accusations. Most state cannabis regulations and business
+            insurance policies require it.
+
+    practical: {type: cup_entry, threshold: 1}
+    perks: {yield_pct: 0.03, tuition_discount_pct: 0.10}
+
+  biz-501:
+    name: "Scaling, M&A & the Cannabis Exit"
+    department: bizlaw
+    faculty: lex
+    credits: 5
+    level_req: 11
+    duration_hours: 168
+    tuition: 900
+    prereqs: [biz-401]
+    lecture:
+      topic: >
+        Growth strategy for licensed cannabis operators: multi-state operator
+        (MSO) structures, license acquisition vs. organic growth, mergers and
+        acquisitions in a state-licensed industry, M&A due diligence, and the
+        eventual exit — trade sale, management buyout, or public listing on
+        the CSE/OTC markets.
+      objectives:
+        - "Explain why cannabis M&A is structurally different from conventional M&A."
+        - "Describe the three primary MSO expansion strategies and their capital requirements."
+        - "List the five most critical due diligence items in a cannabis license acquisition."
+        - "Explain why most cannabis companies list on the Canadian Securities Exchange rather than NYSE or NASDAQ."
+    modules:
+      - id: biz-501-m1
+        title: "Multi-State Operator Structures"
+        duration_min: 60
+        content: >
+          A Multi-State Operator holds cannabis licenses in multiple states.
+          Because cannabis licenses are state-specific and non-transferable
+          across state lines, an MSO cannot simply open branches — it must
+          apply for or acquire a separate license in each jurisdiction.
+          Three expansion models: Organic (apply for new licenses; low capital
+          cost but 12 to 36 month timelines and $5,000 to $250,000 application
+          fees per license type); License Acquisition (buy an existing licensed
+          operator; faster market entry but you inherit the target's compliance
+          history including any unresolved violations); Management Agreement
+          (manage operations under contract with the existing licensee, taking
+          a management fee, until state approval for ownership transfer is
+          obtained — widely used in states with long change-of-ownership
+          review periods).
+        knowledge_check:
+          question: "An MSO acquires a licensed cultivator that has an unresolved Tier 2 compliance violation. What is the primary risk?"
+          options:
+            - {text: "The violation disappears upon change of ownership.", correct: false}
+            - {text: "The violation carries over to the new owner and may trigger a mandatory regulatory disclosure, delaying or blocking the ownership transfer.", correct: true}
+            - {text: "The MSO must reapply for the license from scratch.", correct: false}
+          explanation: >
+            Most state cannabis agencies require disclosure of open enforcement
+            actions as part of any change-of-ownership filing. The regulator
+            can hold the ownership transfer in abeyance until the violation is
+            resolved. Sophisticated buyers include compliance representation-
+            and-warranty insurance in large cannabis M&A deals for exactly
+            this reason.
+
+      - id: biz-501-m2
+        title: "Cannabis M&A Due Diligence"
+        duration_min: 60
+        content: >
+          Cannabis due diligence has five categories not found in conventional
+          M&A: (1) License Verification — confirm the target license is active,
+          not on suspension or probation, with no pending revocation; obtain
+          the license certificate directly from the state portal, not from the
+          seller; (2) Compliance History — request all prior inspection reports
+          and enforcement actions for the last 3 years; (3) Track-and-Trace
+          Audit — pull the target's Metrc history; consistent inventory
+          variances over 2 percent are a diversion red flag; (4) §280E Tax
+          Exposure — obtain 3 years of tax returns; verify COGS methodology;
+          unresolved IRS challenges to COGS allocations become the buyer's
+          problem post-close; (5) Change-of-Ownership Pre-Approval — in most
+          states the regulatory agency must pre-approve the ownership change
+          before it takes legal effect; closing without pre-approval voids
+          the license in 14+ states.
+        knowledge_check:
+          question: "During due diligence you find the target's Metrc reports show consistent 4% inventory variances over 18 months. How should you interpret this?"
+          options:
+            - {text: "Normal measurement error — not worth flagging.", correct: false}
+            - {text: "A significant diversion red flag that requires explanation; condition the deal on a full inventory audit and regulatory clearance.", correct: true}
+            - {text: "Automatically disqualifying — walk away immediately.", correct: false}
+          explanation: >
+            A 4 percent consistent variance is above the 2 to 3 percent
+            tolerance most states flag. It could be measurement error, system
+            misconfiguration, or actual diversion. A prudent buyer conditions
+            the deal on a third-party inventory audit, regulator confirmation
+            of no open investigation, and a price adjustment mechanism if
+            violations surface post-close. Not an automatic deal-breaker but
+            absolutely a flagged condition.
+
+      - id: biz-501-m3
+        title: "Public Markets: CSE, OTC & the Cannabis Listing Playbook"
+        duration_min: 55
+        content: >
+          Most US cannabis operators that have gone public list on the Canadian
+          Securities Exchange (CSE) rather than NYSE or NASDAQ. The reason is
+          structural: NYSE and NASDAQ listing rules require compliance with all
+          applicable laws including federal law. Since cannabis is federally
+          illegal in the US, NYSE and NASDAQ refuse cannabis listings. The CSE
+          has no such restriction for Canadian-law-compliant issuers. US
+          cannabis operators list on the CSE as Canadian holding companies,
+          then trade over-the-counter in the US on the OTC Markets Pink or
+          OTCQB tiers. The result: limited institutional investor access
+          (most US mutual funds cannot hold OTC stocks), wide bid-ask spreads,
+          and lower liquidity than a major-exchange listing. Effective cannabis
+          companies must raise capital at higher cost and dilution than
+          comparable non-cannabis businesses — a structural disadvantage that
+          persists until federal rescheduling resolves the NYSE/NASDAQ problem.
+          Examples: Curaleaf (CURA:CSE), Trulieve (TRUL:CSE), Green Thumb
+          Industries (GTII:CSE).
+        knowledge_check:
+          question: "Why do US cannabis companies typically list on the CSE rather than NYSE?"
+          options:
+            - {text: "The CSE has lower listing fees.", correct: false}
+            - {text: "NYSE and NASDAQ require compliance with all applicable laws including federal law; since cannabis remains federally illegal, they decline cannabis listings.", correct: true}
+            - {text: "Canadian investors are larger buyers of cannabis stocks than US investors.", correct: false}
+          explanation: >
+            This is a direct consequence of Schedule I status. The moment
+            federal rescheduling or full descheduling occurs, major-exchange
+            listings become legally possible — and most industry analysts
+            expect a wave of uplisting and institutional buying to follow.
+
+    practical: {type: harvest_quality, threshold: 90}
+    perks: {yield_pct: 0.05, terpene_pct: 0.03, quality_bonus: 2}
+
 degrees:
   cert-cultivation:
     name: "Cannabis Cultivation Certificate"
@@ -290,3 +872,27 @@ degrees:
     required_courses: [cult-301, gen-301, nut-201, ipm-201, chem-201, ph-201]
     perks: {yield_pct: 0.1, quality_bonus: 3, terpene_pct: 0.05}
     xp_reward: 1500
+
+  cert-compliance:
+    name: "Cannabis Compliance Certificate"
+    tier: certificate
+    title: "Licensed Compliance Officer"
+    required_courses: [biz-101, biz-201, biz-301]
+    perks: {tuition_discount_pct: 0.10, care_discount_pct: 0.05}
+    xp_reward: 350
+
+  bs-cannabis-business:
+    name: "B.S. Cannabis Business & Law"
+    tier: bachelor
+    title: "Cannabis Business Executive"
+    required_courses: [biz-101, biz-201, biz-301, biz-401]
+    perks: {tuition_discount_pct: 0.15, yield_pct: 0.05, quality_bonus: 1}
+    xp_reward: 1000
+
+  ms-cannabis-operator:
+    name: "M.S. — Cannabis Operations & Strategy"
+    tier: master
+    title: "Master Operator"
+    required_courses: [biz-101, biz-201, biz-301, biz-401, biz-501]
+    perks: {tuition_discount_pct: 0.20, yield_pct: 0.08, quality_bonus: 2, terpene_pct: 0.03}
+    xp_reward: 2000
