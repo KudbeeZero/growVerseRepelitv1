@@ -590,9 +590,11 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
 
     const nodes: Node[] = [];
     const flowering = stageOf() === "flowering" || stageOf() === "harvest";
-    // Node density: the strain silhouette sets the canopy fill, and flowering
-    // packs a few more nodes in to close the gaps the bare skeleton left.
-    const flowerPack = flowering ? 1.18 : 1;
+    // Node density: the strain silhouette sets the canopy fill. Flowering packs a
+    // few more nodes in to close the gaps the bare skeleton left; veg spaces them
+    // OUT (×0.82) so a young plant reads as a handful of distinct, well-separated
+    // fan-leaf tiers up a clean stem (the reference), not an overlapping bush.
+    const flowerPack = flowering ? 1.18 : 0.82;
     const nodeTarget = Math.floor((hN / S.internode) * SK.nodeDensity * SK.vertStack * flowerPack);
     const maxNodes = Math.min(18, Math.max(d <= 10 ? 1 : 2, nodeTarget));
     const grow = smooth(clamp((d - 8) / 22, 0, 1));
@@ -635,7 +637,10 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
       const lateral = az.lateral;
       // Engines 1&2: is this node a co-dominant top (one of the highest `nTop`)?
       const topK = nTop > 0 && i >= topFromIdx ? i - topFromIdx : -1;
-      let tilt = (0.92 + rnd() * 0.3) * (1 - f * 0.22) * lerp(1, 1.12, low);
+      // Veg branches lift toward the canopy (≈20% more upright) so a young plant
+      // reads as the tidy, up-and-out symmetric fan tiers of the reference, not a
+      // drooping bush. Flowering keeps its fuller, wider-tilt canopy.
+      let tilt = (0.92 + rnd() * 0.3) * (1 - f * 0.22) * lerp(1, 1.12, low) * (flowering ? 1 : 0.8);
       let len = A * 0.27 * S.branchMul * (0.35 + 0.65 * low) * grow * shorten;
       if (topK >= 0) {
         // A released top straightens toward vertical and extends up to race the
@@ -647,7 +652,9 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
       const depthSize = lerp(0.86, 1.06, (az.depth + 1) / 2);
       const nd: Node = {
         x: p.x, y: p.y, f, side, tilt, len, spread,
-        leafSize: A * (0.08 + 0.05 * low) * (0.55 + 0.45 * grow) * (1 - 0.4 * P.budDev * f) * depthSize,
+        // Broad palmate fans in veg (the reference's big up-and-out leaves); the
+        // boost fades as buds form (·budDev) so flowering canopy stays as tuned.
+        leafSize: A * (0.08 + 0.05 * low) * (0.55 + 0.45 * grow) * (1 - 0.4 * P.budDev * f) * depthSize * (1 + 0.34 * (1 - clamp(P.budDev, 0, 1))),
         leaflets: Math.min(S.leafletMax, 3 + 2 * Math.floor(d / 14)),
         phase: rnd() * TAU,
         tipX: 0, tipY: 0, site: null, budRot: 0,
@@ -703,8 +710,9 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
       }
       // Secondary branchlets — small forks carrying their own foliage and, in
       // flower, a small bud at the tip. Denser on the lower/mid canopy. Skipped
-      // on co-cola tops (they read as a clean single cola).
-      if (topK < 0 && nd.len > A * 0.045 && d > 14) {
+      // on co-cola tops (they read as a clean single cola) and in veg, where the
+      // reference plant is clean opposite fan tiers with no cluttering forks.
+      if (topK < 0 && nd.len > A * 0.045 && d > 14 && flowering) {
         let nBL = rnd() < SK.branchletFrac ? 1 : 0;
         if (low > 0.45 && rnd() < SK.branchletFrac * 0.75) nBL += 1;
         for (let b = 0; b < nBL; b++) {
@@ -1196,15 +1204,34 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
     }
     if (p.stage === "seed" || p.stage === "germination" || p.stage === "seedling") {
       const top = p.spine[24], sz = p.A * 0.05 + p.stemH * 0.35;
-      ctx!.fillStyle = `hsl(${S.hue}, ${S.sat}%, ${S.lit + 10}%)`;
+      // Cotyledons: a clean OPPOSITE pair of rounded seed-leaves, paler than the
+      // true foliage and sitting a little down the stem — the first thing a sprout
+      // shows (matches the reference sprout: two smooth ovals, then the rosette).
+      const cotY = top.y + sz * 0.34;
+      ctx!.fillStyle = `hsl(${S.hue + 6}, ${S.sat * 0.85}%, ${S.lit + 15}%)`;
+      ctx!.strokeStyle = "rgba(0,0,0,0.18)";
+      ctx!.lineWidth = 0.6;
       for (const s of [-1, 1]) {
+        ctx!.save();
+        ctx!.translate(top.x, cotY);
+        ctx!.rotate(s * 0.42);
         ctx!.beginPath();
-        ctx!.ellipse(top.x + s * sz * 0.5, top.y + 3, sz * 0.42, sz * 0.2, s * 0.3, 0, TAU);
+        ctx!.ellipse(s * sz * 0.36, 0, sz * 0.4, sz * 0.19, 0, 0, TAU);
         ctx!.fill();
+        ctx!.stroke();
+        ctx!.restore();
       }
+      // First true leaves: a small opposite pair of young serrated leaves flanking
+      // an emerging central fan — the seedling rosette, upright and tidy.
       ctx!.save();
-      ctx!.translate(top.x, top.y);
-      drawFan(sz * 1.15, 3, 1, 0);
+      ctx!.translate(top.x, top.y + sz * 0.05);
+      for (const s of [-1, 1]) {
+        ctx!.save();
+        ctx!.rotate(s * 0.66);
+        drawFan(sz * 0.74, 3, 1, 0);
+        ctx!.restore();
+      }
+      drawFan(sz * 1.12, 5, 1, 0);
       ctx!.restore();
       return;
     }
