@@ -571,8 +571,11 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
     let hN: number;
     if (d <= 10) hN = lerp(0.05, 0.13, smooth(d / 10));
     else if (d <= 34) hN = lerp(0.13, 0.55, Math.pow((d - 10) / 24, 0.75));
-    else hN = lerp(0.55, clamp(0.6 * S.stretch, 0, 0.97), smooth(clamp((d - 34) / 28, 0, 1)));
-    hN = clamp(hN * S.heightMul * (0.85 + 0.15 * CL.growthMult), 0.05, 0.97);
+    // Flowering stretch: pull the plant taller / more elongated in flower (was
+    // 0.6·stretch capped at 0.97). A taller leader also reads as a more graceful
+    // spire and makes the top cola sit proportionally smaller against the canopy.
+    else hN = lerp(0.55, clamp(0.78 * S.stretch, 0, 0.99), smooth(clamp((d - 34) / 28, 0, 1)));
+    hN = clamp(hN * S.heightMul * (0.85 + 0.15 * CL.growthMult), 0.05, 0.99);
     const stemH = A * hN;
 
     // Main stem: tapered (drawn thick→thin) with gentle noise so it isn't a
@@ -670,16 +673,19 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
         // still reads as the main cola. Total flower mass is conserved by the
         // leaderShare/secondaryShares split.
         const coShare = tops.secondaryShares[topK] / tops.leaderShare; // ≤1 vs leader
-        const axis = stemH * 0.13 * S.clusterLen * SK.colaScale * (0.5 + 0.5 * P.budDev) * lerp(0.72, 1.06, coShare) * (1 + P.ripe * 0.18);
-        const baseW = axis * (S.pattern === "spiral" ? 0.3 : 0.46) * S.clusterFat * (0.95 + 0.18 * P.ripe);
+        const axis = stemH * 0.115 * S.clusterLen * SK.colaScale * (0.5 + 0.5 * P.budDev) * lerp(0.72, 1.06, coShare) * (1 + P.ripe * 0.12);
+        const baseW = axis * (S.pattern === "spiral" ? 0.27 : 0.4) * S.clusterFat * (0.95 + 0.12 * P.ripe);
         const nC = Math.max(3, Math.round(S.bracts * (S.pattern === "spiral" ? 1.5 : 1.05)));
         nd.site = buildFlowerSite(rnd, axis, baseW, { pattern: S.pattern, nClusters: nC, bracts: S.bracts, fatMul: 1.05 });
         nd.budRot = nd.side * 0.06;
         nd.weight = lerp(0.95, 1.7, f) * S.clusterFat; // a top cola is heavy
       } else if (P.budDev > 0 && f > S.flowerFrom) {
-        const sizeUp = lerp(0.55, 1.15, f);
-        const axis = A * (0.05 + 0.09 * f) * S.clusterLen * sizeUp * (0.5 + 0.5 * P.budDev);
-        const baseW = axis * 0.42 * S.clusterFat;
+        // Upper branch-tip buds: trimmed so the highest ones don't fuse with the
+        // leader cola into one oversized apex blob — they read as their own buds
+        // stacking up a taller spire.
+        const sizeUp = lerp(0.5, 1.0, f);
+        const axis = A * (0.045 + 0.075 * f) * S.clusterLen * sizeUp * (0.5 + 0.5 * P.budDev);
+        const baseW = axis * 0.38 * S.clusterFat;
         const nC = Math.max(2, Math.round(S.bracts * 0.55 * (0.6 + 0.5 * f)));
         nd.site = buildFlowerSite(rnd, axis, baseW, { pattern: S.pattern, nClusters: nC, bracts: S.bracts, fatMul: 1 });
         nd.budRot = nd.side * 0.1;
@@ -723,15 +729,23 @@ export function createChamberCore(opts: ChamberCoreOpts): ChamberCore {
 
     let cola: Plant["cola"] = null;
     if (P.budDev > 0) {
-      // Top cola gains mass through flowering and swells further in late flower
-      // (ripeness) — the apex should be the visual climax, not a tidy spike.
-      const lateMass = 1 + P.ripe * 0.2;
+      // Top cola gains mass through flowering and swells a little more in late
+      // flower (ripeness) — the apex is the visual climax, but a restrained one:
+      // a tapered spire, not a club. Late swell is gentle (was ·0.2) so a plant
+      // left past harvest-ready doesn't keep ballooning the top.
+      const lateMass = 1 + P.ripe * 0.12;
       // Engines 1&2: when the canopy shares its mass across several tops the
       // leader cola shrinks toward its share (but never below ~0.62×, so it still
       // reads as THE main cola). leaderShare = 1 for single-cola strains → no change.
       const leaderMul = lerp(0.62, 1, tops.leaderShare);
-      const axis = stemH * (0.15 + 0.18 * P.budDev) * S.clusterLen * SK.colaScale * lateMass * leaderMul;
-      const baseW = axis * (S.pattern === "spiral" ? 0.3 : 0.46) * S.clusterFat * (0.95 + 0.18 * P.ripe);
+      // Length: trimmed from (0.15 + 0.18·budDev) so the top reads smaller, then
+      // hard-capped at 0.40·stemH so no strain / late-flower combo can let the
+      // central cola overrun the plant. Width is pulled in more than length
+      // (slimmer factor + gentler ripe-fatten) so the cola stretches into an
+      // elongated spear rather than a fat blob.
+      const rawAxis = stemH * (0.13 + 0.14 * P.budDev) * S.clusterLen * SK.colaScale * lateMass * leaderMul;
+      const axis = Math.min(rawAxis, stemH * 0.35);
+      const baseW = axis * (S.pattern === "spiral" ? 0.23 : 0.32) * S.clusterFat * (0.95 + 0.12 * P.ripe);
       const nC = Math.round(S.bracts * (S.pattern === "spiral" ? 1.7 : 1.15));
       cola = {
         site: buildFlowerSite(rnd, axis, baseW, { pattern: S.pattern, nClusters: nC, bracts: S.bracts, fatMul: 1.1 }),
