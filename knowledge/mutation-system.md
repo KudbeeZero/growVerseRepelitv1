@@ -30,4 +30,7 @@ by grow conditions, surfaced through the environment system rather than RNG alon
 
 ## Implementation pointers
 `web/src/lib/chamber/budDna.ts` (palette + `applyEnvironmentToBudDNA`),
-`web/src/lib/chamber/strainVisuals.ts` (per-strain `BudColor`).
+`web/src/lib/chamber/strainVisuals.ts` (per-strain `BudColor`). The
+`mutationTraits` field on `ResolvedPhenotype` (`web/src/lib/chamber/phenotype.ts`,
+see `phenotype-generator.md`) is the resolution-layer plug-point where this ladder
+and future generative traits surface.

@@ -202,6 +202,22 @@ once they appear here. Last reconciled: **2026-06-14** (REC-004 full repository 
   (tuned in `balance.yaml`), VPD/DLI/PPFD exposed on `/state`. +8 tests (147 total, green). *Next:*
   Phase B (photosynthesis + transpiration + EC/pH→uptake) — land the sim-cost-cap first.
 
+- 🟠 🔨 **Graphics phase — canonical PR roadmap** (renumbered 2026-06-13, owner) — the visual
+  launch sequence. The numbering previously lived only in PR descriptions (PR #25's body listed
+  Circadian as "#27"); recorded here so it can't drift again. After **Phenotype Generator
+  Foundation** took the live #27, the tail renumbered by one:
+  - **PR #25 — De-Grape Whole Plant Buds** · open (renderer silhouette polish).
+  - **PR #26 — Bud Weight Physics Polish** · open (`budPhysics.ts` droop/lean).
+  - **PR #27 — Phenotype Generator Foundation** · open · *this branch*. Deterministic, visual-only
+    `resolvePhenotype()` consolidating the scattered chamber visual inputs into one
+    `ResolvedPhenotype`. **Export-only standby — renderer NOT rewired yet** (a later PR switches
+    `GrowChamber` to consume it). `web/src/lib/chamber/phenotype.ts` + `knowledge/phenotype-generator.md`.
+  - **PR #28 — Circadian Leaf Motion** (was the placeholder "#27"; not yet opened).
+  - **PR #29 — Canonical Stage PNG Generation.**
+  - **PR #30 — Dashboard / GameState Wiring Polish.**
+  - **PR #31 — MVP Launch Candidate.**
+  Do **not** start #28+ or touch #25/#26 from the #27 branch.
+
 ## 🟡 Low / later (valuable, not urgent)
 - 🟡 ⬜ **Constellation leaf-mesh follow-ups (sacred-hash re-pin batch)** (helper review,
   2026-06-11) — three deferred items that each require intentionally changing a pinned render
