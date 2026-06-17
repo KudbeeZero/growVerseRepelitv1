@@ -517,6 +517,12 @@ class DegreeProgress(UUIDPrimaryKeyMixin, Base):
         DateTime, default=datetime.utcnow, nullable=False
     )
 
+    # On-chain diploma (a verifiable credential mirrored as an Algorand ASA).
+    # DB stays authoritative for perks/title; the ASA is an optional mirror,
+    # exactly like harvest/strain NFTs.
+    nft_asset_id: Mapped[Optional[int]] = mapped_column(Integer)
+    nft_status: Mapped[str] = mapped_column(String(16), default="none", nullable=False)
+
     __table_args__ = (
         Index("uq_degree_progress_player_degree", "player_id", "degree_key", unique=True),
     )

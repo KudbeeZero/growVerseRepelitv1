@@ -1154,6 +1154,24 @@ def mint_strain(player_id, strain_id):
         return _error(str(e))
 
 
+@game_bp.post("/players/<player_id>/degrees/<degree_key>/mint")
+@require_feature("chain")
+@require_player
+def mint_diploma(player_id, degree_key):
+    """Mint an earned degree as an on-chain verifiable credential (ASA)."""
+    try:
+        with session_scope() as s:
+            progress = MintingService(s).mint_diploma(player_id, degree_key)
+            payload = {
+                "degree_key": progress.degree_key,
+                "nft_status": progress.nft_status,
+                "nft_asset_id": progress.nft_asset_id,
+            }
+        return jsonify(payload), 201
+    except GameError as e:
+        return _error(str(e))
+
+
 @game_bp.get("/nft/<kind>/<obj_id>.json")
 @require_feature("chain")
 def nft_metadata(kind, obj_id):

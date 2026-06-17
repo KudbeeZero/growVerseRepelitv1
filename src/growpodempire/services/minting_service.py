@@ -17,12 +17,13 @@ from sqlalchemy.orm import Session
 from ..config import get_settings
 from ..economy.config import get_economy_config, EconomyConfig
 from ..enums import NFTStatus, Rarity, rarity_index
-from ..db.models import Harvest, Strain
+from ..db.models import Harvest, Strain, Player, DegreeProgress
 from ..chain.provider import ChainProvider, ChainError
 from ..chain import metadata as md
 from ..chain.factory import shared_provider
 from . import leveling_service
 from .game_service import GameError
+from .university_service import load_curriculum
 
 
 class MintingService:
@@ -106,6 +107,42 @@ class MintingService:
         leveling_service.award(self.session, player_id, "mint", self.cfg)
         return minted
 
+    # ----- Diploma NFTs (verifiable degree credentials) -------------------
+    def mint_diploma(self, player_id: str, degree_key: str) -> DegreeProgress:
+        """Mint an earned degree as an on-chain verifiable credential.
+
+        The DB (DegreeProgress) is authoritative — the degree's perks and title
+        are already in effect. This only mirrors the credential on Algorand, so
+        it requires the degree to already be earned and never confers perks.
+        """
+        progress = (
+            self.session.query(DegreeProgress)
+            .filter(
+                DegreeProgress.player_id == player_id,
+                DegreeProgress.degree_key == degree_key,
+            )
+            .one_or_none()
+        )
+        if progress is None:
+            raise GameError("You have not earned this degree")
+        if progress.nft_status == NFTStatus.MINTED.value:
+            return progress  # idempotent
+
+        degree = load_curriculum().get("degrees", {}).get(degree_key)
+        if degree is None:
+            raise GameError(f"Unknown degree '{degree_key}'")
+
+        player = self.session.get(Player, player_id)
+        metadata = md.diploma_metadata(degree_key, degree, player)
+        minted = self._mint(
+            progress,
+            asset_name=f"{degree.get('name', degree_key)} Diploma"[:32],
+            url=self._nft_url("diploma", progress.id),
+            metadata=metadata,
+        )
+        leveling_service.award(self.session, player_id, "mint", self.cfg)
+        return minted
+
     # ----- shared mint path ----------------------------------------------
     def _mint(self, row, asset_name: str, url: str, metadata: dict):
         row.nft_status = NFTStatus.PENDING.value
@@ -139,4 +176,14 @@ class MintingService:
             if strain is None:
                 raise GameError("Strain not found")
             return md.strain_metadata(strain)
+        if kind == "diploma":
+            progress = self.session.get(DegreeProgress, obj_id)
+            if progress is None:
+                raise GameError("Diploma not found")
+            degree = load_curriculum().get("degrees", {}).get(progress.degree_key)
+            if degree is None:
+                raise GameError("Unknown degree")
+            return md.diploma_metadata(
+                progress.degree_key, degree, self.session.get(Player, progress.player_id)
+            )
         raise GameError("Unknown metadata kind")
