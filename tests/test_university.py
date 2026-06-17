@@ -120,6 +120,25 @@ def test_public_catalog_lists_courses_and_degrees(session):
     assert "cult-101" in keys and "ms-master-grower" in {d["key"] for d in cat["degrees"]}
 
 
+def test_doctorate_tier_integrates_without_claim_changes(session):
+    """The new `doctorate` tier + Lab QA / Pharmacology degrees are pure data:
+    they appear in the catalog and their perks aggregate via the same path as
+    every other degree, with no change to claim_degree or the tier handling."""
+    uni = UniversityService(session)
+    degrees = {d["key"]: d for d in uni.catalog()["degrees"]}
+    assert degrees["phd-cannabis-science"]["tier"] == "doctorate"
+    assert {"cert-lab-qa", "bs-analytical", "cert-pharma", "bs-medical"} <= degrees.keys()
+
+    svc, p = _player(session, "phd", level=12)
+    # Grant the doctorate directly to isolate the perk-aggregation path.
+    session.add(DegreeProgress(player_id=p.id, degree_key="phd-cannabis-science"))
+    session.flush()
+    fx = uni.degree_effects(p.id)
+    assert fx["yield_pct"] == 0.10
+    assert fx["quality_bonus"] == 3.0
+    assert fx["consumable_potency_pct"] == 0.10
+
+
 def test_transcript_reports_status_and_locks(session):
     svc, p = _player(session, "transcriber", level=1)
     UniversityService(session, clock=FrozenClock(BASE)).enroll(p.id, "cult-101")
